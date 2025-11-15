@@ -1,0 +1,497 @@
+<!--
+  REUSABLE LINKEDBUD EMAIL TEMPLATE
+
+  This is a reusable, LLM-friendly HTML email template that matches Linkedbud's brand identity.
+  Follows industry best practices for email development and maximum client compatibility.
+
+  USAGE:
+  - Replace all {{placeholder}} values with actual content before sending
+  - Only modify sections marked with "LLM EDITABLE" comments
+  - Structure and CSS should remain unchanged for consistency
+
+  PLACEHOLDERS:
+  - {{subject}} - Email subject line (reference only, in comment)
+  - {{preheader_text}} - Preheader text (visible in email preview)
+  - {{brand_name}} - Brand name (default: "Linkedbud")
+  - {{email_title}} - Main heading/title
+  - {{greeting}} - Personalized greeting (e.g., "Hi John,")
+  - {{main_message_html}} - Main content area (HTML allowed)
+  - {{cta_label}} - CTA button text (optional - omit to hide CTA)
+  - {{cta_url}} - CTA button URL (optional - omit to hide CTA)
+  - {{footer_note}} - Footer message text
+  - {{unsubscribe_url}} - Unsubscribe link URL
+  - {{privacy_url}} - Privacy policy link URL
+  - {{current_year}} - Current year for copyright
+
+  DESIGN SYSTEM:
+  - Primary color: #2563eb (blue-600)
+  - Text: #1e293b (slate-800) - lighter than before
+  - Secondary text: #64748b (slate-500) - lighter gray
+  - Background: #ffffff (pure white)
+  - Border radius: 6px (email-safe)
+  - Typography: System font stack
+  - Mobile-first responsive design
+-->
+<!DOCTYPE html>
+<html
+  lang="en"
+  xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:v="urn:schemas-microsoft-com:vml"
+  xmlns:o="urn:schemas-microsoft-com:office:office"
+>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <meta
+      name="format-detection"
+      content="telephone=no,address=no,email=no,date=no,url=no"
+    />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <!--[if mso]>
+      <noscript>
+        <xml>
+          <o:OfficeDocumentSettings>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+          </o:OfficeDocumentSettings>
+        </xml>
+      </noscript>
+    <![endif]-->
+    <!-- Email subject: {{subject}} -->
+    <title>{{email_title}}</title>
+
+    <!-- PREHEADER TEXT -->
+    <div
+      style="
+        display: none;
+        max-height: 0;
+        overflow: hidden;
+        font-size: 1px;
+        line-height: 1px;
+        color: transparent;
+        max-width: 0;
+        opacity: 0;
+        visibility: hidden;
+        mso-hide: all;
+      "
+    >
+      {{preheader_text}}
+    </div>
+
+    <!--[if mso]>
+      <style type="text/css">
+        body,
+        table,
+        td,
+        a {
+          font-family: Arial, Helvetica, sans-serif !important;
+        }
+        table {
+          border-collapse: collapse;
+          mso-table-lspace: 0pt;
+          mso-table-rspace: 0pt;
+        }
+        img {
+          -ms-interpolation-mode: bicubic;
+        }
+      </style>
+    <![endif]-->
+
+    <style type="text/css">
+      /* Reset */
+      body,
+      table,
+      td,
+      p,
+      a,
+      li,
+      blockquote {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+      }
+      table,
+      td {
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
+      }
+      img {
+        -ms-interpolation-mode: bicubic;
+        border: 0;
+        outline: none;
+        text-decoration: none;
+        display: block;
+      }
+      a {
+        text-decoration: none;
+      }
+
+      /* Mobile styles */
+      @media only screen and (max-width: 600px) {
+        .email-container {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        .email-body {
+          width: 100% !important;
+        }
+        .email-padding {
+          padding-left: 24px !important;
+          padding-right: 24px !important;
+        }
+        h1 {
+          font-size: 24px !important;
+          line-height: 1.3 !important;
+        }
+        .cta-button {
+          padding: 12px 24px !important;
+          font-size: 16px !important;
+        }
+        .brand-name {
+          font-size: 20px !important;
+        }
+      }
+    </style>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      background-color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+        'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #1e293b;
+    "
+  >
+    <!-- MAIN EMAIL CONTAINER -->
+    <table
+      role="presentation"
+      cellspacing="0"
+      cellpadding="0"
+      border="0"
+      width="100%"
+      style="margin: 0; padding: 0; width: 100%; background-color: #f1f5f9"
+    >
+      <tr>
+        <td align="center" style="padding: 0">
+          <!-- OUTER WRAPPER -->
+          <table
+            role="presentation"
+            cellspacing="0"
+            cellpadding="0"
+            border="0"
+            width="100%"
+            style="margin: 0; padding: 0; width: 100%; max-width: 600px"
+          >
+            <tr>
+              <td style="padding: 24px 0">
+                <!-- EMAIL CARD -->
+                <table
+                  role="presentation"
+                  cellspacing="0"
+                  cellpadding="0"
+                  border="0"
+                  width="100%"
+                  class="email-container"
+                  style="
+                    margin: 0 auto;
+                    width: 100%;
+                    max-width: 600px;
+                    background-color: #ffffff;
+                    border-radius: 6px;
+                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                  "
+                >
+                  <!-- HEADER SECTION -->
+                  <!-- LLM EDITABLE: Header with brand logo/name -->
+                  <tr>
+                    <td
+                      style="
+                        padding: 32px 40px 24px 40px;
+                        text-align: left;
+                        background-color: #ffffff;
+                      "
+                      class="email-padding"
+                    >
+                      <table
+                        role="presentation"
+                        cellspacing="0"
+                        cellpadding="0"
+                        border="0"
+                        width="100%"
+                      >
+                        <tr>
+                          <td>
+                            <div
+                              class="brand-name"
+                              style="
+                                font-size: 22px;
+                                font-weight: 600;
+                                color: #1e293b;
+                                line-height: 1.2;
+                                letter-spacing: -0.02em;
+                              "
+                            >
+                              {{brand_name}}
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- MAIN TITLE SECTION -->
+                  <!-- LLM EDITABLE: Main email title/heading -->
+                  <tr>
+                    <td
+                      style="
+                        padding: 0 40px 16px 40px;
+                        text-align: left;
+                        background-color: #ffffff;
+                      "
+                      class="email-padding"
+                    >
+                      <h1
+                        style="
+                          margin: 0;
+                          padding: 0;
+                          font-size: 28px;
+                          font-weight: 600;
+                          line-height: 1.3;
+                          color: #1e293b;
+                          letter-spacing: -0.02em;
+                        "
+                      >
+                        {{email_title}}
+                      </h1>
+                    </td>
+                  </tr>
+
+                  <!-- GREETING SECTION -->
+                  <!-- LLM EDITABLE: Personalized greeting -->
+                  <tr>
+                    <td
+                      style="
+                        padding: 0 40px 24px 40px;
+                        text-align: left;
+                        background-color: #ffffff;
+                      "
+                      class="email-padding"
+                    >
+                      <p
+                        style="
+                          margin: 0;
+                          padding: 0;
+                          font-size: 16px;
+                          line-height: 1.6;
+                          color: #1e293b;
+                        "
+                      >
+                        {{greeting}}
+                      </p>
+                    </td>
+                  </tr>
+
+                  <!-- MAIN CONTENT SECTION -->
+                  <!-- LLM EDITABLE: Main message content (HTML allowed) -->
+                  <tr>
+                    <td
+                      style="
+                        padding: 0 40px 32px 40px;
+                        text-align: left;
+                        background-color: #ffffff;
+                      "
+                      class="email-padding email-body"
+                    >
+                      <div
+                        style="
+                          font-size: 16px;
+                          line-height: 1.7;
+                          color: #334155;
+                        "
+                      >
+                        {{{main_message_html}}}
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- CTA BUTTON SECTION -->
+                  <!-- LLM EDITABLE: Optional call-to-action button -->
+                  <!-- Use Handlebars conditional: {{#if cta_label}}...{{/if}} to show CTA only when provided -->
+                  {{#if cta_label}}
+                  <tr>
+                    <td
+                      style="
+                        padding: 0 40px 40px 40px;
+                        text-align: left;
+                        background-color: #ffffff;
+                      "
+                      class="email-padding"
+                    >
+                      <!--[if mso]>
+                        <v:roundrect
+                          xmlns:v="urn:schemas-microsoft-com:vml"
+                          xmlns:w="urn:schemas-microsoft-com:office:word"
+                          href="{{cta_url}}"
+                          style="
+                            height: 44px;
+                            v-text-anchor: middle;
+                            width: 200px;
+                          "
+                          arcsize="8%"
+                          strokecolor="#2563eb"
+                          fillcolor="#2563eb"
+                        >
+                          <w:anchorlock />
+                          <center
+                            style="
+                              color: #ffffff;
+                              font-family: Arial, sans-serif;
+                              font-size: 16px;
+                              font-weight: 500;
+                            "
+                          >
+                            {{cta_label}}
+                          </center>
+                        </v:roundrect>
+                      <![endif]-->
+                      <!--[if !mso]><!-->
+                      <table
+                        role="presentation"
+                        cellspacing="0"
+                        cellpadding="0"
+                        border="0"
+                        align="left"
+                      >
+                        <tr>
+                          <td
+                            style="
+                              border-radius: 6px;
+                              background-color: #2563eb;
+                            "
+                          >
+                            <a
+                              href="{{cta_url}}"
+                              class="cta-button"
+                              style="
+                                display: inline-block;
+                                padding: 14px 32px;
+                                font-size: 16px;
+                                font-weight: 500;
+                                text-decoration: none;
+                                color: #ffffff;
+                                border-radius: 6px;
+                                background-color: #2563eb;
+                                line-height: 1.5;
+                                text-align: center;
+                              "
+                            >
+                              {{cta_label}}
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+                      <!--<![endif]-->
+                    </td>
+                  </tr>
+                  {{/if}}
+
+                  <!-- DIVIDER -->
+                  <tr>
+                    <td
+                      style="padding: 0 40px; background-color: #ffffff"
+                      class="email-padding"
+                    >
+                      <table
+                        role="presentation"
+                        cellspacing="0"
+                        cellpadding="0"
+                        border="0"
+                        width="100%"
+                      >
+                        <tr>
+                          <td
+                            style="
+                              border-top: 1px solid #e2e8f0;
+                              height: 1px;
+                              line-height: 1px;
+                              font-size: 1px;
+                              padding: 0;
+                            "
+                          >
+                            &nbsp;
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- FOOTER SECTION -->
+                  <!-- LLM EDITABLE: Footer note and legal links -->
+                  <tr>
+                    <td
+                      style="
+                        padding: 32px 40px;
+                        text-align: left;
+                        background-color: #ffffff;
+                      "
+                      class="email-padding"
+                    >
+                      <p
+                        style="
+                          margin: 0 0 16px 0;
+                          padding: 0;
+                          font-size: 14px;
+                          line-height: 1.6;
+                          color: #64748b;
+                        "
+                      >
+                        {{footer_note}}
+                      </p>
+                      <p
+                        style="
+                          margin: 0 0 16px 0;
+                          padding: 0;
+                          font-size: 13px;
+                          line-height: 1.6;
+                        "
+                      >
+                        <a
+                          href="{{unsubscribe_url}}"
+                          style="color: #2563eb; text-decoration: none"
+                          >Unsubscribe</a
+                        >
+                        <span style="color: #cbd5e1; margin: 0 8px">|</span>
+                        <a
+                          href="{{privacy_url}}"
+                          style="color: #2563eb; text-decoration: none"
+                          >Privacy Policy</a
+                        >
+                      </p>
+                      <p
+                        style="
+                          margin: 0;
+                          padding: 0;
+                          font-size: 12px;
+                          line-height: 1.6;
+                          color: #94a3b8;
+                        "
+                      >
+                        © {{current_year}} {{brand_name}}. All rights reserved.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+
+
