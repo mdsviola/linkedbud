@@ -18,7 +18,7 @@ export function FAQSection({ className = "" }: FAQSectionProps) {
         <SectionHeader
           align="center"
           title="Frequently asked questions"
-          description="Everything you need to know about how Linkedbud helps you show up consistently on LinkedIn."
+          description="Everything you need to know about how linkedbud helps you show up consistently on LinkedIn."
         />
       </Container>
 

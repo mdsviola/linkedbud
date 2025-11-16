@@ -44,7 +44,7 @@ export default async function AdminDashboard() {
     <div className="space-y-6">
       <div>
         <PageTitle>Admin Dashboard</PageTitle>
-        <PageDescription>Manage your Linkedbud application</PageDescription>
+        <PageDescription>Manage your linkedbud application</PageDescription>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {stats.map((stat) => {

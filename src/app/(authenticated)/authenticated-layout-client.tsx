@@ -174,7 +174,7 @@ export function AuthenticatedLayoutClient({
     <div className="min-h-screen bg-gray-50">
       {/* Top Navigation */}
       <SharedNav
-        logoText="Linkedbud"
+        logoText="linkedbud"
         logoHref="/dashboard"
         navigation={navigation}
         rightActions={rightActions}

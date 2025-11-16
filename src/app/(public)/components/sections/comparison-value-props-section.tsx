@@ -17,9 +17,9 @@ export function ComparisonValuePropsSection({ competitor }: ComparisonValueProps
       <Container className="flex flex-col gap-12">
         <SectionHeader
           align="center"
-          eyebrow="Why choose Linkedbud"
-          title={`Why choose Linkedbud over ${competitor.displayName}?`}
-          description="Linkedbud provides unique advantages that make it the better choice for teams serious about LinkedIn growth."
+          eyebrow="Why choose linkedbud"
+          title={`Why choose linkedbud over ${competitor.displayName}?`}
+          description="linkedbud provides unique advantages that make it the better choice for teams serious about LinkedIn growth."
         />
 
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">

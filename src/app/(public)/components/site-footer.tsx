@@ -48,7 +48,7 @@ export function SiteFooter() {
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-500">
                 Comparisons
               </p>
-              <nav className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <nav className="grid grid-cols-2 gap-x-6 gap-y-2 md:grid-cols-3">
                 {COMPARISON_LINKS.map((link) => (
                   <Link
                     key={link.href}
@@ -64,7 +64,7 @@ export function SiteFooter() {
           <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300">
             <Link
               href="https://www.linkedin.com"
-              aria-label="Linkedbud on LinkedIn"
+              aria-label="linkedbud on LinkedIn"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition hover:border-primary hover:text-primary dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200"
@@ -73,7 +73,7 @@ export function SiteFooter() {
             </Link>
             <Link
               href="https://x.com"
-              aria-label="Linkedbud on X"
+              aria-label="linkedbud on X"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600 transition hover:border-primary hover:text-primary dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200"
@@ -84,7 +84,7 @@ export function SiteFooter() {
         </div>
 
         <p className="text-xs text-slate-600 dark:text-slate-400 md:col-span-2">
-          © {new Date().getFullYear()} Linkedbud. Crafted for creators who live on LinkedIn.
+          © {new Date().getFullYear()} linkedbud. Crafted for creators who live on LinkedIn.
         </p>
       </Container>
     </footer>

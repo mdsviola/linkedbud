@@ -34,7 +34,7 @@ import { ScheduledPostsCalendar } from "@/components/scheduled-posts-calendar";
 import { WarningMessage } from "@/components/ui/message";
 import { LabelWithCount } from "@/components/ui/label-with-count";
 import { isTokenExpired } from "@/lib/linkedin-token-utils";
-import { truncateContent } from "@/lib/utils";
+import { truncateContent, getOrganizationName } from "@/lib/utils";
 
 interface PostVariant {
   hook: string;
@@ -121,26 +121,26 @@ export function ScheduledPostsClient() {
     const firstDay = new Date(year, month - 1, 1);
     // Last day of the month
     const lastDay = new Date(year, month, 0);
-    
+
     // Get the day of the week for the first day (0 = Sunday, 6 = Saturday)
     const firstDayOfWeek = firstDay.getDay();
-    
+
     // Calculate the first visible day (start of the calendar week containing the first day)
     // Subtract the weekday offset to get to the Sunday of that week
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDayOfWeek);
     startDate.setHours(0, 0, 0, 0);
-    
+
     // Get the day of the week for the last day
     const lastDayOfWeek = lastDay.getDay();
-    
+
     // Calculate the last visible day (end of the calendar week containing the last day)
     // Add days to complete the week (to Saturday)
     const daysToAdd = 6 - lastDayOfWeek;
     const endDate = new Date(lastDay);
     endDate.setDate(endDate.getDate() + daysToAdd);
     endDate.setHours(23, 59, 59, 999);
-    
+
     return { startDate, endDate };
   }, []);
 
@@ -175,7 +175,7 @@ export function ScheduledPostsClient() {
         }
 
         let url = `/api/posts?status=SCHEDULED&page=${page}&limit=10`;
-        
+
         // For calendar view (page 1), use extended date range to include adjacent month days
         // For pagination (page > 1), use regular month range
         if (page === 1) {
@@ -434,30 +434,31 @@ export function ScheduledPostsClient() {
                 );
 
                 const renderPost = (post: Post) => {
-                  // Get organization info
-                  let orgId =
-                    post.linkedin_posts?.find((lp) => lp.organization_id)
-                      ?.organization_id || null;
+                  // Get organization name using utility function
+                  const organizationName = getOrganizationName(post, organizations);
+
+                  // Determine organization ID
+                  let orgId: string | null = null;
                   if (
-                    !orgId &&
                     post.publish_target &&
                     post.publish_target !== "personal"
                   ) {
                     orgId = post.publish_target;
+                  } else if (post.linkedin_posts?.length) {
+                    // Check if any linkedin post has an organization_id
+                    const orgPost = post.linkedin_posts.find(
+                      (lp) => lp.organization_id !== null
+                    );
+                    if (orgPost) {
+                      orgId = orgPost.organization_id;
+                    }
                   }
+
+                  // Determine if this is a personal post
                   const isPersonal =
                     post.publish_target === "personal" ||
-                    post.linkedin_posts?.some(
-                      (lp) => lp.organization_id === null
-                    );
-                  const organizationName =
-                    isPersonal
-                      ? "Personal"
-                      : orgId && organizations[orgId]
-                      ? organizations[orgId]
-                      : orgId
-                      ? "Organization"
-                      : "Personal";
+                    (!orgId && !post.publish_target) ||
+                    post.linkedin_posts?.some((lp) => lp.organization_id === null);
 
                   // Get actual published date (from LinkedIn post if available)
                   const actualPublishedAt =

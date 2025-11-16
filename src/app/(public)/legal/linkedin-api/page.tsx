@@ -9,9 +9,9 @@ import Link from "next/link";
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linkedbud.com";
 
 export const metadata: Metadata = {
-  title: "LinkedIn API Compliance - Linkedbud",
+  title: "LinkedIn API Compliance - linkedbud",
   description:
-    "Linkedbud's compliance documentation for LinkedIn API usage. Learn about our API integrations, data handling, and security practices.",
+    "linkedbud's compliance documentation for LinkedIn API usage. Learn about our API integrations, data handling, and security practices.",
   keywords: [
     "LinkedIn API compliance",
     "LinkedIn API terms",
@@ -20,27 +20,27 @@ export const metadata: Metadata = {
     "LinkedIn API security",
   ],
   openGraph: {
-    title: "LinkedIn API Compliance - Linkedbud",
+    title: "LinkedIn API Compliance - linkedbud",
     description:
-      "Linkedbud's compliance documentation for LinkedIn API usage. Learn about our API integrations, data handling, and security practices.",
+      "linkedbud's compliance documentation for LinkedIn API usage. Learn about our API integrations, data handling, and security practices.",
     url: `${baseUrl}/legal/linkedin-api`,
     type: "website",
     locale: "en_US",
-    siteName: "Linkedbud",
+    siteName: "linkedbud",
     images: [
       {
         url: `${baseUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "LinkedIn API Compliance - Linkedbud",
+        alt: "LinkedIn API Compliance - linkedbud",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "LinkedIn API Compliance - Linkedbud",
+    title: "LinkedIn API Compliance - linkedbud",
     description:
-      "Linkedbud's compliance documentation for LinkedIn API usage. Learn about our API integrations, data handling, and security practices.",
+      "linkedbud's compliance documentation for LinkedIn API usage. Learn about our API integrations, data handling, and security practices.",
     images: [`${baseUrl}/og-image.png`],
   },
   alternates: {
@@ -55,8 +55,8 @@ export default function LinkedInAPICompliancePage() {
     { name: "LinkedIn API Compliance", url: `${baseUrl}/legal/linkedin-api` },
   ]);
   const webPageSchema = generateWebPageSchema(
-    "LinkedIn API Compliance - Linkedbud",
-    "Linkedbud's compliance documentation for LinkedIn API usage",
+    "LinkedIn API Compliance - linkedbud",
+    "linkedbud's compliance documentation for LinkedIn API usage",
     `${baseUrl}/legal/linkedin-api`
   );
 
@@ -86,8 +86,8 @@ export default function LinkedInAPICompliancePage() {
               LinkedIn API Compliance Documentation
             </h1>
             <p className="mt-6 text-base leading-relaxed text-slate-600 dark:text-slate-300">
-              Complete transparency about how Linkedbud uses LinkedIn&apos;s APIs
-              to power your content creation and analytics workflows.
+              Complete transparency about how linkedbud uses LinkedIn&apos;s
+              APIs to power your content creation and analytics workflows.
             </p>
           </div>
         </section>
@@ -99,7 +99,7 @@ export default function LinkedInAPICompliancePage() {
                 Overview
               </h2>
               <p className="mb-4">
-                Linkedbud is a LinkedIn content creation and analytics co-pilot
+                linkedbud is a LinkedIn content creation and analytics co-pilot
                 that helps users ideate, write, schedule, and analyze LinkedIn
                 posts. We use LinkedIn&apos;s Community Management API
                 (Marketing API) to publish posts to personal profiles and
@@ -109,7 +109,7 @@ export default function LinkedInAPICompliancePage() {
                 <strong className="text-slate-900 dark:text-white">
                   Important:
                 </strong>{" "}
-                Linkedbud focuses exclusively on content creation and analytics.
+                linkedbud focuses exclusively on content creation and analytics.
                 We do not perform lead generation, scraping, mass outreach, or
                 automated messaging. Our product helps you create better
                 content—nothing more.
@@ -261,7 +261,7 @@ export default function LinkedInAPICompliancePage() {
               <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
                 <li>
                   <strong>Post Content</strong> — Text content you draft in
-                  Linkedbud and choose to publish to LinkedIn. This is your
+                  linkedbud and choose to publish to LinkedIn. This is your
                   content, not data we scrape from LinkedIn.
                 </li>
                 <li>
@@ -308,7 +308,7 @@ export default function LinkedInAPICompliancePage() {
                 How Publishing Works
               </h2>
               <p className="mb-4">
-                When you create a post in Linkedbud and choose to publish it to
+                When you create a post in linkedbud and choose to publish it to
                 LinkedIn:
               </p>
               <ol className="list-decimal list-inside space-y-2 mb-4 ml-4">
@@ -450,7 +450,7 @@ export default function LinkedInAPICompliancePage() {
                 <li>
                   <strong>Access Tokens:</strong> Retained while your LinkedIn
                   integration is active. Deleted immediately when you disconnect
-                  LinkedIn or delete your Linkedbud account.
+                  LinkedIn or delete your linkedbud account.
                 </li>
                 <li>
                   <strong>Organization Data:</strong> Retained while your
@@ -473,17 +473,17 @@ export default function LinkedInAPICompliancePage() {
               </h3>
               <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
                 <li>
-                  <strong>In Linkedbud:</strong> Go to Settings → Integrations →
+                  <strong>In linkedbud:</strong> Go to Settings → Integrations →
                   Disconnect LinkedIn. This immediately deletes stored access
                   tokens and organization mappings.
                 </li>
                 <li>
-                  <strong>On LinkedIn:</strong> You can revoke Linkedbud&apos;s
+                  <strong>On LinkedIn:</strong> You can revoke linkedbud&apos;s
                   access at any time via LinkedIn Settings & Privacy → Data
                   privacy → Other applications → Permitted services.
                 </li>
                 <li>
-                  <strong>Account Deletion:</strong> Deleting your Linkedbud
+                  <strong>Account Deletion:</strong> Deleting your linkedbud
                   account removes all LinkedIn-related data we store (tokens,
                   organization mappings, post IDs, metrics, drafts).
                 </li>
@@ -530,12 +530,12 @@ export default function LinkedInAPICompliancePage() {
                 </strong>
               </p>
               <p className="mb-4">
-                Linkedbud is not affiliated with, endorsed by, or sponsored by
+                linkedbud is not affiliated with, endorsed by, or sponsored by
                 LinkedIn. LinkedIn, the LinkedIn logo, and related marks are
                 trademarks of LinkedIn Corporation.
               </p>
               <p className="mb-4">
-                Your use of LinkedIn data through Linkedbud is subject to
+                Your use of LinkedIn data through linkedbud is subject to
                 LinkedIn&apos;s Terms of Service and API Terms of Use.
               </p>
 

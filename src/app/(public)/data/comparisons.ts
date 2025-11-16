@@ -35,11 +35,11 @@ export type CompetitorData = {
   seoDescription: string;
 };
 
-// Linkedbud's features for comparison
+// linkedbud's features for comparison
 const LINKEDBUD_FEATURES: FeatureComparison[] = [
   {
     feature: "AI-generated post ideas",
-    linkedbud: "Unlimited",
+    linkedbud: "Unlimited*",
     competitor: "",
   },
   {
@@ -91,10 +91,10 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     displayName: "MagicPost",
     tagline: "Maybe MagicPost isn't so magical after all...",
     description:
-      "MagicPost is a LinkedIn-verified application that offers AI-driven post generation, scheduling, and analytics. While it provides content creation features, Linkedbud goes further with AI-led performance insights, personalized scheduling intelligence, and transparent API compliance documentation.",
-    heroTitle: "Linkedbud vs MagicPost",
+      "MagicPost is a LinkedIn-verified application that offers AI-driven post generation, scheduling, and analytics. While it provides content creation features, linkedbud goes further with AI-led performance insights, personalized scheduling intelligence, and transparent API compliance documentation.",
+    heroTitle: "linkedbud vs MagicPost",
     heroDescription:
-      "Both tools are LinkedIn-verified, but Linkedbud provides AI-led performance insights, personalized scheduling that learns from your history, and transparent API compliance documentation that MagicPost doesn't emphasize.",
+      "Both tools are LinkedIn-verified, but linkedbud provides AI-led performance insights, personalized scheduling that learns from your history, and transparent API compliance documentation that MagicPost doesn't emphasize.",
     features: [
       {
         feature: "LinkedIn API compliance transparency",
@@ -123,7 +123,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       },
       {
         feature: "AI-generated post ideas",
-        linkedbud: "Unlimited",
+        linkedbud: "Unlimited*",
         competitor: "Unlimited",
       },
       {
@@ -146,31 +146,31 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       startingPrice: "$39/month",
       popularPlan: "Creator",
       popularPlanPrice: "$29/month",
-      notes: "MagicPost's cheapest option starts at $39/month. The Creator plan at $29/month includes comprehensive content creation features, but lacks Linkedbud's AI-led insights and personalized scheduling intelligence.",
+      notes: "MagicPost's cheapest option starts at $39/month. The Creator plan at $29/month includes comprehensive content creation features, but lacks linkedbud's AI-led insights and personalized scheduling intelligence.",
     },
     valueProps: [
       {
         icon: "📊",
         title: "Analytics that explain themselves",
         description:
-          "Linkedbud's AI highlights what outperformed and why, so you can double down without exporting data. MagicPost offers analytics dashboards but doesn't emphasize AI-led explanations of performance patterns.",
+          "linkedbud's AI highlights what outperformed and why, so you can double down without exporting data. MagicPost offers analytics dashboards but doesn't emphasize AI-led explanations of performance patterns.",
       },
       {
         icon: "⏰",
         title: "Timing that learns your audience",
         description:
-          "Linkedbud's scheduler adapts to what worked for you before, not generic best-time guesses. MagicPost discusses generic scheduling guidance rather than learning from your historical performance.",
+          "linkedbud's scheduler adapts to what worked for you before, not generic best-time guesses. MagicPost discusses generic scheduling guidance rather than learning from your historical performance.",
       },
       {
         icon: "🔒",
         title: "Transparent API compliance",
         description:
-          "Linkedbud publishes via LinkedIn Community Management API with a public compliance page for reviewers and security teams. MagicPost is LinkedIn-verified but doesn't emphasize transparent compliance documentation.",
+          "linkedbud publishes via LinkedIn Community Management API with a public compliance page for reviewers and security teams. MagicPost is LinkedIn-verified but doesn't emphasize transparent compliance documentation.",
       },
     ],
-    seoTitle: "Linkedbud vs MagicPost - Compare LinkedIn Content Tools",
+    seoTitle: "linkedbud vs MagicPost - Compare LinkedIn Content Tools",
     seoDescription:
-      "Compare Linkedbud and MagicPost for LinkedIn content creation. Linkedbud offers AI-led performance insights, personalized scheduling intelligence, and transparent API compliance that MagicPost doesn't emphasize.",
+      "Compare linkedbud and MagicPost for LinkedIn content creation. linkedbud offers AI-led performance insights, personalized scheduling intelligence, and transparent API compliance that MagicPost doesn't emphasize.",
   },
   taplio: {
     id: "taplio",
@@ -178,10 +178,10 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     displayName: "Taplio",
     tagline: "Maybe Taplio isn't so inspiring after all...",
     description:
-      "Taplio is a LinkedIn automation and content creation tool that combines content scheduling with lead generation features and a Chrome extension. While versatile, it lacks personalized scheduling intelligence, AI-led performance insights, and transparent API compliance documentation that Linkedbud provides.",
-    heroTitle: "Linkedbud vs Taplio",
+      "Taplio is a LinkedIn automation and content creation tool that combines content scheduling with lead generation features and a Chrome extension. While versatile, it lacks personalized scheduling intelligence, AI-led performance insights, and transparent API compliance documentation that linkedbud provides.",
+    heroTitle: "linkedbud vs Taplio",
     heroDescription:
-      "Linkedbud focuses exclusively on content creation and analytics, delivering personalized scheduling intelligence, AI-led performance insights, and transparent API compliance that Taplio's broad suite approach doesn't emphasize.",
+      "linkedbud focuses exclusively on content creation and analytics, delivering personalized scheduling intelligence, AI-led performance insights, and transparent API compliance that Taplio's broad suite approach doesn't emphasize.",
     features: [
       {
         feature: "LinkedIn API compliance transparency",
@@ -210,7 +210,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       },
       {
         feature: "AI-generated post ideas",
-        linkedbud: "Unlimited",
+        linkedbud: "Unlimited*",
         competitor: "Limited (requires upgrade)",
       },
       {
@@ -233,31 +233,31 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       startingPrice: "$39/month",
       popularPlan: "Pro",
       popularPlanPrice: "$65/month",
-      notes: "Taplio starts at $39/month with limited features. To access AI-generated posts, you need to upgrade to the $65/month plan. Linkedbud includes all features including AI-led insights and personalized scheduling in the Starter plan.",
+      notes: "Taplio starts at $39/month with limited features. To access AI-generated posts, you need to upgrade to the $65/month plan. linkedbud includes all features including AI-led insights and personalized scheduling in the Starter plan.",
     },
     valueProps: [
       {
         icon: "📊",
         title: "Analytics that explain themselves",
         description:
-          "Linkedbud's AI highlights what outperformed and why, so you can double down without exporting data. Taplio offers analytics dashboards but doesn't emphasize AI-led explanations of performance patterns.",
+          "linkedbud's AI highlights what outperformed and why, so you can double down without exporting data. Taplio offers analytics dashboards but doesn't emphasize AI-led explanations of performance patterns.",
       },
       {
         icon: "⏰",
         title: "Timing that learns your audience",
         description:
-          "Linkedbud's scheduler adapts to what worked for you before, not generic best-time guesses. Taplio markets scheduling features but doesn't claim to learn from your historical performance.",
+          "linkedbud's scheduler adapts to what worked for you before, not generic best-time guesses. Taplio markets scheduling features but doesn't claim to learn from your historical performance.",
       },
       {
         icon: "🔒",
         title: "Built on the official LinkedIn API",
         description:
-          "Linkedbud publishes safely to profiles and pages with a public compliance page your reviewers will love. Taplio markets Chrome extension features but doesn't explicitly claim Community Management API use or provide transparent compliance documentation.",
+          "linkedbud publishes safely to profiles and pages with a public compliance page your reviewers will love. Taplio markets Chrome extension features but doesn't explicitly claim Community Management API use or provide transparent compliance documentation.",
       },
     ],
-    seoTitle: "Linkedbud vs Taplio - Compare LinkedIn Content Creation Tools",
+    seoTitle: "linkedbud vs Taplio - Compare LinkedIn Content Creation Tools",
     seoDescription:
-      "Compare Linkedbud and Taplio for LinkedIn content creation. Linkedbud offers personalized scheduling intelligence, AI-led performance insights, and transparent API compliance that Taplio doesn't emphasize.",
+      "Compare linkedbud and Taplio for LinkedIn content creation. linkedbud offers personalized scheduling intelligence, AI-led performance insights, and transparent API compliance that Taplio doesn't emphasize.",
   },
   authoredup: {
     id: "authoredup",
@@ -265,10 +265,10 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     displayName: "AuthoredUp",
     tagline: "Maybe AuthoredUp isn't so comprehensive after all...",
     description:
-      "AuthoredUp provides LinkedIn content creation with a strong editor, formatting tools, and analytics. While it offers a comprehensive editing experience, Linkedbud provides AI-led performance insights, personalized scheduling intelligence, and transparent API compliance that AuthoredUp doesn't emphasize.",
-    heroTitle: "Linkedbud vs AuthoredUp",
+      "AuthoredUp provides LinkedIn content creation with a strong editor, formatting tools, and analytics. While it offers a comprehensive editing experience, linkedbud provides AI-led performance insights, personalized scheduling intelligence, and transparent API compliance that AuthoredUp doesn't emphasize.",
+    heroTitle: "linkedbud vs AuthoredUp",
     heroDescription:
-      "Linkedbud combines AI-powered ideation, AI-led performance insights, and personalized scheduling with transparent API compliance. AuthoredUp focuses on manual editing with formatting tools, lacking AI-led insights and personalized scheduling intelligence.",
+      "linkedbud combines AI-powered ideation, AI-led performance insights, and personalized scheduling with transparent API compliance. AuthoredUp focuses on manual editing with formatting tools, lacking AI-led insights and personalized scheduling intelligence.",
     features: [
       {
         feature: "LinkedIn API compliance transparency",
@@ -297,7 +297,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       },
       {
         feature: "AI-generated post ideas",
-        linkedbud: "Unlimited",
+        linkedbud: "Unlimited*",
         competitor: false,
       },
       {
@@ -320,31 +320,31 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       startingPrice: "$19.95/month",
       popularPlan: "Business",
       popularPlanPrice: "$14.95/month per profile",
-      notes: "AuthoredUp's pricing scales per profile, which can become expensive for teams. Linkedbud offers unlimited profiles, AI-led insights, and personalized scheduling in one plan.",
+      notes: "AuthoredUp's pricing scales per profile, which can become expensive for teams. linkedbud offers unlimited profiles, AI-led insights, and personalized scheduling in one plan.",
     },
     valueProps: [
       {
         icon: "📊",
         title: "Analytics that explain themselves",
         description:
-          "Linkedbud's AI highlights what outperformed and why, so you can double down without exporting data. AuthoredUp focuses on formatting and preview first, not AI-led insights into performance patterns.",
+          "linkedbud's AI highlights what outperformed and why, so you can double down without exporting data. AuthoredUp focuses on formatting and preview first, not AI-led insights into performance patterns.",
       },
       {
         icon: "⏰",
         title: "Timing that learns your audience",
         description:
-          "Linkedbud's scheduler adapts to what worked for you before, not generic best-time guesses. AuthoredUp offers scheduling but doesn't claim personalized timing based on your historical performance.",
+          "linkedbud's scheduler adapts to what worked for you before, not generic best-time guesses. AuthoredUp offers scheduling but doesn't claim personalized timing based on your historical performance.",
       },
       {
         icon: "🔒",
         title: "Built on the official LinkedIn API",
         description:
-          "Linkedbud publishes safely to profiles and pages with a public compliance page your reviewers will love. AuthoredUp positions as GDPR-compliant extension but doesn't explicitly claim Community Management API use or provide transparent compliance documentation.",
+          "linkedbud publishes safely to profiles and pages with a public compliance page your reviewers will love. AuthoredUp positions as GDPR-compliant extension but doesn't explicitly claim Community Management API use or provide transparent compliance documentation.",
       },
     ],
-    seoTitle: "Linkedbud vs AuthoredUp - Compare LinkedIn Content Tools",
+    seoTitle: "linkedbud vs AuthoredUp - Compare LinkedIn Content Tools",
     seoDescription:
-      "Compare Linkedbud and AuthoredUp for LinkedIn content creation. Linkedbud offers AI-led performance insights, personalized scheduling intelligence, and transparent API compliance that AuthoredUp doesn't emphasize.",
+      "Compare linkedbud and AuthoredUp for LinkedIn content creation. linkedbud offers AI-led performance insights, personalized scheduling intelligence, and transparent API compliance that AuthoredUp doesn't emphasize.",
   },
   easygen: {
     id: "easygen",
@@ -352,10 +352,10 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     displayName: "EasyGen",
     tagline: "Maybe EasyGen isn't so easy after all...",
     description:
-      "EasyGen offers AI-driven LinkedIn post generation via Chrome extension with a focus on creating engaging content. However, it explicitly states it never connects to the LinkedIn API, lacks native scheduling and analytics, and doesn't provide an end-to-end workflow like Linkedbud.",
-    heroTitle: "Linkedbud vs EasyGen",
+      "EasyGen offers AI-driven LinkedIn post generation via Chrome extension with a focus on creating engaging content. However, it explicitly states it never connects to the LinkedIn API, lacks native scheduling and analytics, and doesn't provide an end-to-end workflow like linkedbud.",
+    heroTitle: "linkedbud vs EasyGen",
     heroDescription:
-      "Linkedbud provides a complete LinkedIn-native workflow with API compliance, personalized scheduling, and AI-led analytics. EasyGen is a writer-focused extension that doesn't connect to LinkedIn's API and lacks scheduling and analytics features.",
+      "linkedbud provides a complete LinkedIn-native workflow with API compliance, personalized scheduling, and AI-led analytics. EasyGen is a writer-focused extension that doesn't connect to LinkedIn's API and lacks scheduling and analytics features.",
     features: [
       {
         feature: "LinkedIn API compliance transparency",
@@ -384,7 +384,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       },
       {
         feature: "AI-generated post ideas",
-        linkedbud: "Unlimited",
+        linkedbud: "Unlimited*",
         competitor: false,
       },
       {
@@ -405,31 +405,31 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     ],
     pricing: {
       startingPrice: "Pricing not publicly available",
-      notes: "EasyGen focuses solely on post generation via Chrome extension. Linkedbud provides a complete LinkedIn-native platform with API compliance, scheduling, analytics, and collaboration.",
+      notes: "EasyGen focuses solely on post generation via Chrome extension. linkedbud provides a complete LinkedIn-native platform with API compliance, scheduling, analytics, and collaboration.",
     },
     valueProps: [
       {
         icon: "🔒",
         title: "Built on the official LinkedIn API",
         description:
-          "Linkedbud publishes safely to profiles and pages with a public compliance page your reviewers will love. EasyGen's Chrome listing explicitly states it never connects to the LinkedIn API, limiting its capabilities.",
+          "linkedbud publishes safely to profiles and pages with a public compliance page your reviewers will love. EasyGen's Chrome listing explicitly states it never connects to the LinkedIn API, limiting its capabilities.",
       },
       {
         icon: "🔄",
         title: "One LinkedIn-native flow",
         description:
-          "Linkedbud provides an end-to-end workflow from idea to publish to insight, all in one focused workspace with compliance clarity. EasyGen is writer-first and extension-focused, not providing a complete publishing workflow.",
+          "linkedbud provides an end-to-end workflow from idea to publish to insight, all in one focused workspace with compliance clarity. EasyGen is writer-first and extension-focused, not providing a complete publishing workflow.",
       },
       {
         icon: "📊",
         title: "Analytics that explain themselves",
         description:
-          "Linkedbud's AI highlights what outperformed and why, so you can double down without exporting data. EasyGen doesn't provide analytics or performance tracking.",
+          "linkedbud's AI highlights what outperformed and why, so you can double down without exporting data. EasyGen doesn't provide analytics or performance tracking.",
       },
     ],
-    seoTitle: "Linkedbud vs EasyGen - Compare LinkedIn AI Content Tools",
+    seoTitle: "linkedbud vs EasyGen - Compare LinkedIn AI Content Tools",
     seoDescription:
-      "Compare Linkedbud and EasyGen for LinkedIn content creation. Linkedbud offers a complete LinkedIn-native platform with API compliance, scheduling, and AI-led analytics that EasyGen's extension-based approach can't match.",
+      "Compare linkedbud and EasyGen for LinkedIn content creation. linkedbud offers a complete LinkedIn-native platform with API compliance, scheduling, and AI-led analytics that EasyGen's extension-based approach can't match.",
   },
   redactai: {
     id: "redactai",
@@ -437,10 +437,10 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     displayName: "RedactAI",
     tagline: "Maybe RedactAI isn't so polished after all...",
     description:
-      "RedactAI provides AI-generated LinkedIn content with formatting and styling options, plus profile review features. However, it lacks LinkedIn API compliance transparency, personalized scheduling, AI-led performance insights, and doesn't provide a complete publishing workflow like Linkedbud.",
-    heroTitle: "Linkedbud vs RedactAI",
+      "RedactAI provides AI-generated LinkedIn content with formatting and styling options, plus profile review features. However, it lacks LinkedIn API compliance transparency, personalized scheduling, AI-led performance insights, and doesn't provide a complete publishing workflow like linkedbud.",
+    heroTitle: "linkedbud vs RedactAI",
     heroDescription:
-      "Linkedbud provides a complete LinkedIn-native workflow with API compliance, personalized scheduling, and AI-led analytics. RedactAI focuses on content generation and profile review, lacking scheduling intelligence and performance insights.",
+      "linkedbud provides a complete LinkedIn-native workflow with API compliance, personalized scheduling, and AI-led analytics. RedactAI focuses on content generation and profile review, lacking scheduling intelligence and performance insights.",
     features: [
       {
         feature: "LinkedIn API compliance transparency",
@@ -469,7 +469,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       },
       {
         feature: "AI-generated post ideas",
-        linkedbud: "Unlimited",
+        linkedbud: "Unlimited*",
         competitor: false,
       },
       {
@@ -490,31 +490,31 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     ],
     pricing: {
       startingPrice: "$11.90/month",
-      notes: "RedactAI starts at $11.90/month with post limits. Linkedbud provides a complete LinkedIn-native platform with API compliance, scheduling, and AI-led analytics without post limits.",
+      notes: "RedactAI starts at $11.90/month with post limits. linkedbud provides a complete LinkedIn-native platform with API compliance, scheduling, and AI-led analytics without post limits.",
     },
     valueProps: [
       {
         icon: "🔒",
         title: "Built on the official LinkedIn API",
         description:
-          "Linkedbud publishes safely to profiles and pages with a public compliance page your reviewers will love. RedactAI focuses on generator and profile review but doesn't explicitly claim Community Management API use or provide transparent compliance documentation.",
+          "linkedbud publishes safely to profiles and pages with a public compliance page your reviewers will love. RedactAI focuses on generator and profile review but doesn't explicitly claim Community Management API use or provide transparent compliance documentation.",
       },
       {
         icon: "🔄",
         title: "One LinkedIn-native flow",
         description:
-          "Linkedbud provides an end-to-end workflow from idea to publish to insight, all in one focused workspace with compliance clarity. RedactAI doesn't provide a full publishing workflow with scheduling and analytics.",
+          "linkedbud provides an end-to-end workflow from idea to publish to insight, all in one focused workspace with compliance clarity. RedactAI doesn't provide a full publishing workflow with scheduling and analytics.",
       },
       {
         icon: "📊",
         title: "Analytics that explain themselves",
         description:
-          "Linkedbud's AI highlights what outperformed and why, so you can double down without exporting data. RedactAI is a profile review tool and doesn't provide publishing analytics.",
+          "linkedbud's AI highlights what outperformed and why, so you can double down without exporting data. RedactAI is a profile review tool and doesn't provide publishing analytics.",
       },
     ],
-    seoTitle: "Linkedbud vs RedactAI - Compare LinkedIn Content Creation Tools",
+    seoTitle: "linkedbud vs RedactAI - Compare LinkedIn Content Creation Tools",
     seoDescription:
-      "Compare Linkedbud and RedactAI for LinkedIn content creation. Linkedbud offers a complete LinkedIn-native platform with API compliance, scheduling, and AI-led analytics that RedactAI's generator-focused approach can't match.",
+      "Compare linkedbud and RedactAI for LinkedIn content creation. linkedbud offers a complete LinkedIn-native platform with API compliance, scheduling, and AI-led analytics that RedactAI's generator-focused approach can't match.",
   },
   perfectpost: {
     id: "perfectpost",
@@ -523,9 +523,9 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     tagline: "Maybe PerfectPost isn't so perfect after all...",
     description:
       "PerfectPost offers LinkedIn scheduling, analytics, and utilities like unreplied tracker and exports. However, it lacks LinkedIn API compliance transparency, personalized scheduling intelligence, AI-led performance insights, and doesn't explicitly state company page support.",
-    heroTitle: "Linkedbud vs PerfectPost",
+    heroTitle: "linkedbud vs PerfectPost",
     heroDescription:
-      "Linkedbud offers transparent API compliance, personalized scheduling intelligence, and AI-led performance insights. PerfectPost provides scheduling and analytics but doesn't emphasize AI-led explanations or personalized timing based on your history.",
+      "linkedbud offers transparent API compliance, personalized scheduling intelligence, and AI-led performance insights. PerfectPost provides scheduling and analytics but doesn't emphasize AI-led explanations or personalized timing based on your history.",
     features: [
       {
         feature: "LinkedIn API compliance transparency",
@@ -554,7 +554,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       },
       {
         feature: "AI-generated post ideas",
-        linkedbud: "Unlimited",
+        linkedbud: "Unlimited*",
         competitor: "Unknown",
       },
       {
@@ -575,31 +575,31 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     ],
     pricing: {
       startingPrice: "$19/month",
-      notes: "PerfectPost starts at $19/month but doesn't emphasize AI-led performance explanations. Linkedbud offers transparent pricing with a free tier and clear feature sets including AI-led insights.",
+      notes: "PerfectPost starts at $19/month but doesn't emphasize AI-led performance explanations. linkedbud offers transparent pricing with a free tier and clear feature sets including AI-led insights.",
     },
     valueProps: [
       {
         icon: "📊",
         title: "Analytics that explain themselves",
         description:
-          "Linkedbud's AI highlights what outperformed and why, so you can double down without exporting data. PerfectPost offers analytics with exports and commenter insights but doesn't frame them as AI-led explanations of performance patterns.",
+          "linkedbud's AI highlights what outperformed and why, so you can double down without exporting data. PerfectPost offers analytics with exports and commenter insights but doesn't frame them as AI-led explanations of performance patterns.",
       },
       {
         icon: "⏰",
         title: "Timing that learns your audience",
         description:
-          "Linkedbud's scheduler adapts to what worked for you before, not generic best-time guesses. PerfectPost has scheduling features but doesn't claim history-based personalized timing.",
+          "linkedbud's scheduler adapts to what worked for you before, not generic best-time guesses. PerfectPost has scheduling features but doesn't claim history-based personalized timing.",
       },
       {
         icon: "🔒",
         title: "Built on the official LinkedIn API",
         description:
-          "Linkedbud publishes safely to profiles and pages with a public compliance page your reviewers will love. PerfectPost provides scheduling and analytics but doesn't explicitly claim Community Management API use or provide transparent compliance documentation.",
+          "linkedbud publishes safely to profiles and pages with a public compliance page your reviewers will love. PerfectPost provides scheduling and analytics but doesn't explicitly claim Community Management API use or provide transparent compliance documentation.",
       },
     ],
-    seoTitle: "Linkedbud vs PerfectPost - Compare LinkedIn Content Tools",
+    seoTitle: "linkedbud vs PerfectPost - Compare LinkedIn Content Tools",
     seoDescription:
-      "Compare Linkedbud and PerfectPost for LinkedIn content creation. Linkedbud offers transparent API compliance, personalized scheduling intelligence, and AI-led performance insights that PerfectPost doesn't emphasize.",
+      "Compare linkedbud and PerfectPost for LinkedIn content creation. linkedbud offers transparent API compliance, personalized scheduling intelligence, and AI-led performance insights that PerfectPost doesn't emphasize.",
   },
   postdrips: {
     id: "postdrips",
@@ -607,10 +607,10 @@ export const COMPETITORS: Record<string, CompetitorData> = {
     displayName: "Postdrips",
     tagline: "Maybe Postdrips isn't so comprehensive after all...",
     description:
-      "Postdrips offers AI-powered LinkedIn tools for content planning, creation, scheduling, and optimization at an affordable price. However, it lacks LinkedIn API compliance transparency, personalized scheduling intelligence, and AI-led performance insights that Linkedbud provides.",
-    heroTitle: "Linkedbud vs Postdrips",
+      "Postdrips offers AI-powered LinkedIn tools for content planning, creation, scheduling, and optimization at an affordable price. However, it lacks LinkedIn API compliance transparency, personalized scheduling intelligence, and AI-led performance insights that linkedbud provides.",
+    heroTitle: "linkedbud vs Postdrips",
     heroDescription:
-      "Linkedbud combines affordable pricing with personalized scheduling intelligence, AI-led performance insights, and transparent API compliance. Postdrips offers good writing and scheduling but doesn't emphasize AI-led insights or personalized timing.",
+      "linkedbud combines affordable pricing with personalized scheduling intelligence, AI-led performance insights, and transparent API compliance. Postdrips offers good writing and scheduling but doesn't emphasize AI-led insights or personalized timing.",
     features: [
       {
         feature: "LinkedIn API compliance transparency",
@@ -639,7 +639,7 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       },
       {
         feature: "AI-generated post ideas",
-        linkedbud: "Unlimited",
+        linkedbud: "Unlimited*",
         competitor: true,
       },
       {
@@ -662,31 +662,31 @@ export const COMPETITORS: Record<string, CompetitorData> = {
       startingPrice: "$20/month",
       popularPlan: "Premium",
       popularPlanPrice: "$20/month",
-      notes: "Postdrips offers affordable pricing at $20/month, but Linkedbud provides better value with AI-led insights, personalized scheduling, and transparent API compliance included.",
+      notes: "Postdrips offers affordable pricing at $20/month, but linkedbud provides better value with AI-led insights, personalized scheduling, and transparent API compliance included.",
     },
     valueProps: [
       {
         icon: "📊",
         title: "Analytics that explain themselves",
         description:
-          "Linkedbud's AI highlights what outperformed and why, so you can double down without exporting data. Postdrips offers previews and ideas but doesn't provide AI-led campaign insights messaging.",
+          "linkedbud's AI highlights what outperformed and why, so you can double down without exporting data. Postdrips offers previews and ideas but doesn't provide AI-led campaign insights messaging.",
       },
       {
         icon: "⏰",
         title: "Timing that learns your audience",
         description:
-          "Linkedbud's scheduler adapts to what worked for you before, not generic best-time guesses. Postdrips has scheduling features but doesn't claim history-based personalized timing.",
+          "linkedbud's scheduler adapts to what worked for you before, not generic best-time guesses. Postdrips has scheduling features but doesn't claim history-based personalized timing.",
       },
       {
         icon: "🔒",
         title: "Built on the official LinkedIn API",
         description:
-          "Linkedbud publishes safely to profiles and pages with a public compliance page your reviewers will love. Postdrips highlights tone mimic and scheduling but doesn't explicitly claim Community Management API use or provide transparent compliance documentation.",
+          "linkedbud publishes safely to profiles and pages with a public compliance page your reviewers will love. Postdrips highlights tone mimic and scheduling but doesn't explicitly claim Community Management API use or provide transparent compliance documentation.",
       },
     ],
-    seoTitle: "Linkedbud vs Postdrips - Compare LinkedIn Content Creation Tools",
+    seoTitle: "linkedbud vs Postdrips - Compare LinkedIn Content Creation Tools",
     seoDescription:
-      "Compare Linkedbud and Postdrips for LinkedIn content creation. Linkedbud offers personalized scheduling intelligence, AI-led performance insights, and transparent API compliance that Postdrips doesn't emphasize.",
+      "Compare linkedbud and Postdrips for LinkedIn content creation. linkedbud offers personalized scheduling intelligence, AI-led performance insights, and transparent API compliance that Postdrips doesn't emphasize.",
   },
 };
 

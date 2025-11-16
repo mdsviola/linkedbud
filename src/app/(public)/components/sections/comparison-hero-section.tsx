@@ -26,7 +26,7 @@ export function ComparisonHeroSection({ competitor }: ComparisonHeroSectionProps
           <SectionHeader
             align="center"
             as="h1"
-            eyebrow={`Linkedbud vs ${competitor.displayName}`}
+            eyebrow={`linkedbud vs ${competitor.displayName}`}
             title={competitor.heroTitle}
             description={competitor.heroDescription}
           />

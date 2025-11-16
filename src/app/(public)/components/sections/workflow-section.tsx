@@ -14,7 +14,7 @@ import {
 } from "@/marketing/data/workflow";
 import { fadeInUp, slideInFromRight } from "@/lib/motion-variants";
 
-// WorkflowSection outlines Linkedbud's three-step operating rhythm and supporting testimonial.
+// WorkflowSection outlines linkedbud's three-step operating rhythm and supporting testimonial.
 export function WorkflowSection() {
   return (
     <section className="relative overflow-hidden py-24">
@@ -24,7 +24,7 @@ export function WorkflowSection() {
           <motion.div {...fadeInUp({ distance: 16 })}>
             <SectionHeader
               title="A calm command center for every stage of LinkedIn content."
-              description="Build a repeatable rhythm that pairs strategic ideation with automated publishing. Linkedbud keeps your brand voice consistent across founders, leaders, and marketing teams."
+              description="Build a repeatable rhythm that pairs strategic ideation with automated publishing. linkedbud keeps your brand voice consistent across founders, leaders, and marketing teams."
             />
           </motion.div>
           {/* <motion.div {...fadeInUp({ delay: 0.18, distance: 16 })}>

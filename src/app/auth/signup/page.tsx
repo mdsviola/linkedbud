@@ -206,14 +206,14 @@ export default function SignUpPage() {
     return (
       <AuthLayout
         title="Join the waitlist"
-        subtitle="Be among the first to access Linkedbud"
+        subtitle="Be among the first to access linkedbud"
         footerText=""
         footerLinkText=""
         footerLinkHref=""
       >
         <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <p className="text-sm text-blue-800 dark:text-blue-200">
-            <strong>Early access:</strong> We&apos;re putting the finishing touches on Linkedbud. Join our waitlist and get <strong>20% off</strong> your first month&apos;s subscription when we launch!
+            <strong>Early access:</strong> We&apos;re putting the finishing touches on linkedbud. Join our waitlist and get <strong>20% off</strong> your first month&apos;s subscription when we launch!
           </p>
         </div>
 
@@ -241,7 +241,7 @@ export default function SignUpPage() {
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="Get started with Linkedbud for free"
+      subtitle="Get started with linkedbud for free"
       footerText="Already have an account?"
       footerLinkText="Sign in here"
       footerLinkHref={signInHref}
@@ -249,7 +249,7 @@ export default function SignUpPage() {
       <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg">
         <p className="text-sm text-blue-800 dark:text-blue-200">
           <strong>No credit card required:</strong> Get 3 free draft generations
-          per month, forever. Upgrade anytime for unlimited generations after.
+          per month, forever. Upgrade anytime for unlimited* generations after.
         </p>
       </div>
 

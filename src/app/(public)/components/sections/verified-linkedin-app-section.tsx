@@ -37,7 +37,7 @@ const LinkedInLogo = () => (
   </svg>
 );
 
-// VerifiedLinkedInAppSection displays information about Linkedbud being a verified LinkedIn app.
+// VerifiedLinkedInAppSection displays information about linkedbud being a verified LinkedIn app.
 export function VerifiedLinkedInAppSection() {
   return (
     <section className="relative overflow-hidden py-16 border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">

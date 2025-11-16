@@ -32,7 +32,7 @@ export function PaywallModal({ onClose }: PaywallModalProps) {
             Upgrade to {starterPricing.name}
           </DialogTitle>
           <DialogDescription>
-            You&apos;ve used your 3 free draft generations. Unlock unlimited drafts
+            You&apos;ve used your 3 free draft generations. Unlock unlimited* drafts
             and more features.
           </DialogDescription>
         </DialogHeader>

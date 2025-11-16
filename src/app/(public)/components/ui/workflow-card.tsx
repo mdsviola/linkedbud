@@ -1,6 +1,6 @@
 import type { WorkflowStep } from "@/marketing/types/marketing";
 
-// WorkflowCard outlines one stage of the Linkedbud operating rhythm.
+// WorkflowCard outlines one stage of the linkedbud operating rhythm.
 type WorkflowCardProps = WorkflowStep & {
   index: number;
 };

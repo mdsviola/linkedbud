@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { motion, useInView } from "framer-motion";
 
 import { Container } from "@/marketing/components/common";
 import { PricingCard, ValuePropCard } from "@/marketing/components/ui";
@@ -27,6 +28,65 @@ const getTierIcon = (planName: string): string | string[] => {
   return "👑";
 };
 
+// PricingCardWrapper handles animation for cards that may already be in view on mount
+function PricingCardWrapper({
+  plan,
+  icon,
+  index,
+}: {
+  plan: (typeof PRICING_PLANS)[0];
+  icon: string | string[];
+  index: number;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, amount: 0.1, margin: "0px" });
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+
+  // Check if element is in view on mount (after layout)
+  useEffect(() => {
+    // Use requestAnimationFrame to ensure layout is complete
+    const checkVisibility = () => {
+      if (ref.current) {
+        const rect = ref.current.getBoundingClientRect();
+        const isVisible =
+          rect.top < window.innerHeight &&
+          rect.bottom > 0 &&
+          rect.left < window.innerWidth &&
+          rect.right > 0;
+        if (isVisible) {
+          setShouldAnimate(true);
+        }
+      }
+    };
+
+    // Check immediately and after next frame to catch any layout changes
+    checkVisibility();
+    requestAnimationFrame(checkVisibility);
+  }, []);
+
+  // Also trigger animation when useInView detects it
+  useEffect(() => {
+    if (isInView) {
+      setShouldAnimate(true);
+    }
+  }, [isInView]);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 40 }}
+      animate={shouldAnimate || isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+      transition={{ duration: 0.6, delay: index * 0.08, ease: "easeOut" }}
+    >
+      <PricingCard
+        {...plan}
+        icon={icon}
+        badgeIcon={plan.badge ? "👑" : undefined}
+      />
+    </motion.div>
+  );
+}
+
 // PricingSection presents plan tiers, callouts, and supporting guarantees.
 export function PricingSection({ showBackground = true }: PricingSectionProps) {
   return (
@@ -43,16 +103,12 @@ export function PricingSection({ showBackground = true }: PricingSectionProps) {
           {PRICING_PLANS.map((plan, index) => {
             const icon = getTierIcon(plan.name);
             return (
-              <motion.div
+              <PricingCardWrapper
                 key={plan.name}
-                {...fadeInUp({ delay: index * 0.08, distance: 40 })}
-              >
-                <PricingCard
-                  {...plan}
-                  icon={icon}
-                  badgeIcon={plan.badge ? "👑" : undefined}
-                />
-              </motion.div>
+                plan={plan}
+                icon={icon}
+                index={index}
+              />
             );
           })}
         </div>
@@ -66,8 +122,15 @@ export function PricingSection({ showBackground = true }: PricingSectionProps) {
             href="mailto:hello@linkedbud.com"
             className="text-blue-600 underline underline-offset-4 dark:text-sky-400"
           >
-            Let’s talk.
+            Let&apos;s talk.
           </a>
+        </motion.p>
+
+        <motion.p
+          {...fadeInUp({ delay: 0.12, distance: 16 })}
+          className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400"
+        >
+          * Under a reasonable use policy. Usage may be capped if the system is exploited or abused.
         </motion.p>
 
         {PRICING_VALUE_PROPS.length ? (

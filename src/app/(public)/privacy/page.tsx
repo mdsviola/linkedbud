@@ -10,38 +10,38 @@ import {
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linkedbud.com";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Linkedbud",
+  title: "Privacy Policy | linkedbud",
   description:
-    "Linkedbud's privacy policy covering data collection, usage, security, and your rights. Learn how we protect your personal information and comply with GDPR and other privacy regulations.",
+    "linkedbud's privacy policy covering data collection, usage, security, and your rights. Learn how we protect your personal information and comply with GDPR and other privacy regulations.",
   keywords: [
-    "Linkedbud privacy policy",
+    "linkedbud privacy policy",
     "data security",
     "privacy compliance",
     "GDPR compliance",
     "data protection",
   ],
   openGraph: {
-    title: "Privacy Policy | Linkedbud",
+    title: "Privacy Policy | linkedbud",
     description:
-      "Linkedbud's privacy policy covering data collection, usage, security, and your rights.",
+      "linkedbud's privacy policy covering data collection, usage, security, and your rights.",
     url: `${baseUrl}/privacy`,
     type: "website",
     locale: "en_US",
-    siteName: "Linkedbud",
+    siteName: "linkedbud",
     images: [
       {
         url: `${baseUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "Linkedbud Privacy Policy",
+        alt: "linkedbud Privacy Policy",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Privacy Policy | Linkedbud",
+    title: "Privacy Policy | linkedbud",
     description:
-      "Linkedbud's privacy policy covering data collection, usage, security, and your rights.",
+      "linkedbud's privacy policy covering data collection, usage, security, and your rights.",
     images: [`${baseUrl}/og-image.png`],
   },
   alternates: {
@@ -64,19 +64,19 @@ const sections: Section[] = [
         </p>
         <h4 className="font-semibold text-slate-900 dark:text-white mb-2 mt-4">Account Information</h4>
         <p className="mb-4">
-          When you create an Linkedbud account, we collect your email address, name, and password. We use this information to create and manage your account, authenticate you, and communicate with you about our services.
+          When you create an linkedbud account, we collect your email address, name, and password. We use this information to create and manage your account, authenticate you, and communicate with you about our services.
         </p>
         <h4 className="font-semibold text-slate-900 dark:text-white mb-2 mt-4">Content and Workspace Data</h4>
         <p className="mb-4">
-          We store content you create within Linkedbud, including draft posts, scheduled content, preferences, and settings. This data is stored to provide our core functionality and allow you to access your work across devices.
+          We store content you create within linkedbud, including draft posts, scheduled content, preferences, and settings. This data is stored to provide our core functionality and allow you to access your work across devices.
         </p>
         <h4 className="font-semibold text-slate-900 dark:text-white mb-2 mt-4">Third-Party Service Data</h4>
         <p className="mb-4">
-          When you connect third-party social media accounts to Linkedbud, we access and store information necessary to provide our services, such as account identifiers, profile information, and content you authorize us to publish. This data is accessed only with your explicit consent through the third-party service&apos;s authorization process.
+          When you connect third-party social media accounts to linkedbud, we access and store information necessary to provide our services, such as account identifiers, profile information, and content you authorize us to publish. This data is accessed only with your explicit consent through the third-party service&apos;s authorization process.
         </p>
         <h4 className="font-semibold text-slate-900 dark:text-white mb-2 mt-4">Usage and Technical Information</h4>
         <p className="mb-4">
-          We automatically collect information about how you use Linkedbud, including device information, IP address, browser type, and usage patterns. We use this data to improve our services, diagnose technical issues, and ensure security.
+          We automatically collect information about how you use linkedbud, including device information, IP address, browser type, and usage patterns. We use this data to improve our services, diagnose technical issues, and ensure security.
         </p>
         <h4 className="font-semibold text-slate-900 dark:text-white mb-2 mt-4">Payment Information</h4>
         <p className="mb-4">
@@ -199,7 +199,7 @@ const sections: Section[] = [
           . We will respond to your request within 30 days.
         </p>
         <p className="mb-4">
-          You can also manage much of your information directly through your Linkedbud account settings, including disconnecting third-party services and deleting your content.
+          You can also manage much of your information directly through your linkedbud account settings, including disconnecting third-party services and deleting your content.
         </p>
       </>
     ),
@@ -230,7 +230,7 @@ const sections: Section[] = [
     content: (
       <>
         <p className="mb-4">
-          Linkedbud is not intended for children under the age of 18. We do not knowingly collect personal information from children under 18. If we become aware that we have collected personal information from a child under 18, we will take steps to delete such information promptly.
+          linkedbud is not intended for children under the age of 18. We do not knowingly collect personal information from children under 18. If we become aware that we have collected personal information from a child under 18, we will take steps to delete such information promptly.
         </p>
         <p className="mb-4">
           If you are a parent or guardian and believe your child has provided us with personal information, please contact us at{" "}
@@ -280,7 +280,7 @@ const sections: Section[] = [
           </a>
         </p>
         <p className="mb-4">
-          <strong>Data Controller:</strong> Linkedbud
+          <strong>Data Controller:</strong> linkedbud
         </p>
         <p className="mb-4">
           If you are located in the European Economic Area (EEA) or United Kingdom, you also have the right to lodge a complaint with your local data protection authority.
@@ -300,8 +300,8 @@ export default function PrivacyPage() {
   });
 
   const webPageSchema = generateWebPageSchema(
-    "Privacy Policy | Linkedbud",
-    "Linkedbud's privacy policy covering data collection, usage, security, and your rights.",
+    "Privacy Policy | linkedbud",
+    "linkedbud's privacy policy covering data collection, usage, security, and your rights.",
     `${baseUrl}/privacy`
   );
 
@@ -331,7 +331,7 @@ export default function PrivacyPage() {
               Your trust matters to us.
             </h1>
             <p className="mt-6 text-base leading-relaxed text-slate-600 dark:text-slate-300">
-              This privacy policy explains how Linkedbud collects, uses, stores, and protects your personal information. We are committed to transparency and protecting your privacy.
+              This privacy policy explains how linkedbud collects, uses, stores, and protects your personal information. We are committed to transparency and protecting your privacy.
             </p>
             <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
               <strong>Last Updated:</strong> {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -358,14 +358,14 @@ export default function PrivacyPage() {
                 11. Third-Party Service Integration Addendum
               </h2>
               <p className="mb-4">
-                This section provides additional details about how Linkedbud processes personal data obtained through third-party social media platform APIs (including but not limited to LinkedIn&apos;s APIs). This supplements our general privacy policy above and provides specific information required for compliance with third-party platform terms.
+                This section provides additional details about how linkedbud processes personal data obtained through third-party social media platform APIs (including but not limited to LinkedIn&apos;s APIs). This supplements our general privacy policy above and provides specific information required for compliance with third-party platform terms.
               </p>
 
               <h3 className="text-base font-semibold text-slate-900 dark:text-white mt-4 mb-2">
                 Data Controller and Contact
               </h3>
               <p className="mb-4">
-                <strong>Data Controller:</strong> Linkedbud<br />
+                <strong>Data Controller:</strong> linkedbud<br />
                 <strong>Contact for Data Protection Inquiries:</strong>{" "}
                 <a
                   href="mailto:privacy@linkedbud.com"
@@ -381,7 +381,7 @@ export default function PrivacyPage() {
               <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
                 <li><strong>Identity Information:</strong> LinkedIn Member ID (via OpenID Connect), basic profile information (name, profile picture) displayed in our UI</li>
                 <li><strong>Organization Data:</strong> Organization IDs and names for organization pages you administer</li>
-                <li><strong>Content:</strong> Post text you draft in Linkedbud and choose to publish to LinkedIn, LinkedIn post IDs</li>
+                <li><strong>Content:</strong> Post text you draft in linkedbud and choose to publish to LinkedIn, LinkedIn post IDs</li>
                 <li><strong>Analytics:</strong> Aggregated post metrics (impressions, reactions/likes, comments, shares, clicks, engagement rate), follower counts</li>
               </ul>
               <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
@@ -421,7 +421,7 @@ export default function PrivacyPage() {
                 Your Rights (GDPR)
               </h3>
               <p className="mb-4">
-                Under GDPR, you have the right to access, rectify, erase, restrict processing, object to processing, and data portability with respect to your LinkedIn data processed by Linkedbud. To exercise these rights, contact us at{" "}
+                Under GDPR, you have the right to access, rectify, erase, restrict processing, object to processing, and data portability with respect to your LinkedIn data processed by linkedbud. To exercise these rights, contact us at{" "}
                 <a
                   href="mailto:privacy@linkedbud.com"
                   className="text-blue-600 hover:underline dark:text-blue-400"
@@ -435,22 +435,22 @@ export default function PrivacyPage() {
                 Revocation and Deletion
               </h3>
               <p className="mb-4">
-                You can revoke Linkedbud&apos;s access to your LinkedIn data at any time:
+                You can revoke linkedbud&apos;s access to your LinkedIn data at any time:
               </p>
               <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
-                <li><strong>In Linkedbud:</strong> Go to Settings → Integrations → Disconnect LinkedIn. This immediately deletes stored access tokens and organization mappings.</li>
-                <li><strong>On LinkedIn:</strong> LinkedIn Settings & Privacy → Data privacy → Other applications → Permitted services → Revoke access for Linkedbud.</li>
-                <li><strong>Account Deletion:</strong> Deleting your Linkedbud account removes all LinkedIn-related data we store (tokens, organization mappings, post IDs, metrics, drafts).</li>
+                <li><strong>In linkedbud:</strong> Go to Settings → Integrations → Disconnect LinkedIn. This immediately deletes stored access tokens and organization mappings.</li>
+                <li><strong>On LinkedIn:</strong> LinkedIn Settings & Privacy → Data privacy → Other applications → Permitted services → Revoke access for linkedbud.</li>
+                <li><strong>Account Deletion:</strong> Deleting your linkedbud account removes all LinkedIn-related data we store (tokens, organization mappings, post IDs, metrics, drafts).</li>
               </ul>
               <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
-                <strong>Note:</strong> Deleting data in Linkedbud does not automatically delete content you have already published to LinkedIn. You can remove such content directly on LinkedIn.
+                <strong>Note:</strong> Deleting data in linkedbud does not automatically delete content you have already published to LinkedIn. You can remove such content directly on LinkedIn.
               </p>
 
               <h3 className="text-base font-semibold text-slate-900 dark:text-white mt-4 mb-2">
                 Third-Party Terms
               </h3>
               <p className="mb-4">
-                Your use of LinkedIn data through Linkedbud is also subject to LinkedIn&apos;s terms and policies:
+                Your use of LinkedIn data through linkedbud is also subject to LinkedIn&apos;s terms and policies:
               </p>
               <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
                 <li>

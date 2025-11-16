@@ -21,7 +21,7 @@ import { PRICING_PLANS } from "@/marketing/data/pricing";
 import { getTierFromPriceId, getTierDisplayName } from "@/lib/tier-utils";
 
 const getLimitText = (limit: number, label: string) => {
-  if (limit === -1) return `Unlimited ${label}`;
+  if (limit === -1) return `Unlimited* ${label}`;
   if (limit === 0) return `No ${label}`;
   return `${limit} ${label}`;
 };
@@ -91,8 +91,8 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
     if (searchParams.get("success") === "true") {
       const pricing = getStarterPricing();
       toast({
-        title: `Welcome to Linkedbud ${pricing.name}!`,
-        description: `Your subscription is now active. You have unlimited access to all ${pricing.name} features.`,
+        title: `Welcome to linkedbud ${pricing.name}!`,
+        description: `Your subscription is now active. You have unlimited* access to all ${pricing.name} features.`,
         variant: "success",
       });
       // Clear the URL parameter
@@ -294,7 +294,7 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
         <p className="text-xl text-gray-600">
           {isSubscribed
             ? "Manage your subscription and billing"
-            : "Start free, upgrade when you're ready for unlimited drafts"}
+            : "Start free, upgrade when you're ready for unlimited* drafts"}
         </p>
       </div>
 
@@ -364,6 +364,11 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
         })}
       </div>
 
+      {/* Footnote */}
+      <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
+        * Under a reasonable use policy. Usage may be capped if the system is exploited or abused.
+      </p>
+
       {/* FAQ Section */}
       <div className="mt-16">
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
@@ -380,7 +385,7 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
               10 Polish with AI actions per month, 1 ideas bubble board
               generation per month (up to 15 AI generated ideas), and 1 AI
               analytics report per month (30d timeframe only). You can publish
-              up to 2 posts per month. Perfect for testing Linkedbud with real
+              up to 2 posts per month. Perfect for testing linkedbud with real
               LinkedIn posting.
             </p>
           </div>

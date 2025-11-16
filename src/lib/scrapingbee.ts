@@ -99,7 +99,7 @@ async function attemptScraping(
   const response = await fetch(apiUrl, {
     method: "GET",
     headers: {
-      "User-Agent": "Linkedbud/1.0",
+      "User-Agent": "linkedbud/1.0",
     },
     // Add timeout to prevent hanging requests
     signal: AbortSignal.timeout(60000), // 60 second timeout

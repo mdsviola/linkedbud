@@ -13,13 +13,13 @@ export async function POST(request: NextRequest) {
     // Plan names: "Free", "Creator Lite", "Creator Pro", "Growth" (legacy: "Lite", "Starter" also supported)
     // Tier names: "FREE", "LITE", "STARTER", "GROWTH"
     const planToTierMap: Record<string, { tier: string; variantEnvKey: string; displayName: string }> = {
-      "Free": { tier: "FREE", variantEnvKey: "", displayName: "Linkedbud Free" },
-      "Creator Lite": { tier: "LITE", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_LITE", displayName: "Linkedbud Creator Lite" },
-      "Creator Pro": { tier: "STARTER", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_PRO", displayName: "Linkedbud Creator Pro" },
-      "Growth": { tier: "GROWTH", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_GROWTH", displayName: "Linkedbud Growth" },
+      "Free": { tier: "FREE", variantEnvKey: "", displayName: "linkedbud Free" },
+      "Creator Lite": { tier: "LITE", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_LITE", displayName: "linkedbud Creator Lite" },
+      "Creator Pro": { tier: "STARTER", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_PRO", displayName: "linkedbud Creator Pro" },
+      "Growth": { tier: "GROWTH", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_GROWTH", displayName: "linkedbud Growth" },
       // Legacy plan names for backward compatibility
-      "Lite": { tier: "LITE", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_LITE", displayName: "Linkedbud Creator Lite" },
-      "Starter": { tier: "STARTER", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_PRO", displayName: "Linkedbud Creator Pro" },
+      "Lite": { tier: "LITE", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_LITE", displayName: "linkedbud Creator Lite" },
+      "Starter": { tier: "STARTER", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_PRO", displayName: "linkedbud Creator Pro" },
     };
 
     // Default to Creator Pro if no plan specified

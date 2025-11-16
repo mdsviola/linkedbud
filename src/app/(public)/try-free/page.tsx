@@ -15,7 +15,7 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linkedbud.com";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Try Linkedbud Free - Your AI LinkedIn Co-Pilot",
+    absolute: "Try linkedbud Free - Your AI LinkedIn Co-Pilot",
   },
   description:
     "Start creating standout LinkedIn content with AI. Free sign-up, no credit card required. Get 3 free draft generations per month, forever.",
@@ -27,25 +27,25 @@ export const metadata: Metadata = {
     "content automation",
   ],
   openGraph: {
-    title: "Try Linkedbud Free - Your AI LinkedIn Co-Pilot",
+    title: "Try linkedbud Free - Your AI LinkedIn Co-Pilot",
     description:
       "Start creating standout LinkedIn content with AI. Free sign-up, no credit card required.",
     url: `${baseUrl}/try-free`,
-    siteName: "Linkedbud",
+    siteName: "linkedbud",
     locale: "en_US",
     images: [
       {
         url: `${baseUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "Linkedbud dashboard preview",
+        alt: "linkedbud dashboard preview",
       },
     ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Try Linkedbud Free - Your AI LinkedIn Co-Pilot",
+    title: "Try linkedbud Free - Your AI LinkedIn Co-Pilot",
     description:
       "Start creating standout LinkedIn content with AI. Free sign-up, no credit card required.",
     images: [`${baseUrl}/og-image.png`],
@@ -64,7 +64,7 @@ const benefits = [
 export default function TryFreePage() {
   const organizationSchema = generateOrganizationSchema();
   const webpageSchema = generateWebPageSchema(
-    "Try Linkedbud Free - Your AI LinkedIn Co-Pilot",
+    "Try linkedbud Free - Your AI LinkedIn Co-Pilot",
     "Start creating standout LinkedIn content with AI. Free sign-up, no credit card required.",
     `${baseUrl}/try-free`
   );
@@ -122,7 +122,7 @@ export default function TryFreePage() {
                 <Link href="/auth/signup">Try Free</Link>
               </Button>
               <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
-                No credit card required • 3 free drafts per month, forever
+                No credit card required • 2 free posts per month, forever
               </p>
             </div>
 
@@ -131,7 +131,7 @@ export default function TryFreePage() {
               <div className="relative w-full">
                 <Image
                   src="/dashboard_screenshot.png"
-                  alt="Linkedbud Dashboard"
+                  alt="linkedbud Dashboard"
                   width={1200}
                   height={800}
                   className="w-full h-auto"

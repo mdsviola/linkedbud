@@ -20,10 +20,10 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linkedbud.com";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Linkedbud - Your intelligent LinkedIn co-pilot",
+    absolute: "linkedbud - Your intelligent LinkedIn co-pilot",
   },
   description:
-    "Linkedbud is the AI-powered LinkedIn assistant for teams who want to ideate, create, and schedule standout posts in record time.",
+    "linkedbud is the AI-powered LinkedIn assistant for teams who want to ideate, create, and schedule standout posts in record time.",
   keywords: [
     "LinkedIn",
     "AI content creation",
@@ -33,27 +33,27 @@ export const metadata: Metadata = {
     "LinkedIn marketing",
   ],
   openGraph: {
-    title: "Linkedbud - Your intelligent LinkedIn co-pilot",
+    title: "linkedbud - Your intelligent LinkedIn co-pilot",
     description:
-      "Linkedbud helps you ideate, draft, and schedule LinkedIn content with AI guidance and insight-rich analytics.",
+      "linkedbud helps you ideate, draft, and schedule LinkedIn content with AI guidance and insight-rich analytics.",
     url: `${baseUrl}/`,
-    siteName: "Linkedbud",
+    siteName: "linkedbud",
     locale: "en_US",
     images: [
       {
         url: `${baseUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "Linkedbud marketing site preview",
+        alt: "linkedbud marketing site preview",
       },
     ],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Linkedbud - Your intelligent LinkedIn co-pilot",
+    title: "linkedbud - Your intelligent LinkedIn co-pilot",
     description:
-      "Automate LinkedIn ideation, drafting, and scheduling with Linkedbud's AI command center for modern teams.",
+      "Automate LinkedIn ideation, drafting, and scheduling with linkedbud's AI command center for modern teams.",
     images: [`${baseUrl}/og-image.png`],
   },
   alternates: {
@@ -65,8 +65,8 @@ export default function LandingPage() {
   const organizationSchema = generateOrganizationSchema();
   const softwareSchema = generateSoftwareApplicationSchema();
   const webpageSchema = generateWebPageSchema(
-    "Linkedbud - Your intelligent LinkedIn co-pilot",
-    "Linkedbud is the AI-powered LinkedIn assistant for teams who want to ideate, create, and schedule standout posts in record time.",
+    "linkedbud - Your intelligent LinkedIn co-pilot",
+    "linkedbud is the AI-powered LinkedIn assistant for teams who want to ideate, create, and schedule standout posts in record time.",
     `${baseUrl}/`,
     {
       image: {

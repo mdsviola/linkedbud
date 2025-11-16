@@ -11,7 +11,7 @@ import { PageDescription } from "@/components/ui/page-description";
 import { BarChart3, FileText, Calendar, TrendingUp } from "lucide-react";
 import { AnalyticsWidget } from "@/components/analytics-widget";
 import { IdeasShowcase, Idea } from "@/components/ideas-showcase";
-import { truncateContent } from "@/lib/utils";
+import { truncateContent, getOrganizationName } from "@/lib/utils";
 
 interface Post {
   id: number;
@@ -58,6 +58,9 @@ export function DashboardClient() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [upcomingScheduledPosts, setUpcomingScheduledPosts] = useState<Post[]>(
     []
+  );
+  const [organizations, setOrganizations] = useState<Record<string, string>>(
+    {}
   );
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(
     null
@@ -220,6 +223,7 @@ export function DashboardClient() {
 
         if (scheduledResponse.ok) {
           setUpcomingScheduledPosts(scheduledResult.posts || []);
+          setOrganizations(scheduledResult.organizations || {});
         } else {
           console.warn(
             "Failed to fetch scheduled posts:",
@@ -266,34 +270,6 @@ export function DashboardClient() {
     });
   };
 
-  const getOrganizationName = (post: Post) => {
-    // Handle case where publish_target might be null/undefined for existing posts
-    if (post.publish_target === "personal") {
-      return "Personal";
-    }
-
-    // Check if there's a linkedin_post with organization_id
-    let organizationId = post.linkedin_posts?.find(
-      (lp) => lp.organization_id
-    )?.organization_id;
-
-    // If no organization_id in linkedin_posts, use publish_target
-    if (
-      !organizationId &&
-      post.publish_target &&
-      post.publish_target !== "personal"
-    ) {
-      organizationId = post.publish_target;
-    }
-
-    // If still no organization info, default to "Personal" for scheduled posts
-    if (!organizationId) {
-      return "Personal";
-    }
-
-    // For now, just show the organization ID or "Organization"
-    return organizationId || "Organization";
-  };
 
   if (loading) {
     return (
@@ -453,7 +429,7 @@ export function DashboardClient() {
                             {formatScheduledDate(post.scheduled_publish_date!)}
                           </span>
                           <span className="text-xs text-gray-500">
-                            • {getOrganizationName(post)}
+                            • {getOrganizationName(post, organizations)}
                           </span>
                         </div>
                       </div>

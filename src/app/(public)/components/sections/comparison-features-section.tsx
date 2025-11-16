@@ -33,8 +33,8 @@ export function ComparisonFeaturesSection({ competitor }: ComparisonFeaturesSect
         <SectionHeader
           align="center"
           eyebrow="Feature comparison"
-          title={`${competitor.displayName} vs Linkedbud`}
-          description="When comparing functionalities, Linkedbud offers a comprehensive LinkedIn command center with collaborative features and advanced analytics that set it apart."
+          title="Side-by-side feature comparison"
+          description="See how linkedbud compares feature-by-feature with comprehensive capabilities that set it apart."
         />
 
         <motion.div
@@ -49,7 +49,7 @@ export function ComparisonFeaturesSection({ competitor }: ComparisonFeaturesSect
                     Features
                   </th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900 dark:text-white">
-                    Linkedbud
+                    linkedbud
                   </th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-slate-900 dark:text-white">
                     {competitor.displayName}

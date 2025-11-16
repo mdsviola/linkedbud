@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: competitor.seoTitle,
   description: competitor.seoDescription,
   keywords: [
-    "Linkedbud vs EasyGen",
+    "linkedbud vs EasyGen",
     "LinkedIn content tools comparison",
     "EasyGen alternative",
     "LinkedIn content creation",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     title: competitor.seoTitle,
     description: competitor.seoDescription,
     url: `${baseUrl}/comparison/easygen`,
-    siteName: "Linkedbud",
+    siteName: "linkedbud",
     locale: "en_US",
     type: "website",
     images: [

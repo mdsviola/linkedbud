@@ -23,7 +23,7 @@ export const COMPANY_VALUES: CompanyValue[] = [
   {
     title: "Ship with heart",
     description:
-      "Automation should amplify human voices, not replace them. Linkedbud keeps creators in the loop and celebrates their POV.",
+      "Automation should amplify human voices, not replace them. linkedbud keeps creators in the loop and celebrates their POV.",
   },
 ];
 
@@ -32,11 +32,11 @@ export const COMPANY_MILESTONES: CompanyMilestone[] = [
     year: "2025",
     title: "Building the foundation",
     description:
-      "We started building Linkedbud to solve the challenge of creating consistent, high-quality LinkedIn content. Our team began developing AI-assisted workflows that keep your voice at the center while automating the tedious parts of content creation.",
+      "We started building linkedbud to solve the challenge of creating consistent, high-quality LinkedIn content. Our team began developing AI-assisted workflows that keep your voice at the center while automating the tedious parts of content creation.",
   },
   {
     year: "2026",
-    title: "Linkedbud today",
+    title: "linkedbud today",
     description:
       "We're expanding the platform so distributed teams can ideate, approve, and schedule content in rhythm with the conversations happening on LinkedIn right now. Early users are already seeing how AI-powered tools amplify their storytelling.",
   },

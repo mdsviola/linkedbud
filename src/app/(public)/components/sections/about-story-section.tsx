@@ -7,7 +7,7 @@ import { SectionHeader } from "@/marketing/components/ui";
 import { COMPANY_MILESTONES, COMPANY_VALUES } from "@/marketing/data/about";
 import { fadeInUp, scaleFadeIn } from "@/lib/motion-variants";
 
-// AboutStorySection shares the Linkedbud origin narrative, values, and timeline.
+// AboutStorySection shares the linkedbud origin narrative, values, and timeline.
 export function AboutStorySection() {
   return (
     <div className="space-y-20">
@@ -19,7 +19,7 @@ export function AboutStorySection() {
           <div className="space-y-6">
             <SectionHeader
               title="We believe LinkedIn deserves tools crafted for modern storytellers."
-              description="Linkedbud was born from teams who needed to contribute ideas, share wins, and build authority without spending hours crafting each post. We blend thoughtful design with an AI layer that keeps your voice at the center. Our mission is to help professionals share better ideas faster—so the best voices stay in the conversation, not buried in drafts."
+              description="linkedbud was born from teams who needed to contribute ideas, share wins, and build authority without spending hours crafting each post. We blend thoughtful design with an AI layer that keeps your voice at the center. Our mission is to help professionals share better ideas faster—so the best voices stay in the conversation, not buried in drafts."
             />
           </div>
 

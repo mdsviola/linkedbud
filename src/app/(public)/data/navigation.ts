@@ -15,12 +15,12 @@ export const FOOTER_LINKS = [
 ];
 
 export const COMPARISON_LINKS = [
-  { href: "/comparison/magicpost", label: "Linkedbud vs MagicPost" },
-  { href: "/comparison/taplio", label: "Linkedbud vs Taplio" },
-  { href: "/comparison/authoredup", label: "Linkedbud vs AuthoredUp" },
-  { href: "/comparison/easygen", label: "Linkedbud vs EasyGen" },
-  { href: "/comparison/redactai", label: "Linkedbud vs RedactAI" },
-  { href: "/comparison/perfectpost", label: "Linkedbud vs PerfectPost" },
-  { href: "/comparison/postdrips", label: "Linkedbud vs Postdrips" },
+  { href: "/comparison/magicpost", label: "linkedbud vs MagicPost" },
+  { href: "/comparison/taplio", label: "linkedbud vs Taplio" },
+  { href: "/comparison/authoredup", label: "linkedbud vs AuthoredUp" },
+  { href: "/comparison/easygen", label: "linkedbud vs EasyGen" },
+  { href: "/comparison/redactai", label: "linkedbud vs RedactAI" },
+  { href: "/comparison/perfectpost", label: "linkedbud vs PerfectPost" },
+  { href: "/comparison/postdrips", label: "linkedbud vs Postdrips" },
 ];
 

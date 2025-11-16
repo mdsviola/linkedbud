@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: competitor.seoTitle,
   description: competitor.seoDescription,
   keywords: [
-    "Linkedbud vs Taplio",
+    "linkedbud vs Taplio",
     "LinkedIn content tools comparison",
     "Taplio alternative",
     "LinkedIn content creation",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     title: competitor.seoTitle,
     description: competitor.seoDescription,
     url: `${baseUrl}/comparison/taplio`,
-    siteName: "Linkedbud",
+    siteName: "linkedbud",
     locale: "en_US",
     type: "website",
     images: [

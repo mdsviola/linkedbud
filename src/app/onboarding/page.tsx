@@ -407,7 +407,7 @@ export default function OnboardingPage() {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white mb-4">
-            Welcome to Linkedbud! 🎉
+            Welcome to linkedbud! 🎉
           </h1>
           <p className="text-lg text-slate-600 dark:text-slate-400">Let&apos;s get you set up</p>
         </div>

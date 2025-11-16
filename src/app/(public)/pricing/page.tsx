@@ -19,38 +19,38 @@ import { getPricingConfig } from "@/lib/pricing-config";
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linkedbud.com";
 
 export const metadata: Metadata = {
-  title: "Linkedbud pricing — Flexible plans for LinkedIn growth",
+  title: "linkedbud pricing — Flexible plans for LinkedIn growth",
   description:
-    "Compare Linkedbud pricing plans. Start free, then unlock AI drafting, collaboration, and analytics designed for LinkedIn teams.",
+    "Compare linkedbud pricing plans. Start free, then unlock AI drafting, collaboration, and analytics designed for LinkedIn teams.",
   keywords: [
-    "Linkedbud pricing",
+    "linkedbud pricing",
     "LinkedIn tools pricing",
     "social media management cost",
     "AI content creation plans",
     "LinkedIn scheduler pricing",
   ],
   openGraph: {
-    title: "Linkedbud pricing — Flexible plans for LinkedIn growth",
+    title: "linkedbud pricing — Flexible plans for LinkedIn growth",
     description:
-      "Choose the Linkedbud plan that matches your LinkedIn goals. Seamless upgrades, transparent pricing, and a scale plan for teams.",
+      "Choose the linkedbud plan that matches your LinkedIn goals. Seamless upgrades, transparent pricing, and a scale plan for teams.",
     url: `${baseUrl}/pricing`,
     type: "website",
     locale: "en_US",
-    siteName: "Linkedbud",
+    siteName: "linkedbud",
     images: [
       {
         url: `${baseUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "Linkedbud pricing - Flexible plans for LinkedIn growth",
+        alt: "linkedbud pricing - Flexible plans for LinkedIn growth",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Linkedbud pricing — Flexible plans for LinkedIn growth",
+    title: "linkedbud pricing — Flexible plans for LinkedIn growth",
     description:
-      "Choose the Linkedbud plan that matches your LinkedIn goals. Seamless upgrades, transparent pricing, and a scale plan for teams.",
+      "Choose the linkedbud plan that matches your LinkedIn goals. Seamless upgrades, transparent pricing, and a scale plan for teams.",
     images: [`${baseUrl}/og-image.png`],
   },
   alternates: {
@@ -90,7 +90,7 @@ export default async function PricingPage() {
       ? pricingConfig.tiers.GROWTH.monthlyPrice
       : 39;
   const productSchema = generateProductSchema(
-    "Linkedbud",
+    "linkedbud",
     "AI-powered LinkedIn assistant with flexible pricing plans",
     `${baseUrl}/pricing`,
     [
@@ -102,8 +102,8 @@ export default async function PricingPage() {
   );
 
   const webPageSchema = generateWebPageSchema(
-    "Linkedbud Pricing",
-    "Compare Linkedbud pricing plans. Start free, then unlock AI drafting, collaboration, and analytics designed for LinkedIn teams.",
+    "linkedbud Pricing",
+    "Compare linkedbud pricing plans. Start free, then unlock AI drafting, collaboration, and analytics designed for LinkedIn teams.",
     `${baseUrl}/pricing`
   );
 

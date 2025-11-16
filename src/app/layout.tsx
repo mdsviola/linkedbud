@@ -18,8 +18,8 @@ const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Linkedbud - AI-Powered Content Creation",
-    template: "%s | Linkedbud",
+    default: "linkedbud - AI-Powered Content Creation",
+    template: "%s | linkedbud",
   },
   description:
     "AI-powered LinkedIn assistant for creating, scheduling, and analyzing posts. Start free with unlimited drafts.",
@@ -33,8 +33,8 @@ export const metadata: Metadata = {
     "AI writing assistant",
     "LinkedIn marketing",
   ],
-  authors: [{ name: "Linkedbud" }],
-  creator: "Linkedbud",
+  authors: [{ name: "linkedbud" }],
+  creator: "linkedbud",
   verification: googleSiteVerification
     ? {
         google: googleSiteVerification,
@@ -44,8 +44,8 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: baseUrl,
-    siteName: "Linkedbud",
-    title: "Linkedbud - AI-Powered LinkedIn Content Creation",
+    siteName: "linkedbud",
+    title: "linkedbud - AI-Powered LinkedIn Content Creation",
     description:
       "AI-powered LinkedIn assistant for creating, scheduling, and analyzing posts. Start free with unlimited drafts.",
     images: [
@@ -53,13 +53,13 @@ export const metadata: Metadata = {
         url: `${baseUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "Linkedbud - AI-Powered LinkedIn Content Creation",
+        alt: "linkedbud - AI-Powered LinkedIn Content Creation",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Linkedbud - AI-Powered LinkedIn Content Creation",
+    title: "linkedbud - AI-Powered LinkedIn Content Creation",
     description:
       "AI-powered LinkedIn assistant for creating, scheduling, and analyzing posts. Start free with unlimited drafts.",
     images: [`${baseUrl}/og-image.png`],

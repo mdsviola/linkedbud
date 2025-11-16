@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: competitor.seoTitle,
   description: competitor.seoDescription,
   keywords: [
-    "Linkedbud vs MagicPost",
+    "linkedbud vs MagicPost",
     "LinkedIn content tools comparison",
     "MagicPost alternative",
     "LinkedIn content creation",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     title: competitor.seoTitle,
     description: competitor.seoDescription,
     url: `${baseUrl}/comparison/magicpost`,
-    siteName: "Linkedbud",
+    siteName: "linkedbud",
     locale: "en_US",
     type: "website",
     images: [

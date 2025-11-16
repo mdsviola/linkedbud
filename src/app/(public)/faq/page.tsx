@@ -13,38 +13,38 @@ import {
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linkedbud.com";
 
 export const metadata: Metadata = {
-  title: "Linkedbud FAQ — Answers for your LinkedIn workflow",
+  title: "linkedbud FAQ — Answers for your LinkedIn workflow",
   description:
-    "Find answers about Linkedbud's AI LinkedIn assistant: collaboration, integrations, security, pricing, and early access roadmap.",
+    "Find answers about linkedbud's AI LinkedIn assistant: collaboration, integrations, security, pricing, and early access roadmap.",
   keywords: [
-    "Linkedbud FAQ",
+    "linkedbud FAQ",
     "LinkedIn tools questions",
     "AI content creation help",
     "social media management FAQ",
     "LinkedIn scheduler support",
   ],
   openGraph: {
-    title: "Linkedbud FAQ — Answers for your LinkedIn workflow",
+    title: "linkedbud FAQ — Answers for your LinkedIn workflow",
     description:
-      "Find answers about Linkedbud's AI LinkedIn assistant: collaboration, integrations, security, pricing, and early access roadmap.",
+      "Find answers about linkedbud's AI LinkedIn assistant: collaboration, integrations, security, pricing, and early access roadmap.",
     url: `${baseUrl}/faq`,
     type: "website",
     locale: "en_US",
-    siteName: "Linkedbud",
+    siteName: "linkedbud",
     images: [
       {
         url: `${baseUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "Linkedbud FAQ - Answers for your LinkedIn workflow",
+        alt: "linkedbud FAQ - Answers for your LinkedIn workflow",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Linkedbud FAQ — Answers for your LinkedIn workflow",
+    title: "linkedbud FAQ — Answers for your LinkedIn workflow",
     description:
-      "Find answers about Linkedbud's AI LinkedIn assistant: collaboration, integrations, security, pricing, and early access roadmap.",
+      "Find answers about linkedbud's AI LinkedIn assistant: collaboration, integrations, security, pricing, and early access roadmap.",
     images: [`${baseUrl}/og-image.png`],
   },
   alternates: {
@@ -59,8 +59,8 @@ export default function FAQPage() {
   ]);
   const faqSchema = generateFAQPageSchema(FAQ_ITEMS);
   const webPageSchema = generateWebPageSchema(
-    "Linkedbud FAQ",
-    "Find answers about Linkedbud's AI LinkedIn assistant: collaboration, integrations, security, pricing, and early access roadmap.",
+    "linkedbud FAQ",
+    "Find answers about linkedbud's AI LinkedIn assistant: collaboration, integrations, security, pricing, and early access roadmap.",
     `${baseUrl}/faq`
   );
 
@@ -97,7 +97,7 @@ export default function FAQPage() {
               align="center"
               as="h1"
               title="Answers for creators who live on LinkedIn."
-              description="We gathered the most common questions from founders, consultants, and marketing teams exploring Linkedbud. Need something else? Email us anytime."
+              description="We gathered the most common questions from founders, consultants, and marketing teams exploring linkedbud. Need something else? Email us anytime."
             />
           </Container>
         </section>

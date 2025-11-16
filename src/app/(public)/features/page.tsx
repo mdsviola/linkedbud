@@ -17,11 +17,11 @@ import {
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linkedbud.com";
 
 export const metadata: Metadata = {
-  title: "Linkedbud features — LinkedIn-native ideation, drafting, analytics",
+  title: "linkedbud features — Article discovery, AI drafting, scheduling, analytics",
   description:
-    "Explore Linkedbud's end-to-end workflows for LinkedIn growth: idea generation, AI drafting, collaborative scheduling, and deep analytics.",
+    "Explore linkedbud's features for LinkedIn content: article discovery from RSS feeds, AI-powered post generation, scheduling, and performance analytics.",
   keywords: [
-    "Linkedbud features",
+    "linkedbud features",
     "LinkedIn tools features",
     "AI content creation tools",
     "social media management features",
@@ -29,27 +29,27 @@ export const metadata: Metadata = {
     "content analytics",
   ],
   openGraph: {
-    title: "Linkedbud features — LinkedIn-native ideation, drafting, analytics",
+    title: "linkedbud features — Article discovery, AI drafting, scheduling, analytics",
     description:
-      "See how Linkedbud powers LinkedIn content from the first spark of an idea to performance insights that fuel the next post.",
+      "Discover articles, generate LinkedIn posts with AI, schedule publication, and track performance with detailed analytics.",
     url: `${baseUrl}/features`,
     type: "website",
     locale: "en_US",
-    siteName: "Linkedbud",
+    siteName: "linkedbud",
     images: [
       {
         url: `${baseUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "Linkedbud features - LinkedIn-native ideation, drafting, analytics",
+        alt: "linkedbud features - Article discovery, AI drafting, scheduling, analytics",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Linkedbud features — LinkedIn-native ideation, drafting, analytics",
+    title: "linkedbud features — Article discovery, AI drafting, scheduling, analytics",
     description:
-      "See how Linkedbud powers LinkedIn content from the first spark of an idea to performance insights that fuel the next post.",
+      "Discover articles, generate LinkedIn posts with AI, schedule publication, and track performance with detailed analytics.",
     images: [`${baseUrl}/og-image.png`],
   },
   alternates: {
@@ -64,12 +64,12 @@ export default function FeaturesPage() {
   ]);
   const softwareSchema = generateSoftwareApplicationSchema({
     description:
-      "LinkedIn-native ideation, AI drafting, collaborative scheduling, and deep analytics for end-to-end LinkedIn content workflows.",
+      "Article discovery from RSS feeds, AI-powered LinkedIn post generation, scheduling, and performance analytics for LinkedIn content workflows.",
   });
 
   const webPageSchema = generateWebPageSchema(
-    "Linkedbud Features",
-    "Explore Linkedbud's end-to-end workflows for LinkedIn growth: idea generation, AI drafting, collaborative scheduling, and deep analytics.",
+    "linkedbud Features",
+    "Explore linkedbud's features for LinkedIn content: article discovery from RSS feeds, AI-powered post generation, scheduling, and performance analytics.",
     `${baseUrl}/features`
   );
 
@@ -106,7 +106,7 @@ export default function FeaturesPage() {
               align="center"
               as="h1"
               title="Everything you need to build a standout LinkedIn presence."
-              description="Linkedbud connects ideation, creation, scheduling, and analysis into one calm interface that respects LinkedIn's unique rhythm. The result: consistent content, clear collaboration, and measurable growth."
+              description="linkedbud connects article discovery, AI-powered content creation, scheduling, and analytics into one interface. Discover relevant content, generate posts, schedule publication, and track performance—all in one place."
             />
           </Container>
         </section>

@@ -10,7 +10,9 @@ type ComparisonCTASectionProps = {
 };
 
 // ComparisonCTASection renders the CTA section for comparison pages
-export function ComparisonCTASection({ competitor }: ComparisonCTASectionProps) {
+export function ComparisonCTASection({
+  competitor,
+}: ComparisonCTASectionProps) {
   return (
     <section className="relative isolate overflow-hidden pb-20">
       <div className="mx-auto max-w-6xl px-6 lg:px-8">
@@ -20,10 +22,12 @@ export function ComparisonCTASection({ competitor }: ComparisonCTASectionProps) 
               Ready to switch from {competitor.displayName}?
             </p>
             <h2 className="text-3xl font-semibold leading-tight sm:text-4xl text-white">
-              Linkedbud gives your team a repeatable system for standout posts and measurable growth.
+              linkedbud gives your team a repeatable system for standout posts
+              and measurable growth.
             </h2>
             <p className="text-base text-white">
-              Join Linkedbud to unlock AI-guided ideation, voice-aware drafting, and scheduling superpowers built for LinkedIn.
+              Join linkedbud to unlock AI-guided ideation, voice-aware drafting,
+              and scheduling superpowers built for LinkedIn.
             </p>
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Button
@@ -42,11 +46,12 @@ export function ComparisonCTASection({ competitor }: ComparisonCTASectionProps) 
                 <Link href="/pricing">View Pricing</Link>
               </Button>
             </div>
-            <p className="pt-4 text-sm text-white/80">No credit card required • 3 free drafts per month, forever</p>
+            <p className="pt-4 text-sm text-white/80">
+              No credit card required • 2 free posts per month, forever
+            </p>
           </div>
         </div>
       </div>
     </section>
   );
 }
-

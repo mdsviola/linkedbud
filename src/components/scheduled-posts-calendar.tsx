@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LabelWithCount } from "@/components/ui/label-with-count";
-import { truncateContent } from "@/lib/utils";
+import { truncateContent, getOrganizationName } from "@/lib/utils";
 import {
   X,
   Calendar as CalendarIcon,
@@ -857,25 +857,7 @@ export function ScheduledPostsCalendar({
                           }}
                         />
                         <span>
-                          {(() => {
-                            if (post.publish_target === "personal") {
-                              return "Personal";
-                            }
-                            let organizationId = post.linkedin_posts?.find(
-                              (lp) => lp.organization_id
-                            )?.organization_id;
-                            if (
-                              !organizationId &&
-                              post.publish_target &&
-                              post.publish_target !== "personal"
-                            ) {
-                              organizationId = post.publish_target;
-                            }
-                            return organizationId &&
-                              organizations[organizationId]
-                              ? organizations[organizationId]
-                              : "Organization";
-                          })()}
+                          {getOrganizationName(post, organizations)}
                         </span>
                       </div>
                     </div>
@@ -887,8 +869,8 @@ export function ScheduledPostsCalendar({
                     {scheduledPosts.length > 0 && (
                       <div className="space-y-4">
                         <h3>
-                          <LabelWithCount 
-                            label="Scheduled" 
+                          <LabelWithCount
+                            label="Scheduled"
                             count={scheduledPosts.length}
                             className="text-sm font-semibold"
                           />
@@ -901,8 +883,8 @@ export function ScheduledPostsCalendar({
                     {publishedPosts.length > 0 && (
                       <div className="space-y-4">
                         <h3>
-                          <LabelWithCount 
-                            label="Published" 
+                          <LabelWithCount
+                            label="Published"
                             count={publishedPosts.length}
                             className="text-sm font-semibold"
                           />
@@ -976,30 +958,7 @@ export function ScheduledPostsCalendar({
                     style={{ backgroundColor: selectedEvent.color }}
                   />
                   <span>
-                    {(() => {
-                      if (
-                        selectedEvent.resource.publish_target ===
-                        "personal"
-                      ) {
-                        return "Personal";
-                      }
-                      let organizationId =
-                        selectedEvent.resource.linkedin_posts?.find(
-                          (lp) => lp.organization_id
-                        )?.organization_id;
-                      if (
-                        !organizationId &&
-                        selectedEvent.resource.publish_target &&
-                        selectedEvent.resource.publish_target !==
-                          "personal"
-                      ) {
-                        organizationId =
-                          selectedEvent.resource.publish_target;
-                      }
-                      return organizationId && organizations[organizationId]
-                        ? organizations[organizationId]
-                        : "Organization";
-                    })()}
+                    {getOrganizationName(selectedEvent.resource, organizations)}
                   </span>
                 </div>
 

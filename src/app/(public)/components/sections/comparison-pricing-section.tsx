@@ -31,19 +31,19 @@ export function ComparisonPricingSection({ competitor }: ComparisonPricingSectio
             title={`The best value-for-money compared to ${competitor.displayName}`}
             description={
               competitor.pricing.notes ||
-              `Linkedbud offers comprehensive features at competitive pricing compared to ${competitor.displayName}.`
+              `linkedbud offers comprehensive features at competitive pricing compared to ${competitor.displayName}.`
             }
           />
         </div>
 
         <div className="mt-14 grid gap-8 md:grid-cols-2">
-          {/* Linkedbud Pricing */}
+          {/* linkedbud Pricing */}
           <motion.div
             {...fadeInUp({ delay: 0.1, distance: 40 })}
             className="group relative overflow-hidden rounded-lg border-2 border-blue-600 bg-white p-8 shadow-sm transition duration-300 hover:shadow dark:border-blue-500 dark:bg-slate-900"
           >
             <div className="mb-6">
-              <h3 className="text-2xl font-semibold text-slate-900 dark:text-white">Linkedbud</h3>
+              <h3 className="text-2xl font-semibold text-slate-900 dark:text-white">linkedbud</h3>
               <p className="mt-2 text-3xl font-bold text-blue-600 dark:text-blue-400">
                 {linkedbudStarterPlan?.price || "Custom"}
               </p>
@@ -103,11 +103,18 @@ export function ComparisonPricingSection({ competitor }: ComparisonPricingSectio
             </div>
             <div className="space-y-3">
               <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-                {competitor.pricing.notes || "Limited feature set compared to Linkedbud."}
+                {competitor.pricing.notes || "Limited feature set compared to linkedbud."}
               </p>
             </div>
           </motion.div>
         </div>
+
+        <motion.p
+          {...fadeInUp({ delay: 0.2, distance: 16 })}
+          className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400"
+        >
+          * Under a reasonable use policy. Usage may be capped if the system is exploited or abused.
+        </motion.p>
       </Container>
     </section>
   );

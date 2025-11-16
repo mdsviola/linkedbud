@@ -15,7 +15,7 @@ export function FeatureDeepDiveSection() {
         <SectionHeader
           eyebrow="Crafted end-to-end"
           title="Three workflows, one calm workspace."
-          description="The Linkedbud suite guides your team from the moment an industry insight hits your inbox to the second your next post goes live."
+          description="The linkedbud suite guides your team from the moment an industry insight hits your inbox to the second your next post goes live."
         />
 
         <div className="mt-16 space-y-12">

@@ -38,6 +38,8 @@ import {
   Paperclip,
   User,
   Building2,
+  Wand2,
+  Video,
 } from "lucide-react";
 
 export interface CreatePostFormData {
@@ -448,6 +450,11 @@ export function CreatePostModal({
   const [rewriteError, setRewriteError] = useState("");
   const [showPublishTargetDropdown, setShowPublishTargetDropdown] =
     useState(false);
+  const [showPolishInput, setShowPolishInput] = useState(false);
+  const [polishPrompt, setPolishPrompt] = useState("");
+  const [isPolishing, setIsPolishing] = useState(false);
+  const polishInputRef = useRef<HTMLDivElement>(null);
+  const polishButtonRef = useRef<HTMLButtonElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const articleInputRef = useRef<HTMLDivElement>(null);
@@ -550,6 +557,9 @@ export function CreatePostModal({
       setCurrentVariantIndex(0);
       setTwoParaSummary(""); // Clear summary when modal resets
       setIsNavigating(false); // Reset navigating state
+      setShowPolishInput(false); // Reset polish input state
+      setPolishPrompt(""); // Reset polish prompt
+      setIsPolishing(false); // Reset polishing state
       // Reset auto-load tracking when modal opens
       hasAutoLoadedRef.current = null;
     }
@@ -755,15 +765,51 @@ export function CreatePostModal({
       ) {
         setShowArticleInput(false);
       }
+      if (
+        polishInputRef.current &&
+        !polishInputRef.current.contains(event.target as Node)
+      ) {
+        setShowPolishInput(false);
+      }
     };
 
-    if (showArticleInput) {
+    if (showArticleInput || showPolishInput) {
       document.addEventListener("mousedown", handleClickOutside);
       return () => {
         document.removeEventListener("mousedown", handleClickOutside);
       };
     }
-  }, [showArticleInput]);
+  }, [showArticleInput, showPolishInput]);
+
+  // Position polish popover above button on mobile (centered on screen)
+  useEffect(() => {
+    if (!showPolishInput || !polishButtonRef.current || !polishInputRef.current) return;
+
+    const updatePosition = () => {
+      if (!polishInputRef.current || !polishButtonRef.current) return;
+
+      const isMobile = window.innerWidth < 640;
+      if (!isMobile) {
+        // Desktop: let CSS handle positioning
+        polishInputRef.current.style.bottom = '';
+        return;
+      }
+
+      // Mobile: position above button, centered horizontally
+      const buttonRect = polishButtonRef.current.getBoundingClientRect();
+      polishInputRef.current.style.bottom = `${window.innerHeight - buttonRect.top + 8}px`;
+    };
+
+    updatePosition();
+
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
+  }, [showPolishInput]);
 
   // Memoize textarea onChange handler to prevent unnecessary re-renders
   const handleTextareaChange = useCallback(
@@ -1128,6 +1174,50 @@ export function CreatePostModal({
         ? `${variant.hook}\n\n${variant.body}`
         : variant.body;
       setPostText(variantText);
+    }
+  };
+
+  const handlePolish = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!postText.trim() || !polishPrompt.trim()) {
+      return;
+    }
+
+    try {
+      setIsPolishing(true);
+
+      const response = await fetch("/api/polish-content", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: polishPrompt.trim(),
+          content: postText,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to polish post");
+      }
+
+      // Update the textarea with the polished content
+      setPostText(data.polishedContent);
+      setPolishPrompt("");
+      setShowPolishInput(false);
+    } catch (err) {
+      console.error("Error polishing post:", err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to polish post";
+      toast({
+        title: "Polish Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsPolishing(false);
     }
   };
 
@@ -2141,174 +2231,242 @@ export function CreatePostModal({
 
           {/* Footer */}
           {!previewMode && (
-            <div className="border-t border-slate-200 bg-white px-4 py-3 dark:border-slate-800 dark:bg-slate-900 flex-shrink-0">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3 relative">
-                  {/* Emoji Picker Button */}
-                  <div className="relative" ref={emojiPickerRef}>
-                    <button
-                      type="button"
-                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                      className="flex h-8 w-8 items-center justify-center rounded text-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-                    >
-                      😊
-                    </button>
+            <div className="border-t border-slate-200 bg-white px-3 py-2.5 sm:px-4 sm:py-3 dark:border-slate-800 dark:bg-slate-900 flex-shrink-0">
+              <div className="flex flex-col gap-2.5 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3 relative min-w-0">
+                  {/* First Row: Emoji, Upload Icons */}
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    {/* Emoji Picker Button */}
+                    <div className="relative flex-shrink-0" ref={emojiPickerRef}>
+                      <button
+                        type="button"
+                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                        className="flex h-8 w-8 items-center justify-center rounded text-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+                      >
+                        😊
+                      </button>
 
-                    {/* Emoji Picker Popover */}
-                    {showEmojiPicker && (
-                      <div className="absolute bottom-full left-0 mb-2 w-64 h-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg p-3 overflow-y-auto z-50">
-                        <div className="grid grid-cols-8 gap-1">
-                          {COMMON_EMOJIS.map((emoji, index) => (
-                            <button
-                              key={index}
-                              type="button"
-                              onClick={() => insertEmoji(emoji)}
-                              className="flex h-8 w-8 items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-lg transition-colors"
-                              title={emoji}
-                            >
-                              {emoji}
-                            </button>
-                          ))}
+                      {/* Emoji Picker Popover */}
+                      {showEmojiPicker && (
+                        <div className="absolute bottom-full left-0 mb-2 w-64 h-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg p-3 overflow-y-auto z-50">
+                          <div className="grid grid-cols-8 gap-1">
+                            {COMMON_EMOJIS.map((emoji, index) => (
+                              <button
+                                key={index}
+                                type="button"
+                                onClick={() => insertEmoji(emoji)}
+                                className="flex h-8 w-8 items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-lg transition-colors"
+                                title={emoji}
+                              >
+                                {emoji}
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+
+                    {/* Upload Icons */}
+                    {!formData.imagePreview &&
+                      !formData.documentFile &&
+                      !formData.documentPreview &&
+                      !formData.videoFile &&
+                      !formData.videoPreview && (
+                        <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageSelect}
+                            className="hidden"
+                            aria-label="Upload image"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            aria-label="Add image"
+                            className="flex h-8 w-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 flex-shrink-0"
+                            title="Add image"
+                          >
+                            <Image className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                          <input
+                            ref={documentInputRef}
+                            type="file"
+                            accept=".pdf,.doc,.docx,.txt"
+                            onChange={handleDocumentSelect}
+                            className="hidden"
+                            aria-label="Upload document"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => documentInputRef.current?.click()}
+                            aria-label="Add document"
+                            className="flex h-8 w-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 flex-shrink-0"
+                            title="Add document"
+                          >
+                            <Paperclip className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                          <input
+                            ref={videoInputRef}
+                            type="file"
+                            accept="video/*"
+                            onChange={handleVideoSelect}
+                            className="hidden"
+                            aria-label="Upload video"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => videoInputRef.current?.click()}
+                            aria-label="Add video"
+                            className="flex h-8 w-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 flex-shrink-0"
+                            title="Add video"
+                          >
+                            <Video className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                        </div>
+                      )}
                   </div>
 
-                  {/* Rewrite with AI Button */}
-                  <button
-                    type="button"
-                    onClick={handleRewrite}
-                    disabled={!hasText || isRewriting || isGenerating}
-                    className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 min-w-[140px]"
-                  >
-                    {isRewriting ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        Rewriting...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-3.5 w-3.5" />
-                        Rewrite with AI
-                      </>
-                    )}
-                  </button>
-
-                  {/* Variant Navigation */}
-                  {rewrittenVariants.length > 1 && !isRewriting && (
-                    <div className="flex items-center gap-1 rounded-md border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900">
-                      <button
-                        type="button"
-                        onClick={handlePreviousVariant}
-                        disabled={currentVariantIndex === 0}
-                        className="flex items-center justify-center p-1.5 text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-200 dark:hover:bg-slate-800"
-                        title="Previous variant"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </button>
-                      <span className="px-2 text-xs font-medium text-slate-600 dark:text-slate-400">
-                        Opt. {currentVariantIndex + 1} of{" "}
-                        {rewrittenVariants.length}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={handleNextVariant}
-                        disabled={
-                          currentVariantIndex === rewrittenVariants.length - 1
-                        }
-                        className="flex items-center justify-center p-1.5 text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-200 dark:hover:bg-slate-800"
-                        title="Next variant"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Undo Button */}
-                  {originalText && !isRewriting && (
+                  {/* Second Row on Mobile: Rewrite, Polish, Variants, Undo */}
+                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap min-w-0">
+                    {/* Rewrite with AI Button */}
                     <button
                       type="button"
-                      onClick={handleUndo}
-                      className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                      title="Undo rewrite"
+                      onClick={handleRewrite}
+                      disabled={!hasText || isRewriting || isGenerating}
+                      className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap flex-shrink-0"
                     >
-                      <X className="h-3.5 w-3.5" />
-                      Undo
+                      {isRewriting ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Rewriting...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-3.5 w-3.5" />
+                          Rewrite with AI
+                        </>
+                      )}
                     </button>
-                  )}
 
-                  {!formData.imagePreview &&
-                    !formData.documentFile &&
-                    !formData.documentPreview &&
-                    !formData.videoFile &&
-                    !formData.videoPreview && (
-                      <div className="flex items-center gap-1">
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageSelect}
-                          className="hidden"
-                          aria-label="Upload image"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          aria-label="Add image"
-                          className="flex h-8 w-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-                          title="Add image"
+                    {/* Polish Button */}
+                    <div className="relative flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setShowPolishInput(!showPolishInput)}
+                        disabled={!hasText || isRewriting || isGenerating || isPolishing}
+                        className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap"
+                        title="Polish your post"
+                        ref={polishButtonRef}
+                      >
+                        <Wand2 className="h-3.5 w-3.5 text-purple-600" />
+                        Polish
+                      </button>
+
+                      {/* Polish Input Popover */}
+                      {showPolishInput && (
+                        <div
+                          className="fixed left-1/2 -translate-x-1/2 z-[100] w-[min(calc(100vw-2rem),400px)] rounded-lg border border-slate-200 bg-white p-4 shadow-lg sm:absolute sm:left-0 sm:bottom-full sm:mb-2 sm:w-80 sm:translate-x-0 dark:border-slate-800 dark:bg-slate-900"
+                          ref={polishInputRef}
                         >
-                          <Image className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                        <input
-                          ref={documentInputRef}
-                          type="file"
-                          accept=".pdf,.doc,.docx,.txt"
-                          onChange={handleDocumentSelect}
-                          className="hidden"
-                          aria-label="Upload document"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => documentInputRef.current?.click()}
-                          aria-label="Add document"
-                          className="flex h-8 w-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-                          title="Add document"
-                        >
-                          <Paperclip className="h-4 w-4" aria-hidden="true" />
-                        </button>
-                        <input
-                          ref={videoInputRef}
-                          type="file"
-                          accept="video/*"
-                          onChange={handleVideoSelect}
-                          className="hidden"
-                          aria-label="Upload video"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => videoInputRef.current?.click()}
-                          aria-label="Add video"
-                          className="flex h-8 w-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-                          title="Add video"
-                        >
-                          <svg
-                            className="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            aria-hidden="true"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          <form onSubmit={handlePolish} className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Wand2 className="h-4 w-4 text-purple-600" />
+                              <Label
+                                htmlFor="polish-prompt-input"
+                                className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                              >
+                                What would you like to improve?
+                              </Label>
+                            </div>
+                            <Textarea
+                              id="polish-prompt-input"
+                              placeholder="e.g., Make it more engaging, add a call-to-action, improve the tone to be more professional, add emojis, make it shorter, include a compelling opening line..."
+                              value={polishPrompt}
+                              onChange={(e) => setPolishPrompt(e.target.value)}
+                              className="min-h-[140px] resize-none text-sm"
+                              disabled={isPolishing}
                             />
-                          </svg>
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                  setShowPolishInput(false);
+                                  setPolishPrompt("");
+                                }}
+                                disabled={isPolishing}
+                                size="sm"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                type="submit"
+                                disabled={!polishPrompt.trim() || isPolishing}
+                                size="sm"
+                                className="bg-purple-600 text-white hover:bg-purple-700"
+                              >
+                                {isPolishing ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                    Polishing...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Wand2 className="h-4 w-4 mr-2" />
+                                    Polish
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </form>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Variant Navigation */}
+                    {rewrittenVariants.length > 1 && !isRewriting && (
+                      <div className="flex items-center gap-1 rounded-md border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={handlePreviousVariant}
+                          disabled={currentVariantIndex === 0}
+                          className="flex items-center justify-center p-1.5 text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-200 dark:hover:bg-slate-800"
+                          title="Previous variant"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <span className="px-2 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                          Opt. {currentVariantIndex + 1} of {rewrittenVariants.length}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleNextVariant}
+                          disabled={
+                            currentVariantIndex === rewrittenVariants.length - 1
+                          }
+                          className="flex items-center justify-center p-1.5 text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-200 dark:hover:bg-slate-800"
+                          title="Next variant"
+                        >
+                          <ChevronRight className="h-4 w-4" />
                         </button>
                       </div>
                     )}
+
+                    {/* Undo Button */}
+                    {originalText && !isRewriting && (
+                      <button
+                        type="button"
+                        onClick={handleUndo}
+                        className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap flex-shrink-0"
+                        title="Undo rewrite"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Undo
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Post Button */}
@@ -2319,7 +2477,7 @@ export function CreatePostModal({
                     !hasText || isSaving || isGenerating || isNavigating
                   }
                   size="default"
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto flex-shrink-0"
                 >
                   {isSaving ? (
                     <>
@@ -2342,6 +2500,7 @@ export function CreatePostModal({
           )}
         </div>
       </DialogContent>
+
     </Dialog>
   );
 }

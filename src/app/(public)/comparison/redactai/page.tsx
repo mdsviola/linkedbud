@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: competitor.seoTitle,
   description: competitor.seoDescription,
   keywords: [
-    "Linkedbud vs RedactAI",
+    "linkedbud vs RedactAI",
     "LinkedIn content tools comparison",
     "RedactAI alternative",
     "LinkedIn content creation",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     title: competitor.seoTitle,
     description: competitor.seoDescription,
     url: `${baseUrl}/comparison/redactai`,
-    siteName: "Linkedbud",
+    siteName: "linkedbud",
     locale: "en_US",
     type: "website",
     images: [

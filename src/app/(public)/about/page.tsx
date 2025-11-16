@@ -12,38 +12,38 @@ import {
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://linkedbud.com";
 
 export const metadata: Metadata = {
-  title: "About Linkedbud — Our mission for LinkedIn storytellers",
+  title: "About linkedbud — Our mission for LinkedIn storytellers",
   description:
-    "Learn about Linkedbud, the team building AI-assisted workflows that help professionals share better ideas faster on LinkedIn.",
+    "Learn about linkedbud, the team building AI-assisted workflows that help professionals share better ideas faster on LinkedIn.",
   keywords: [
-    "About Linkedbud",
+    "About linkedbud",
     "LinkedIn tools",
     "AI content creation",
     "social media management",
     "company mission",
   ],
   openGraph: {
-    title: "About Linkedbud — Our mission for LinkedIn storytellers",
+    title: "About linkedbud — Our mission for LinkedIn storytellers",
     description:
-      "Linkedbud is built by operators and creators who believe LinkedIn deserves tooling designed for modern storytelling.",
+      "linkedbud is built by operators and creators who believe LinkedIn deserves tooling designed for modern storytelling.",
     url: `${baseUrl}/about`,
     type: "website",
     locale: "en_US",
-    siteName: "Linkedbud",
+    siteName: "linkedbud",
     images: [
       {
         url: `${baseUrl}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "About Linkedbud - Our mission for LinkedIn storytellers",
+        alt: "About linkedbud - Our mission for LinkedIn storytellers",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "About Linkedbud — Our mission for LinkedIn storytellers",
+    title: "About linkedbud — Our mission for LinkedIn storytellers",
     description:
-      "Linkedbud is built by operators and creators who believe LinkedIn deserves tooling designed for modern storytelling.",
+      "linkedbud is built by operators and creators who believe LinkedIn deserves tooling designed for modern storytelling.",
     images: [`${baseUrl}/og-image.png`],
   },
   alternates: {
@@ -58,8 +58,8 @@ export default function AboutPage() {
     { name: "About", url: `${baseUrl}/about` },
   ]);
   const webPageSchema = generateWebPageSchema(
-    "About Linkedbud",
-    "Learn about Linkedbud, the team building AI-assisted workflows that help professionals share better ideas faster on LinkedIn.",
+    "About linkedbud",
+    "Learn about linkedbud, the team building AI-assisted workflows that help professionals share better ideas faster on LinkedIn.",
     `${baseUrl}/about`
   );
 
@@ -96,7 +96,7 @@ export default function AboutPage() {
               align="center"
               as="h1"
               title="Helping professionals share better ideas, faster."
-              description="Linkedbud builds calm, intelligent workflows for the creators who power LinkedIn: founders, operators, and marketers with something to say."
+              description="linkedbud builds calm, intelligent workflows for the creators who power LinkedIn: founders, operators, and marketers with something to say."
             />
           </Container>
         </section>

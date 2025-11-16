@@ -5,7 +5,7 @@ export const WORKFLOW_STEPS: WorkflowStep[] = [
     accent: "Listen",
     title: "Capture and curate",
     description:
-      "Linkedbud continuously watches LinkedIn, newsletters, and RSS feeds in your industry to surface only what your audience cares about.",
+      "linkedbud continuously watches LinkedIn, newsletters, and RSS feeds in your industry to surface only what your audience cares about.",
   },
   {
     accent: "Create",
@@ -23,7 +23,7 @@ export const WORKFLOW_STEPS: WorkflowStep[] = [
 
 export const WORKFLOW_TESTIMONIAL: Testimonial = {
   quote:
-    "Linkedbud turned our leadership team into consistent LinkedIn storytellers. We repurpose news instantly and keep a month of content ready to go.",
+    "linkedbud turned our leadership team into consistent LinkedIn storytellers. We repurpose news instantly and keep a month of content ready to go.",
   author: "Marissa Hope",
   role: "VP Marketing, Northbeam Capital",
 };

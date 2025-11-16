@@ -35,7 +35,7 @@ import {
   Heart,
   FileEdit,
 } from "lucide-react";
-import { copyToClipboard } from "@/lib/utils";
+import { copyToClipboard, getOrganizationName } from "@/lib/utils";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { useToast } from "@/hooks/use-toast";
 import { confetti } from "@tsparticles/confetti";
@@ -338,11 +338,8 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
       (!organizationId && !post.publish_target) ||
       post.linkedin_posts?.some((lp) => lp.organization_id === null);
 
-    const organizationName =
-      isPersonal || !organizationId
-        ? "Personal"
-        : organizations.find((org) => org.linkedin_org_id === organizationId)
-            ?.org_name || "Organization";
+    // Use utility function to get organization name
+    const organizationName = getOrganizationName(post, organizations);
 
     const color = isPersonal
       ? "hsl(var(--primary))"
@@ -1220,17 +1217,6 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
                           <Calendar className="h-4 w-4" />
                           Schedule
                         </Button>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={handleOpenPolishModal}
-                          disabled={updatingPost === currentPost.id}
-                          className="flex items-center gap-2 text-purple-600 hover:text-purple-700"
-                        >
-                          <Wand2 className="h-4 w-4" />
-                          Polish
-                        </Button>
                       </>
                     ) : currentPost.status === "PUBLISHED" ? (
                       <>
@@ -1294,17 +1280,6 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
                             publishingToLinkedin === currentPost.id
                           }
                         />
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={handleOpenPolishModal}
-                          disabled={updatingPost === currentPost.id}
-                          className="flex items-center gap-2 text-purple-600 hover:text-purple-700"
-                        >
-                          <Wand2 className="h-4 w-4" />
-                          Polish
-                        </Button>
                       </>
                     )}
                   </div>
@@ -1484,7 +1459,7 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
         title="Delete Post"
         description={
           modalPostStatus === "PUBLISHED"
-            ? "This will remove the post from your Linkedbud dashboard."
+            ? "This will remove the post from your linkedbud dashboard."
             : "Are you sure you want to delete this post?"
         }
         confirmText="Delete Post"

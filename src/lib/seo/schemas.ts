@@ -127,7 +127,7 @@ export function generateOrganizationSchema(
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "Linkedbud",
+    name: "linkedbud",
     url: baseUrl,
     // Use a square logo for Organization schema (favicon/icon, not the OG image)
     logo: `${baseUrl}/android-chrome-192x192.png`,
@@ -147,7 +147,7 @@ export function generateSoftwareApplicationSchema(
   return {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "Linkedbud",
+    name: "linkedbud",
     description:
       "AI-powered LinkedIn assistant that helps you ideate, craft, and schedule powerful LinkedIn content with AI guidance and insight-rich analytics.",
     url: baseUrl,
@@ -219,7 +219,7 @@ export function generateWebPageSchema(
     ...(image && { image }),
     isPartOf: {
       "@type": "WebSite",
-      name: "Linkedbud",
+      name: "linkedbud",
       url: baseUrl,
     },
     ...options?.overrides,
@@ -263,7 +263,7 @@ export function generateWebSiteSchema(
   return {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Linkedbud",
+    name: "linkedbud",
     url: baseUrl,
     description:
       "AI-powered LinkedIn assistant for teams who want to ideate, create, and schedule standout posts in record time.",

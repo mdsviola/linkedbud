@@ -130,7 +130,7 @@ export default function SignInPage() {
   return (
     <AuthLayout
       title="Welcome back"
-      subtitle="Sign in to your Linkedbud account"
+      subtitle="Sign in to your linkedbud account"
       footerText="Don't have an account?"
       footerLinkText="Create one here"
       footerLinkHref={signUpHref}

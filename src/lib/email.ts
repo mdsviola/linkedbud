@@ -62,7 +62,7 @@ export async function sendWaitlistConfirmationEmail(email: string) {
     const { data, error } = await resend.emails.send({
       from: senderEmail,
       to: [email],
-      subject: "Thanks for your interest in Linkedbud!",
+      subject: "Thanks for your interest in linkedbud!",
       html: emailHTML,
       text: textContent,
     });
@@ -89,23 +89,23 @@ export async function sendWaitlistConfirmationEmail(email: string) {
 
 function generateWaitlistConfirmationText(appUrl: string): string {
   return `
-Thanks for your interest in Linkedbud!
+Thanks for your interest in linkedbud!
 
 Hi there,
 
-Thank you for joining our waitlist! We're putting the finishing touches on Linkedbud and can't wait to share it with you.
+Thank you for joining our waitlist! We're putting the finishing touches on linkedbud and can't wait to share it with you.
 
 As a thank you for your early interest, you'll receive 20% OFF your first month's subscription when we launch!
 
-We'll send you an email as soon as Linkedbud is ready. You'll be among the first to know!
+We'll send you an email as soon as linkedbud is ready. You'll be among the first to know!
 
 In the meantime, you can learn more about what we're building at ${appUrl}.
 
 Best regards,
-The Linkedbud Team
+The linkedbud Team
 
 ---
-You're receiving this because you registered interest in Linkedbud.
+You're receiving this because you registered interest in linkedbud.
   `;
 }
 
@@ -289,9 +289,9 @@ function generateFeedbackSubmissionText(
 ): string {
   let text = `New Feedback Submission
 
-Hi Linkedbud Support,
+Hi linkedbud Support,
 
-A user has submitted new feedback through the Linkedbud application. Here are the details:
+A user has submitted new feedback through the linkedbud application. Here are the details:
 
 Feedback Type: ${feedbackTypeDisplay}
 User Email: ${userEmail}
@@ -310,7 +310,7 @@ ${feedbackMessage}
     text += `\n\nView in Admin Dashboard: ${adminUrl}`;
   }
 
-  text += `\n\n---\nThis is an automated notification from the Linkedbud feedback system.`;
+  text += `\n\n---\nThis is an automated notification from the linkedbud feedback system.`;
 
   return text;
 }
@@ -398,9 +398,9 @@ function generateWaitlistSupportNotificationText(
 ): string {
   let text = `New Waitlist Signup
 
-Hi Linkedbud Support,
+Hi linkedbud Support,
 
-A new user has joined the Linkedbud waitlist. Here are the details:
+A new user has joined the linkedbud waitlist. Here are the details:
 
 User Email: ${userEmail}
 `;
@@ -423,7 +423,7 @@ User Email: ${userEmail}
     text += `\n\nView Waitlist: ${adminUrl}`;
   }
 
-  text += `\n\n---\nThis is an automated notification from the Linkedbud waitlist system.`;
+  text += `\n\n---\nThis is an automated notification from the linkedbud waitlist system.`;
 
   return text;
 }
@@ -448,7 +448,7 @@ export async function sendPortfolioInvitationEmail(
     const privacyUrl = `${appUrl}/privacy`;
     const unsubscribeUrl = `${appUrl}/settings`; // Users can manage preferences in settings
     const currentYear = new Date().getFullYear().toString();
-    const brandName = "Linkedbud";
+    const brandName = "linkedbud";
     const ownerNameDisplay = ownerName || "A team member";
 
     // Read the email template
@@ -467,22 +467,22 @@ export async function sendPortfolioInvitationEmail(
       greeting: `Hi there,`,
       main_message_html: `
         <p style="margin: 0 0 16px 0;">
-          <strong>${ownerNameDisplay}</strong> has invited you to collaborate on their Linkedbud portfolio.
+          <strong>${ownerNameDisplay}</strong> has invited you to collaborate on their linkedbud portfolio.
         </p>
         <p style="margin: 0 0 16px 0;">
           As a collaborator, you'll be able to see and manage posts for LinkedIn organizations that you have access to. Personal posts remain private to their creators.
         </p>
         <p style="margin: 0;">
-          This invitation will expire in 7 days. If you don't have an Linkedbud account yet, you'll be prompted to create one when you accept the invitation.
+          This invitation will expire in 7 days. If you don't have an linkedbud account yet, you'll be prompted to create one when you accept the invitation.
         </p>
       `,
       cta_label: "Accept Invitation",
       cta_url: acceptUrl,
-      footer_note: "You're receiving this email because you were invited to collaborate on an Linkedbud portfolio.",
+      footer_note: "You're receiving this email because you were invited to collaborate on an linkedbud portfolio.",
       unsubscribe_url: unsubscribeUrl,
       privacy_url: privacyUrl,
       current_year: currentYear,
-      preheader_text: `${ownerNameDisplay} has invited you to collaborate on their Linkedbud portfolio.`,
+      preheader_text: `${ownerNameDisplay} has invited you to collaborate on their linkedbud portfolio.`,
       // Legacy variables for fallback link
       accept_url: acceptUrl,
       owner_name: ownerNameDisplay,
@@ -502,7 +502,7 @@ export async function sendPortfolioInvitationEmail(
     const { data, error } = await resend.emails.send({
       from: senderEmail,
       to: [email],
-      subject: "You've been invited to collaborate on Linkedbud",
+      subject: "You've been invited to collaborate on linkedbud",
       html: emailHTML,
       text: textContent,
     });
@@ -532,20 +532,20 @@ function generatePortfolioInvitationText(
   acceptUrl: string
 ): string {
   return `
-You've been invited to collaborate on Linkedbud!
+You've been invited to collaborate on linkedbud!
 
 Hi there,
 
-${ownerName} has invited you to collaborate on their Linkedbud portfolio.
+${ownerName} has invited you to collaborate on their linkedbud portfolio.
 
 As a collaborator, you'll be able to see and manage posts for LinkedIn organizations that you have access to. Personal posts remain private to their creators.
 
 Accept your invitation here:
 ${acceptUrl}
 
-This invitation will expire in 7 days. If you don't have an Linkedbud account yet, you'll be prompted to create one when you accept the invitation.
+This invitation will expire in 7 days. If you don't have an linkedbud account yet, you'll be prompted to create one when you accept the invitation.
 
 ---
-© ${new Date().getFullYear()} Linkedbud. All rights reserved.
+© ${new Date().getFullYear()} linkedbud. All rights reserved.
 `;
 }

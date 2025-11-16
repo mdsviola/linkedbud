@@ -40,7 +40,7 @@ export function HeroSection() {
             variants={heroVariants}
             className="max-w-xl text-lg leading-relaxed text-slate-600 dark:text-slate-300"
           >
-            Linkedbud helps you ideate, craft, and schedule powerful LinkedIn
+            linkedbud helps you ideate, craft, and schedule powerful LinkedIn
             content. AI suggestions stay on-brand, analytics reveal what works,
             and publishing happens while you sleep.
           </motion.p>
@@ -87,7 +87,7 @@ export function HeroSection() {
           className="relative"
         >
           <LinkedInPostModal
-            draftText={`🚀 Most LinkedIn posts fall flat because they forget one thing: consistency beats perfection every single time.\n\nHere's the reality: The founders and operators who dominate LinkedIn aren't spending hours crafting each post. They're showing up consistently with insights that matter. We built Linkedbud to turn today's tech headlines into actionable content—so you can stay visible, stay relevant, and build your authority without the burnout.`}
+            draftText={`🚀 Most LinkedIn posts fall flat because they forget one thing: consistency beats perfection every single time.\n\nHere's the reality: The founders and operators who dominate LinkedIn aren't spending hours crafting each post. They're showing up consistently with insights that matter. We built linkedbud to turn today's tech headlines into actionable content—so you can stay visible, stay relevant, and build your authority without the burnout.`}
             userName="Erlich Bachman"
             userInitials="EB"
             startTypingDelay={800}

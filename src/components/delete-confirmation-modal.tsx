@@ -119,7 +119,7 @@ export function DeleteConfirmationModal({
                 This post is published on LinkedIn
               </p>
               <p className="text-amber-700">
-                Deleting from Linkedbud only removes it from your dashboard. The
+                Deleting from linkedbud only removes it from your dashboard. The
                 post will remain live on LinkedIn and visible to your network.
               </p>
             </div>

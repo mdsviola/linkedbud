@@ -1,99 +1,94 @@
-import {
-  CalendarClock,
-  Lightbulb,
-  LineChart,
-  Sparkles,
-} from "lucide-react";
+import { CalendarClock, Newspaper, LineChart, Sparkles } from "lucide-react";
 
-import type { DeepDiveFeature, FeatureItem, InsightCard } from "@/marketing/types/marketing";
+import type {
+  DeepDiveFeature,
+  FeatureItem,
+  InsightCard,
+} from "@/marketing/types/marketing";
 
 export const FEATURE_GRID_ITEMS: FeatureItem[] = [
   {
-    icon: Lightbulb,
-    title: "Idea engine",
+    icon: Newspaper,
+    title: "Article discovery",
     description:
-      "Generate fresh, on-brand prompts based on your niche, saved voice, and trending stories in your space.",
+      "Discover relevant articles from RSS feeds and Google News based on your topics, with AI-powered recommendations for the best content to turn into posts.",
   },
   {
     icon: Sparkles,
-    title: "AI drafting",
+    title: "AI content generation",
     description:
-      "Compose thoughtful LinkedIn-ready drafts with magnetic hooks, storytelling frameworks, and calls to action that convert.",
+      "Generate multiple LinkedIn-ready draft variants from articles or custom topics, with customizable tone, post type, and formatting options.",
   },
   {
     icon: CalendarClock,
-    title: "Scheduling intelligence",
+    title: "Post scheduling",
     description:
-      "Auto-publish across personal profiles and company pages with timing cues personalized from your historical performance.",
+      "Schedule posts for future publication to your personal profile or LinkedIn organization pages, with automatic publishing at your chosen time.",
   },
   {
     icon: LineChart,
-    title: "Performance insights",
+    title: "Performance analytics",
     description:
-      "Spot breakout posts, compare campaigns, and get AI-led insights secured to LinkedIn metrics that matter.",
+      "Track post performance with LinkedIn metrics including impressions, engagement, and AI-powered insights to understand what resonates with your audience.",
   },
 ];
 
 export const FEATURE_DEEP_DIVE_SECTIONS: DeepDiveFeature[] = [
   {
-    name: "Ideate",
-    headline: "Ideas informed by your voice and what’s trending",
-    body:
-      "Stop chasing prompts. Linkedbud tracks the narratives taking off in your space and combines them with your voice guidelines to propose hooks, story angles, and commentary that sound like you.",
+    name: "Discover",
+    headline: "Find relevant content from RSS feeds and articles",
+    body: "Stay on top of industry news and trends. linkedbud fetches articles from your custom RSS feeds and Google News based on your topics, then uses AI to recommend the most relevant content for your LinkedIn posts.",
     highlights: [
-      "Topic radar scanning newsletters, LinkedIn, and RSS feeds",
-      "Voice profiles ensure every suggestion matches tone and POV",
-      "Idea library with tags, collaborators, and approval states",
+      "Custom RSS feed integration for your favorite sources",
+      "Google News search based on your topics and keywords",
+      "AI-powered 'For You' recommendations highlighting the best articles",
     ],
-    illustration: "Audience heatmap · Trending story clusters · Saved hooks",
+    illustration: "Article feed · RSS sources · AI recommendations",
   },
   {
     name: "Create",
-    headline: "Craft polished drafts with layered AI support",
-    body:
-      "Compose fast without losing nuance. Layer AI-generated outlines, context snippets, and storytelling frameworks. Inject your own insights while Linkedbud handles formatting, structure, and hashtags.",
+    headline: "Generate LinkedIn posts with AI assistance",
+    body: "Transform articles or custom topics into polished LinkedIn drafts. Generate multiple variants, customize tone and style, and refine your content with full editing control before publishing.",
     highlights: [
-      "Draft side-by-side with news snippets and research",
-      "Frameworks for single posts, carousels, and leadership updates",
-      "Human-in-the-loop editing with frictionless revisions",
+      "Generate multiple draft variants from articles or custom topics",
+      "Customizable tone, post type, target audience, and formatting",
+      "Edit and refine drafts with full control over content",
     ],
-    illustration: "Draft canvas · Voice controls · Tone toggles",
+    illustration: "Draft editor · Multiple variants · Customization options",
   },
   {
-    name: "Grow",
-    headline: "Schedule with precision and learn from every post",
-    body:
-      "Move from sporadic to strategic. Linkedbud auto-schedules posts for the best times, syncs across profiles, and feeds back actionable insights so you know what to double down on next week.",
+    name: "Publish & Analyze",
+    headline: "Schedule posts and track performance",
+    body: "Publish directly to LinkedIn or schedule posts for later. Track performance with detailed analytics including impressions, engagement rates, and AI-powered insights to understand what works.",
     highlights: [
-      "Auto-publish across personal and company pages",
-      "Audience graph pinpoints optimal posting windows",
-      "Performance loops recommend follow-up angles instantly",
+      "Publish to personal profiles or LinkedIn organization pages",
+      "Schedule posts for future publication with automatic posting",
+      "Track metrics and get AI insights on post performance",
     ],
-    illustration: "Smart scheduler · Engagement forecast · Follow-up prompts",
+    illustration: "Scheduler · Analytics dashboard · Performance metrics",
   },
 ];
 
 export const INSIGHT_CARDS: InsightCard[] = [
   {
-    title: "Voice consistency",
-    metric: "98%",
-    metricLabel: "On-brand draft match",
+    title: "Multiple variants",
+    metric: "3",
+    metricLabel: "Draft options",
     description:
-      "Keep every contributor aligned with your tone. Maintain style guides, sentiment settings, and vocabulary in one place.",
+      "Generate three different draft variants for each post, giving you options to choose the best angle and approach for your audience.",
   },
   {
-    title: "Content velocity",
-    metric: "4.5x",
-    metricLabel: "Faster pipeline",
+    title: "Content sources",
+    metric: "∞",
+    metricLabel: "RSS feeds",
     description:
-      "Draft a week of posts in a single working session. Linkedbud suggests angles, hooks, and outlines that spark creativity instantly.",
+      "Connect unlimited custom RSS feeds and use Google News to discover articles, ensuring you never run out of content ideas.",
   },
   {
-    title: "Insight engine",
-    metric: "32%",
-    metricLabel: "Engagement lift",
+    title: "Performance tracking",
+    metric: "6",
+    metricLabel: "Key metrics",
     description:
-      "Audience heatmaps and topic insights reveal what resonates so you can double down with confidence.",
+      "Track impressions, likes, comments, shares, clicks, and engagement rates with automatic metric fetching from LinkedIn.",
   },
 ];
-
