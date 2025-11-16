@@ -61,6 +61,7 @@
     overflow-x: hidden;
   }
   /* Prevent iOS Safari from zooming in on input focus */
+  /* iOS Safari zooms in when font-size is less than 16px */
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -71,9 +72,10 @@
   input[type="date"],
   input[type="time"],
   input[type="datetime-local"],
+  input:not([type]), /* catch inputs without explicit type */
   textarea,
   select {
-    font-size: 16px;
+    font-size: 16px !important; /* !important to override Tailwind classes on mobile */
   }
   /* On larger screens, allow smaller font sizes */
   @media (min-width: 768px) {
@@ -87,12 +89,13 @@
     input[type="date"],
     input[type="time"],
     input[type="datetime-local"],
+    input:not([type]),
     textarea,
     select {
-      font-size: 0.875rem; /* text-sm = 14px */
+      font-size: 0.875rem !important; /* text-sm = 14px */
     }
   }
-  
+
   /* Match Framer Motion easeOut easing for modal backdrop animations */
   [data-state="open"].animate-in[class*="Overlay"],
   [data-state="closed"].animate-out[class*="Overlay"] {
