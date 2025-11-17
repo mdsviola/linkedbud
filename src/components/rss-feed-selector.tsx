@@ -72,6 +72,7 @@ export function RssFeedCategorySelector({
             className="border-b last:border-b-0 pb-3 last:pb-0"
           >
             <button
+              type="button"
               onClick={() => toggleCategory(category.name)}
               className="w-full flex items-center justify-between py-3 px-2 hover:bg-gray-50 rounded transition-colors"
             >
@@ -104,6 +105,7 @@ export function RssFeedCategorySelector({
                       className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded transition-colors"
                     >
                       <button
+                        type="button"
                         onClick={() => onToggleFeed(feed.url)}
                         className="flex items-center gap-2 flex-1 text-left"
                       >
@@ -191,6 +193,7 @@ export function PersonalRssFeedsManager({
             >
               <Input value={feed} disabled className="flex-1 text-sm" />
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 onClick={() => onRemoveFeed(feed)}
@@ -207,10 +210,15 @@ export function PersonalRssFeedsManager({
           placeholder="https://example.com/rss"
           value={newFeedUrl}
           onChange={(e) => setNewFeedUrl(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && handleAddFeed()}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleAddFeed();
+            }
+          }}
           className="flex-1"
         />
-        <Button onClick={handleAddFeed} disabled={!newFeedUrl.trim()}>
+        <Button type="button" onClick={handleAddFeed} disabled={!newFeedUrl.trim()}>
           <Plus className="h-4 w-4 mr-2" />
           Add Feed
         </Button>

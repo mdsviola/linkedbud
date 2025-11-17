@@ -80,7 +80,7 @@ Keep creating great content! If you have any questions or need help, we're here 
 
 Privacy Policy: ${appUrl}/privacy
 
-© 2025 Linkedbud. All rights reserved.`;
+© 2025 linkedbud. All rights reserved.`;
 }
 
 /**
@@ -112,7 +112,7 @@ export function generateUserFeedbackSubmissionHTML(
     return renderTemplate(template, {
       subject: `New Feedback Submission - ${feedbackTypeDisplay}`,
       preheader_text: `New feedback submission: ${feedbackTypeDisplay} from ${userEmail}`,
-      brand_name: "Linkedbud",
+      brand_name: "linkedbud",
       email_title: "New Feedback Submission",
       greeting: "Hi,",
       feedback_type_display: feedbackTypeDisplay,
@@ -122,7 +122,7 @@ export function generateUserFeedbackSubmissionHTML(
       cta_label: adminUrl ? "View in Admin Dashboard" : "",
       cta_url: adminUrl || "",
       footer_note:
-        "This is an automated notification from the Linkedbud feedback system. All feedback submissions are logged in the admin dashboard for tracking and follow-up.",
+        "This is an automated notification from the linkedbud feedback system. All feedback submissions are logged in the admin dashboard for tracking and follow-up.",
       privacy_url: privacyUrl,
       current_year: currentYear,
     });
@@ -159,7 +159,7 @@ export function generateWaitlistSupportNotificationHTML(
     return renderTemplate(template, {
       subject: "New Waitlist Signup",
       preheader_text: `New waitlist signup from ${userEmail}`,
-      brand_name: "Linkedbud",
+      brand_name: "linkedbud",
       email_title: "New Waitlist Signup",
       greeting: "Hi,",
       user_email: userEmail,
@@ -169,7 +169,7 @@ export function generateWaitlistSupportNotificationHTML(
       cta_label: adminUrl ? "View Waitlist" : "",
       cta_url: adminUrl || "",
       footer_note:
-        "This is an automated notification from the Linkedbud waitlist system. All waitlist signups are logged for tracking and follow-up.",
+        "This is an automated notification from the linkedbud waitlist system. All waitlist signups are logged for tracking and follow-up.",
       privacy_url: privacyUrl,
       current_year: currentYear,
     });

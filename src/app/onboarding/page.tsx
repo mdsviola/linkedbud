@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { createClientClient } from "@/lib/supabase-client";
-import { Plus, X, Check, Mail, CheckCircle2 } from "lucide-react";
+import { Plus, X, Check, Mail, CheckCircle2, LogOut } from "lucide-react";
 import { RssFeedSelector } from "@/components/rss-feed-selector";
 
 export default function OnboardingPage() {
@@ -23,7 +23,8 @@ export default function OnboardingPage() {
   );
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [keywords, setKeywords] = useState("");
+  const [keywords, setKeywords] = useState<string[]>([]);
+  const [keywordInput, setKeywordInput] = useState("");
   const [linkedinPosts, setLinkedinPosts] = useState([""]);
   const [selectedRssFeeds, setSelectedRssFeeds] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -132,15 +133,34 @@ export default function OnboardingPage() {
             .single();
 
           // If prefs exist and updated_at is different from created_at, onboarding is complete
+          // Check if they're accessing via direct URL (no redirect from signup flow)
+          // If they're coming from a direct URL and have completed onboarding, allow them to stay
+          // Users who haven't completed onboarding should always be able to access the page
           if (prefs && prefs.created_at !== prefs.updated_at) {
-            router.push(getRedirectUrl());
-            return;
+            // Check if they're accessing via direct URL (not from a signup/auth flow)
+            let fromDirectAccess = false;
+            if (typeof window !== "undefined") {
+              const urlParams = new URLSearchParams(window.location.search);
+              fromDirectAccess =
+                !urlParams.has("email") &&
+                !urlParams.has("code") &&
+                !window.location.hash.includes("access_token");
+            }
+
+            // Only redirect if they came from a signup/auth flow, not direct URL access
+            // This allows users to access onboarding via URL even if they've completed it
+            if (!fromDirectAccess) {
+              router.push(getRedirectUrl());
+              return;
+            }
           }
 
           // User has a session but hasn't set preferences, show preferences step
+          // This allows authenticated users who haven't completed onboarding to access via URL
           setStep("preferences");
         } else if (!currentUser && !session) {
-          // If unauthenticated and not coming from a valid signup/auth flow, redirect out
+          // Allow authenticated users who haven't completed onboarding to access via URL
+          // Only redirect unauthenticated users who aren't in a signup flow
           if (!allowedWithoutSession) {
             router.replace("/auth/signup");
             return;
@@ -191,6 +211,21 @@ export default function OnboardingPage() {
     const updatedPosts = [...linkedinPosts];
     updatedPosts[index] = value;
     setLinkedinPosts(updatedPosts);
+  };
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error during logout:", error);
+      }
+      // Redirect to home page after logout
+      window.location.href = "/";
+    } catch (err) {
+      console.error("Error during logout:", err);
+      // Still redirect even if there's an error
+      window.location.href = "/";
+    }
   };
 
   const handleResendEmail = async () => {
@@ -302,17 +337,39 @@ export default function OnboardingPage() {
     }
   };
 
+  const handleAddKeyword = () => {
+    const trimmedKeyword = keywordInput.trim();
+    if (trimmedKeyword && !keywords.includes(trimmedKeyword)) {
+      setKeywords([...keywords, trimmedKeyword]);
+      setKeywordInput("");
+    }
+  };
+
+  const handleRemoveKeyword = (keywordToRemove: string) => {
+    setKeywords(keywords.filter((k) => k !== keywordToRemove));
+  };
+
+  const handleKeywordKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddKeyword();
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const keywordArray = keywords
-      .split(",")
-      .map((k) => k.trim())
-      .filter((k) => k.length > 0);
+    // Add any remaining keyword in the input field before submitting
+    let finalKeywords = [...keywords];
+    const trimmedInput = keywordInput.trim();
+    if (trimmedInput && !finalKeywords.includes(trimmedInput)) {
+      finalKeywords = [...finalKeywords, trimmedInput];
+      setKeywordInput("");
+    }
 
-    if (keywordArray.length === 0) {
+    if (finalKeywords.length === 0) {
       setError("Please enter at least one topic");
       setLoading(false);
       return;
@@ -362,11 +419,16 @@ export default function OnboardingPage() {
         return;
       }
 
+      // Update keywords state if we added a new one
+      if (finalKeywords.length > keywords.length) {
+        setKeywords(finalKeywords);
+      }
+
       const { data, error } = await supabase
         .from("user_prefs")
         .upsert({
           user_id: currentUser.id,
-          topics: keywordArray,
+          topics: finalKeywords,
           custom_rss_feeds: selectedRssFeeds,
           user_corpus: userCorpus,
           updated_at: new Date().toISOString(),
@@ -409,7 +471,9 @@ export default function OnboardingPage() {
           <h1 className="text-3xl font-semibold text-slate-900 dark:text-white mb-4">
             Welcome to linkedbud! 🎉
           </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400">Let&apos;s get you set up</p>
+          <p className="text-lg text-slate-600 dark:text-slate-400">
+            Let&apos;s get you set up
+          </p>
         </div>
 
         {/* Stepper */}
@@ -432,7 +496,9 @@ export default function OnboardingPage() {
                   <Mail className="w-6 h-6" />
                 )}
               </div>
-              <p className="text-sm font-medium mt-2 text-slate-700 dark:text-slate-300">Verify Email</p>
+              <p className="text-sm font-medium mt-2 text-slate-700 dark:text-slate-300">
+                Verify Email
+              </p>
             </div>
 
             <div className="flex-1 w-24 h-1 bg-slate-300 dark:bg-slate-600">
@@ -454,7 +520,9 @@ export default function OnboardingPage() {
               >
                 <Check className="w-6 h-6" />
               </div>
-              <p className="text-sm font-medium mt-2 text-slate-700 dark:text-slate-300">Your Preferences</p>
+              <p className="text-sm font-medium mt-2 text-slate-700 dark:text-slate-300">
+                Your Preferences
+              </p>
             </div>
           </div>
         </div>
@@ -496,7 +564,9 @@ export default function OnboardingPage() {
 
               {error && (
                 <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                  <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+                  <p className="text-sm text-red-800 dark:text-red-200">
+                    {error}
+                  </p>
                 </div>
               )}
 
@@ -510,6 +580,7 @@ export default function OnboardingPage() {
               )}
 
               <Button
+                type="button"
                 onClick={handleResendEmail}
                 className="w-full h-11 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                 variant="outline"
@@ -517,6 +588,18 @@ export default function OnboardingPage() {
               >
                 {resendLoading ? "Sending..." : "Resend verification email"}
               </Button>
+
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                <Button
+                  type="button"
+                  onClick={handleLogout}
+                  variant="ghost"
+                  className="w-full text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log out
+                </Button>
+              </div>
             </div>
           </div>
         ) : (
@@ -534,7 +617,10 @@ export default function OnboardingPage() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="firstName" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <Label
+                      htmlFor="firstName"
+                      className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                    >
                       First Name
                     </Label>
                     <Input
@@ -542,11 +628,20 @@ export default function OnboardingPage() {
                       placeholder="John"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
+                      onKeyDown={(e) => {
+                        // Prevent form submission on Enter key in this input
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                        }
+                      }}
                       className="h-11 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="lastName" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    <Label
+                      htmlFor="lastName"
+                      className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                    >
                       Last Name
                     </Label>
                     <Input
@@ -554,28 +649,72 @@ export default function OnboardingPage() {
                       placeholder="Doe"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
+                      onKeyDown={(e) => {
+                        // Prevent form submission on Enter key in this input
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                        }
+                      }}
                       className="h-11 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="keywords" className="text-sm font-medium text-slate-700 dark:text-slate-300">Topics</Label>
+                  <Label
+                    htmlFor="keywords"
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    Topics
+                  </Label>
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                    Enter topics related to your industry (comma-separated)
+                    Type a topic and press Enter to add it
                   </p>
+
+                  {/* Display tags/chips */}
+                  {keywords.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {keywords.map((keyword, index) => (
+                        <div
+                          key={index}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-full text-sm text-blue-900 dark:text-blue-100"
+                        >
+                          <span>{keyword}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveKeyword(keyword)}
+                            className="hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-full p-0.5 transition-colors"
+                            aria-label={`Remove ${keyword}`}
+                          >
+                            <X className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <Input
                     id="keywords"
-                    placeholder="e.g., technology, business, healthcare, marketing, finance"
-                    value={keywords}
-                    onChange={(e) => setKeywords(e.target.value)}
-                    required
+                    placeholder="e.g., technology (press Enter to add)"
+                    value={keywordInput}
+                    onChange={(e) => setKeywordInput(e.target.value)}
+                    onKeyDown={handleKeywordKeyDown}
                     className="h-11 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
                   />
+                  {keywords.length === 0 && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+                      At least one topic is required
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <Label htmlFor="posts" className="text-sm font-medium text-slate-700 dark:text-slate-300">Past LinkedIn Posts (Optional)</Label>
+                  <Label
+                    htmlFor="posts"
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    Past LinkedIn Posts (Optional)
+                  </Label>
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                     Paste the last of your previous LinkedIn posts (one per
                     textarea)
@@ -629,14 +768,19 @@ export default function OnboardingPage() {
                   )}
 
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-                    This helps us understand your writing style and tone. We&apos;ll
-                    use this to personalize your generated drafts. You can skip
-                    this if you prefer.
+                    This helps us understand your writing style and tone.
+                    We&apos;ll use this to personalize your generated drafts.
+                    You can skip this if you prefer.
                   </p>
                 </div>
 
                 <div>
-                  <Label htmlFor="rss-feeds" className="text-sm font-medium text-slate-700 dark:text-slate-300">RSS Feed Sources (Optional)</Label>
+                  <Label
+                    htmlFor="rss-feeds"
+                    className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                  >
+                    RSS Feed Sources (Optional)
+                  </Label>
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                     Select RSS feeds from popular sources to customize your news
                     feed
@@ -678,6 +822,18 @@ export default function OnboardingPage() {
                   </Button>
                 </div>
               </form>
+
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                <Button
+                  type="button"
+                  onClick={handleLogout}
+                  variant="ghost"
+                  className="w-full text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log out
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -685,8 +841,8 @@ export default function OnboardingPage() {
         {step === "preferences" && (
           <div className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
             <p>
-              Don&apos;t worry - you can always update these preferences later in
-              your settings.
+              Don&apos;t worry - you can always update these preferences later
+              in your settings.
             </p>
           </div>
         )}
