@@ -1,7 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ["@supabase/supabase-js"],
+    serverComponentsExternalPackages: ["@supabase/supabase-js", "handlebars"],
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Externalize handlebars for server-side to avoid webpack bundling issues
+      config.externals = config.externals || [];
+      config.externals.push("handlebars");
+    }
+    return config;
   },
   images: {
     remotePatterns: [

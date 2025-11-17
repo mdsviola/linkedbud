@@ -104,45 +104,45 @@ export const PRICING_PLANS: PricingPlan[] = [
     },
   },
   {
-    name: pricingConfig.tiers.STARTER.name,
-    price: formatPriceDisplay(pricingConfig.tiers.STARTER.monthlyPrice),
+    name: pricingConfig.tiers.PRO.name,
+    price: formatPriceDisplay(pricingConfig.tiers.PRO.monthlyPrice),
     monthlyPrice:
-      typeof pricingConfig.tiers.STARTER.monthlyPrice === "number"
-        ? pricingConfig.tiers.STARTER.monthlyPrice
+      typeof pricingConfig.tiers.PRO.monthlyPrice === "number"
+        ? pricingConfig.tiers.PRO.monthlyPrice
         : undefined,
     yearlyPrice:
-      typeof pricingConfig.tiers.STARTER.yearlyPrice === "number"
-        ? pricingConfig.tiers.STARTER.yearlyPrice
+      typeof pricingConfig.tiers.PRO.yearlyPrice === "number"
+        ? pricingConfig.tiers.PRO.yearlyPrice
         : undefined,
-    tagline: pricingConfig.tiers.STARTER.tagline,
-    targetUser: pricingConfig.tiers.STARTER.targetUser,
-    idealFor: pricingConfig.tiers.STARTER.idealFor,
-    description: pricingConfig.tiers.STARTER.description || pricingConfig.tiers.STARTER.tagline,
-    features: pricingConfig.tiers.STARTER.featureSections || [
+    tagline: pricingConfig.tiers.PRO.tagline,
+    targetUser: pricingConfig.tiers.PRO.targetUser,
+    idealFor: pricingConfig.tiers.PRO.idealFor,
+    description: pricingConfig.tiers.PRO.description || pricingConfig.tiers.PRO.tagline,
+    features: pricingConfig.tiers.PRO.featureSections || [
       ...pricingConfig.allTiersInclude,
-      ...pricingConfig.tiers.STARTER.keyFeatures,
+      ...pricingConfig.tiers.PRO.keyFeatures,
     ],
-    keyFeatures: pricingConfig.tiers.STARTER.keyFeatures,
-    cta: pricingConfig.tiers.STARTER.cta || "Join Early Access",
-    href: pricingConfig.tiers.STARTER.href || "/auth/signup",
-    highlighted: pricingConfig.tiers.STARTER.highlighted || false,
-    badge: pricingConfig.tiers.STARTER.badge ?? null,
+    keyFeatures: pricingConfig.tiers.PRO.keyFeatures,
+    cta: pricingConfig.tiers.PRO.cta || "Join Early Access",
+    href: pricingConfig.tiers.PRO.href || "/auth/signup",
+    highlighted: pricingConfig.tiers.PRO.highlighted || false,
+    badge: pricingConfig.tiers.PRO.badge ?? null,
     teamMembersIncluded:
-      typeof pricingConfig.tiers.STARTER.teamMembersIncluded === "number"
-        ? pricingConfig.tiers.STARTER.teamMembersIncluded
+      typeof pricingConfig.tiers.PRO.teamMembersIncluded === "number"
+        ? pricingConfig.tiers.PRO.teamMembersIncluded
         : undefined,
     extraSeatPrice:
-      pricingConfig.tiers.STARTER.extraSeatPrice === null ||
-      pricingConfig.tiers.STARTER.extraSeatPrice === "Negotiated"
+      pricingConfig.tiers.PRO.extraSeatPrice === null ||
+      pricingConfig.tiers.PRO.extraSeatPrice === "Negotiated"
         ? null
-        : typeof pricingConfig.tiers.STARTER.extraSeatPrice === "number"
-          ? pricingConfig.tiers.STARTER.extraSeatPrice
+        : typeof pricingConfig.tiers.PRO.extraSeatPrice === "number"
+          ? pricingConfig.tiers.PRO.extraSeatPrice
           : undefined,
     limits: {
-      aiGenerationsPerMonth: pricingConfig.tiers.STARTER.limits.aiGenerationsPerMonth,
-      scheduledPostsPerMonth: pricingConfig.tiers.STARTER.limits.scheduledPostsPerMonth,
-      analyticsDepth: pricingConfig.tiers.STARTER.limits.analyticsDepth,
-      collaborationFeatures: pricingConfig.tiers.STARTER.limits.collaborationFeatures,
+      aiGenerationsPerMonth: pricingConfig.tiers.PRO.limits.aiGenerationsPerMonth,
+      scheduledPostsPerMonth: pricingConfig.tiers.PRO.limits.scheduledPostsPerMonth,
+      analyticsDepth: pricingConfig.tiers.PRO.limits.analyticsDepth,
+      collaborationFeatures: pricingConfig.tiers.PRO.limits.collaborationFeatures,
     },
   },
   {

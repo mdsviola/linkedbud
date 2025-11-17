@@ -292,6 +292,85 @@ async function fetchSubscriptionDetails(
   }
 }
 
+// Helper function to cancel a subscription via LemonSqueezy API and update database
+async function cancelSubscription(
+  supabase: any,
+  subscriptionId: string
+): Promise<boolean> {
+  if (
+    !subscriptionId ||
+    subscriptionId === "null" ||
+    subscriptionId === "no-external-id"
+  ) {
+    console.log(
+      `Skipping cancellation for invalid subscription ID: ${subscriptionId}`
+    );
+    return false;
+  }
+
+  const apiKey = Deno.env.get("LEMONSQUEEZY_API_KEY");
+  if (!apiKey) {
+    console.error("LEMONSQUEEZY_API_KEY not configured");
+    return false;
+  }
+
+  try {
+    // Cancel subscription via LemonSqueezy API
+    const response = await fetch(
+      `https://api.lemonsqueezy.com/v1/subscriptions/${subscriptionId}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/vnd.api+json",
+          Accept: "application/vnd.api+json",
+        },
+        body: JSON.stringify({
+          data: {
+            type: "subscriptions",
+            id: subscriptionId,
+            attributes: {
+              cancelled: true,
+            },
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error(
+        `Failed to cancel subscription ${subscriptionId}:`,
+        errorData
+      );
+      return false;
+    }
+
+    // Update database status
+    const { error: updateError } = await supabase
+      .from("subscriptions")
+      .update({
+        status: "canceled",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("external_subscription_id", subscriptionId);
+
+    if (updateError) {
+      console.error(
+        `Error updating subscription ${subscriptionId} in database:`,
+        updateError
+      );
+      return false;
+    }
+
+    console.log(`Successfully cancelled subscription ${subscriptionId}`);
+    return true;
+  } catch (error) {
+    console.error(`Error cancelling subscription ${subscriptionId}:`, error);
+    return false;
+  }
+}
+
 async function handleSubscriptionUpdate(supabase: any, data: any, meta: any) {
   const { attributes, relationships } = data;
 
@@ -344,17 +423,20 @@ async function handleSubscriptionUpdate(supabase: any, data: any, meta: any) {
   // For extra seats, we don't need to check tier changes
   // For main subscriptions, find the main membership subscription
   let previousSub = null;
+  let previousMainSubscriptions: any[] = [];
   if (!isExtraSeat) {
-    // Find subscription with membership_type = "membership" (main subscription)
-    const { data: mainSub } = await supabase
+    // Find all active main subscriptions (membership_type = "membership")
+    const { data: mainSubs } = await supabase
       .from("subscriptions")
-      .select("price_id, status, membership_type")
+      .select("price_id, status, membership_type, external_subscription_id")
       .eq("user_id", userId)
       .eq("provider", "lemonsqueezy")
       .eq("membership_type", "membership")
-      .maybeSingle();
+      .eq("status", "active");
 
-    previousSub = mainSub;
+    previousMainSubscriptions = mainSubs || [];
+    // Get the first one for tier comparison (legacy behavior)
+    previousSub = previousMainSubscriptions[0] || null;
   }
 
   const previousTier = getTierFromPriceId(previousSub?.price_id);
@@ -395,6 +477,8 @@ async function handleSubscriptionUpdate(supabase: any, data: any, meta: any) {
     throw new Error(`Failed to lookup subscription: ${lookupError.message}`);
   }
 
+  const isNewSubscription = !existingSub;
+
   if (existingSub) {
     // Update existing subscription by external_subscription_id
     const { error: updateError } = await supabase
@@ -415,6 +499,44 @@ async function handleSubscriptionUpdate(supabase: any, data: any, meta: any) {
     if (insertError) {
       console.error("Error inserting subscription:", insertError);
       throw new Error(`Failed to insert subscription: ${insertError.message}`);
+    }
+  }
+
+  // If this is a new main subscription (not an addon), cancel previous subscriptions
+  if (isNewSubscription && !isExtraSeat) {
+    // Cancel all previous active main subscriptions (except the new one)
+    const subscriptionsToCancel = previousMainSubscriptions.filter(
+      (sub) =>
+        sub.external_subscription_id && sub.external_subscription_id !== data.id
+    );
+
+    if (subscriptionsToCancel.length > 0) {
+      console.log(
+        `Cancelling ${subscriptionsToCancel.length} previous main subscription(s) for user ${userId}`
+      );
+      const cancelPromises = subscriptionsToCancel.map((sub) =>
+        cancelSubscription(supabase, sub.external_subscription_id)
+      );
+      await Promise.all(cancelPromises);
+    }
+
+    // Cancel all addon subscriptions (extra seats) for this user
+    const { data: addonSubscriptions, error: addonError } = await supabase
+      .from("subscriptions")
+      .select("external_subscription_id")
+      .eq("user_id", userId)
+      .eq("provider", "lemonsqueezy")
+      .eq("membership_type", "addon")
+      .eq("status", "active");
+
+    if (!addonError && addonSubscriptions && addonSubscriptions.length > 0) {
+      console.log(
+        `Cancelling ${addonSubscriptions.length} addon subscription(s) for user ${userId}`
+      );
+      const cancelPromises = addonSubscriptions.map((addon) =>
+        cancelSubscription(supabase, addon.external_subscription_id)
+      );
+      await Promise.all(cancelPromises);
     }
   }
 
@@ -634,11 +756,11 @@ function getTierFromPriceId(priceId: string | null | undefined): string {
 
   const proPriceId = Deno.env.get("LEMONSQUEEZY_VARIANT_ID_PRO");
   if (priceId === proPriceId) {
-    return "STARTER";
+    return "PRO";
   }
 
-  // Default to STARTER for other active subscriptions
-  return "STARTER";
+  // Default to PRO for other active subscriptions
+  return "PRO";
 }
 
 // Handle portfolio creation on Growth upgrade

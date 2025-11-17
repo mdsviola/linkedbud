@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,15 +11,38 @@ export async function POST(request: NextRequest) {
 
     // Map plan name to tier and variant ID
     // Plan names: "Free", "Creator Lite", "Creator Pro", "Growth" (legacy: "Lite", "Starter" also supported)
-    // Tier names: "FREE", "LITE", "STARTER", "GROWTH"
-    const planToTierMap: Record<string, { tier: string; variantEnvKey: string; displayName: string }> = {
-      "Free": { tier: "FREE", variantEnvKey: "", displayName: "linkedbud Free" },
-      "Creator Lite": { tier: "LITE", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_LITE", displayName: "linkedbud Creator Lite" },
-      "Creator Pro": { tier: "STARTER", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_PRO", displayName: "linkedbud Creator Pro" },
-      "Growth": { tier: "GROWTH", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_GROWTH", displayName: "linkedbud Growth" },
+    // Tier names: "FREE", "LITE", "PRO", "GROWTH"
+    const planToTierMap: Record<
+      string,
+      { tier: string; variantEnvKey: string; displayName: string }
+    > = {
+      Free: { tier: "FREE", variantEnvKey: "", displayName: "linkedbud Free" },
+      "Creator Lite": {
+        tier: "LITE",
+        variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_LITE",
+        displayName: "linkedbud Creator Lite",
+      },
+      "Creator Pro": {
+        tier: "PRO",
+        variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_PRO",
+        displayName: "linkedbud Creator Pro",
+      },
+      Growth: {
+        tier: "GROWTH",
+        variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_GROWTH",
+        displayName: "linkedbud Growth",
+      },
       // Legacy plan names for backward compatibility
-      "Lite": { tier: "LITE", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_LITE", displayName: "linkedbud Creator Lite" },
-      "Starter": { tier: "STARTER", variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_PRO", displayName: "linkedbud Creator Pro" },
+      Lite: {
+        tier: "LITE",
+        variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_LITE",
+        displayName: "linkedbud Creator Lite",
+      },
+      Starter: {
+        tier: "PRO",
+        variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_PRO",
+        displayName: "linkedbud Creator Pro",
+      },
     };
 
     // Default to Creator Pro if no plan specified
@@ -33,7 +56,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const planConfig = planToTierMap[selectedPlan] || planToTierMap["Creator Pro"];
+    const planConfig =
+      planToTierMap[selectedPlan] || planToTierMap["Creator Pro"];
 
     // Validate required environment variables
     const requiredEnvVars: Record<string, string | undefined> = {
@@ -44,10 +68,12 @@ export async function POST(request: NextRequest) {
 
     // Add variant ID requirement based on selected plan
     if (planConfig.variantEnvKey) {
-      requiredEnvVars[planConfig.variantEnvKey] = process.env[planConfig.variantEnvKey];
+      requiredEnvVars[planConfig.variantEnvKey] =
+        process.env[planConfig.variantEnvKey];
     } else {
       // If Free tier, we still need a variant (fallback to Creator Pro)
-      requiredEnvVars.LEMONSQUEEZY_VARIANT_ID_PRO = process.env.LEMONSQUEEZY_VARIANT_ID_PRO;
+      requiredEnvVars.LEMONSQUEEZY_VARIANT_ID_PRO =
+        process.env.LEMONSQUEEZY_VARIANT_ID_PRO;
     }
 
     const missingVars = Object.entries(requiredEnvVars)
@@ -112,6 +138,7 @@ export async function POST(request: NextRequest) {
           name: planConfig.displayName,
           description: `Upgrade to ${planConfig.displayName}`,
           media: [],
+          enabled_variants: [variantId],
           redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription?success=true`,
           receipt_button_text: "Manage Subscription",
           receipt_link_url: `${process.env.NEXT_PUBLIC_APP_URL}/subscription`,

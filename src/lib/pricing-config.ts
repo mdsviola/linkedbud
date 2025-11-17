@@ -5,7 +5,7 @@
 
 import { PRICING_DATA, type PricingData, type FeatureSection } from "./pricing-data";
 
-export type PricingTier = "FREE" | "LITE" | "STARTER" | "GROWTH" | "ENTERPRISE";
+export type PricingTier = "FREE" | "LITE" | "PRO" | "GROWTH" | "ENTERPRISE";
 
 export interface TierConfig {
   name: string;
@@ -74,11 +74,11 @@ export function getPricingConfig(): PricingConfig {
         yearlyPrice: PRICING_DATA.tiers.LITE.yearlyPrice,
         featureSections: PRICING_DATA.tiers.LITE.featureSections,
       },
-      STARTER: {
-        ...PRICING_DATA.tiers.STARTER,
-        monthlyPrice: PRICING_DATA.tiers.STARTER.monthlyPrice,
-        yearlyPrice: PRICING_DATA.tiers.STARTER.yearlyPrice,
-        featureSections: PRICING_DATA.tiers.STARTER.featureSections,
+      PRO: {
+        ...PRICING_DATA.tiers.PRO,
+        monthlyPrice: PRICING_DATA.tiers.PRO.monthlyPrice,
+        yearlyPrice: PRICING_DATA.tiers.PRO.yearlyPrice,
+        featureSections: PRICING_DATA.tiers.PRO.featureSections,
       },
       GROWTH: {
         ...PRICING_DATA.tiers.GROWTH,
@@ -116,10 +116,10 @@ export function getTierPricing(tier: PricingTier) {
 }
 
 /**
- * Get Starter tier pricing (most common for authenticated pages)
+ * Get Pro tier pricing (most common for authenticated pages)
  */
 export function getStarterPricing() {
-  return getTierPricing("STARTER");
+  return getTierPricing("PRO");
 }
 
 /**

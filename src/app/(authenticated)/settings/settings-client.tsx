@@ -36,7 +36,8 @@ import {
 } from "@/lib/linkedin-token-utils";
 import { LinkedInOrganizationDB } from "@/lib/linkedin";
 import { CommaSeparatedInput } from "@/components/ui/comma-separated-input";
-import { getStarterPricing, formatPrice, getPricingConfig } from "@/lib/pricing-config";
+import { getTierPricing, formatPrice, getPricingConfig } from "@/lib/pricing-config";
+import { getTierFromPriceId, getTierDisplayName, type PricingTier } from "@/lib/tier-utils";
 import { CollaborationTabContent } from "./collaboration-tab-content";
 
 interface User {
@@ -55,6 +56,7 @@ interface Subscription {
   status: string;
   current_period_end: string;
   external_subscription_id?: string;
+  price_id?: string;
 }
 
 interface LinkedInAccount {
@@ -77,6 +79,8 @@ interface SettingsClientProps {
 export function SettingsClient({ user }: SettingsClientProps) {
   const router = useRouter();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [subscriptionTier, setSubscriptionTier] = useState<PricingTier | null>(null);
+  const [tierLoading, setTierLoading] = useState(false);
   const [linkedinAccount, setLinkedinAccount] =
     useState<LinkedInAccount | null>(null);
   const [communityToken, setCommunityToken] =
@@ -200,17 +204,67 @@ export function SettingsClient({ user }: SettingsClientProps) {
 
   const fetchSettings = async () => {
     try {
-      // Fetch main membership subscription (not addons)
-      const { data: subData, error: subError } = await supabase
-        .from("subscriptions")
-        .select("status, current_period_end, external_subscription_id")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .eq("membership_type", "membership")
-        .maybeSingle();
+      // Use the same API endpoint as subscription page for consistency
+      // This uses getUserSubscription which handles NULL membership_type and excludes addons
+      const response = await fetch("/api/billing/portal");
 
-      if (!subError && subData) {
-        setSubscription(subData);
+      if (response.ok) {
+        const data = await response.json();
+        const subData = data.subscription;
+
+        if (subData) {
+          setSubscription({
+            status: subData.status,
+            current_period_end: subData.current_period_end,
+            external_subscription_id: subData.external_subscription_id,
+            price_id: subData.price_id,
+          });
+
+          // Fetch tier from server-side API (uses server env vars)
+          if (subData.price_id) {
+            setTierLoading(true);
+            try {
+              const tierResponse = await fetch(
+                `/api/portfolio/check-tier?price_id=${subData.price_id}`
+              );
+              if (tierResponse.ok) {
+                const tierData = await tierResponse.json();
+                setSubscriptionTier(tierData.tier);
+              } else {
+                // Fallback to client-side detection
+                const tier = getTierFromPriceId(subData.price_id);
+                setSubscriptionTier(tier);
+              }
+            } catch (error) {
+              console.error("Error fetching tier:", error);
+              // Fallback to client-side detection
+              const tier = getTierFromPriceId(subData.price_id);
+              setSubscriptionTier(tier);
+            } finally {
+              setTierLoading(false);
+            }
+          } else {
+            // No price_id means free tier
+            setSubscriptionTier("FREE");
+            setTierLoading(false);
+          }
+        } else {
+          // No subscription found
+          setSubscription(null);
+          setSubscriptionTier("FREE");
+          setTierLoading(false);
+        }
+      } else if (response.status === 404) {
+        // No active subscription found - this is normal for free users
+        setSubscription(null);
+        setSubscriptionTier("FREE");
+        setTierLoading(false);
+      } else {
+        // Handle other errors
+        console.error("Failed to fetch subscription:", response.status, response.statusText);
+        setSubscription(null);
+        setSubscriptionTier("FREE");
+        setTierLoading(false);
       }
 
       // Fetch LinkedIn personal token status
@@ -763,53 +817,64 @@ export function SettingsClient({ user }: SettingsClientProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               {subscription ? (
-                <>
-                  <div className="bg-green-50 p-6 rounded-lg border border-green-200">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Crown className="h-6 w-6 text-green-600" />
-                      <span className="text-lg font-semibold text-green-900">
-                        {getStarterPricing().name} Plan Active
-                      </span>
-                    </div>
+                (() => {
+                  // Use tier from API if available, otherwise fallback
+                  const tier = subscriptionTier || getTierFromPriceId(subscription.price_id) || "PRO";
+                  const tierPricing = getTierPricing(tier);
+                  const tierDisplayName = getTierDisplayName(tier);
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <span className="text-sm text-green-700">Plan:</span>
-                        <p className="font-medium text-green-900">{getStarterPricing().name} Plan</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-green-700">Status:</span>
-                        <p className="font-medium text-green-900 capitalize">
-                          {subscription.status}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-green-700">
-                          Next Billing:
-                        </span>
-                        <p className="font-medium text-green-900">
-                          {new Date(
-                            subscription.current_period_end
-                          ).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-green-700">Price:</span>
-                        <p className="font-medium text-green-900">
-                          {typeof getStarterPricing().monthlyPrice === "number"
-                            ? `${formatPrice(getStarterPricing().monthlyPrice, getPricingConfig().currency)}/month`
-                            : "Custom"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                  return (
+                    <>
+                      <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Crown className="h-6 w-6 text-green-600" />
+                          <span className="text-lg font-semibold text-green-900">
+                            {tierLoading ? "Loading..." : `${tierDisplayName} Plan Active`}
+                          </span>
+                        </div>
 
-                  <div className="mt-4">
-                    <Button variant="outline" asChild>
-                      <a href="/subscription">Manage Subscription</a>
-                    </Button>
-                  </div>
-                </>
+                        {!tierLoading && (
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <span className="text-sm text-green-700">Plan:</span>
+                              <p className="font-medium text-green-900">{tierDisplayName} Plan</p>
+                            </div>
+                            <div>
+                              <span className="text-sm text-green-700">Status:</span>
+                              <p className="font-medium text-green-900 capitalize">
+                                {subscription.status}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-sm text-green-700">
+                                Next Billing:
+                              </span>
+                              <p className="font-medium text-green-900">
+                                {new Date(
+                                  subscription.current_period_end
+                                ).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-sm text-green-700">Price:</span>
+                              <p className="font-medium text-green-900">
+                                {typeof tierPricing.monthlyPrice === "number"
+                                  ? `${formatPrice(tierPricing.monthlyPrice, getPricingConfig().currency)}/month`
+                                  : "Custom"}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="mt-4">
+                        <Button variant="outline" asChild>
+                          <a href="/subscription">Manage Subscription</a>
+                        </Button>
+                      </div>
+                    </>
+                  );
+                })()
               ) : (
                 <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
                   <div className="flex items-center gap-2 mb-4">

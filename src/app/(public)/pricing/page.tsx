@@ -82,8 +82,8 @@ export default async function PricingPage() {
       ? pricingConfig.tiers.LITE.monthlyPrice
       : 9;
   const starterPrice =
-    typeof pricingConfig.tiers.STARTER.monthlyPrice === "number"
-      ? pricingConfig.tiers.STARTER.monthlyPrice
+    typeof pricingConfig.tiers.PRO.monthlyPrice === "number"
+      ? pricingConfig.tiers.PRO.monthlyPrice
       : 19;
   const growthPrice =
     typeof pricingConfig.tiers.GROWTH.monthlyPrice === "number"

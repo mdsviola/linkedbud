@@ -7,7 +7,7 @@ export const VARIANT_MAP: { [key: string]: string } = {
   ...(process.env.LEMONSQUEEZY_VARIANT_ID_LITE
     ? { [process.env.LEMONSQUEEZY_VARIANT_ID_LITE]: "linkedbud Creator Lite" }
     : {}),
-  // Creator Pro tier variant (maps to STARTER subscription tier)
+  // Creator Pro tier variant (maps to PRO subscription tier)
   ...(process.env.LEMONSQUEEZY_VARIANT_ID_PRO
     ? { [process.env.LEMONSQUEEZY_VARIANT_ID_PRO]: "linkedbud Creator Pro" }
     : {}),

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { getUserPortfolio } from "@/lib/portfolio";
+import { getTierFromPriceId } from "@/lib/tier-utils";
+import { getUserSubscription } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +39,23 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Verify user is on Growth plan
+    const subscription = await getUserSubscription(user.id);
+    if (!subscription || !subscription.price_id) {
+      return NextResponse.json(
+        { error: "You must have an active Growth plan subscription to purchase additional seats" },
+        { status: 403 }
+      );
+    }
+
+    const userTier = getTierFromPriceId(subscription.price_id);
+    if (userTier !== "GROWTH") {
+      return NextResponse.json(
+        { error: "Additional seats are only available for Growth plan subscribers. Please upgrade to Growth plan first." },
+        { status: 403 }
+      );
     }
 
     // Verify user is a portfolio owner
@@ -80,6 +99,7 @@ export async function POST(request: NextRequest) {
           name: "Growth Seat",
           description: "Additional seat for Growth plan collaboration",
           media: [],
+          enabled_variants: [GROWTH_SEAT_PRICE_ID],
           redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=collaboration&success=true`,
           receipt_button_text: "Manage Subscription",
           receipt_link_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings?tab=collaboration`,

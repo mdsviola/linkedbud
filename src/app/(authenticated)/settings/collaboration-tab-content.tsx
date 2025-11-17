@@ -74,22 +74,23 @@ export function CollaborationTabContent() {
         return;
       }
 
-      // Check subscription
-      const { data: subscription } = await supabase
-        .from("subscriptions")
-        .select("price_id, status")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .single();
+      // Use the same API endpoint as billing/subscription pages for consistency
+      // This uses getUserSubscription which handles NULL membership_type and excludes addons
+      const response = await fetch("/api/billing/portal");
 
-      // Check if price_id matches Growth tier
       let hasGrowth = false;
-      if (subscription?.price_id) {
-        // Fetch tier info from API
-        const tierRes = await fetch(`/api/portfolio/check-tier?price_id=${subscription.price_id}`);
-        if (tierRes.ok) {
-          const tierData = await tierRes.json();
-          hasGrowth = tierData.tier === "GROWTH";
+      if (response.ok) {
+        const data = await response.json();
+        const subscription = data.subscription;
+
+        // Check if price_id matches Growth tier
+        if (subscription?.price_id) {
+          // Fetch tier info from API
+          const tierRes = await fetch(`/api/portfolio/check-tier?price_id=${subscription.price_id}`);
+          if (tierRes.ok) {
+            const tierData = await tierRes.json();
+            hasGrowth = tierData.tier === "GROWTH";
+          }
         }
       }
       setHasGrowthPlan(hasGrowth);
@@ -394,11 +395,16 @@ export function CollaborationTabContent() {
 
                 <Button
                   onClick={handlePurchaseSeat}
-                  disabled={purchasingSeat}
+                  disabled={purchasingSeat || !hasGrowthPlan}
                   className="w-full"
                 >
                   {purchasingSeat ? "Processing..." : "Purchase Additional Seat"}
                 </Button>
+                {!hasGrowthPlan && (
+                  <p className="text-sm text-muted-foreground text-center mt-2">
+                    You must be on the Growth plan to purchase additional seats.
+                  </p>
+                )}
               </div>
             )}
           </CardContent>

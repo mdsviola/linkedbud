@@ -199,7 +199,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const planName = tier === "GROWTH" ? "Growth" : tier === "STARTER" ? "Creator Pro" : tier === "LITE" ? "Creator Lite" : "Creator Pro";
+    const planName = tier === "GROWTH" ? "Growth" : tier === "PRO" ? "Creator Pro" : tier === "LITE" ? "Creator Lite" : "Creator Pro";
 
     return NextResponse.json({
       success: true,

@@ -1,6 +1,6 @@
 /**
  * Utility functions for managing subscription tiers
- * Supports the new subscription model with multiple tiers: FREE, LITE, STARTER, GROWTH, ENTERPRISE
+ * Supports the new subscription model with multiple tiers: FREE, LITE, PRO, GROWTH, ENTERPRISE
  */
 
 import type { PricingTier } from "./pricing-config";
@@ -10,12 +10,12 @@ export type { PricingTier };
 
 // Tier mapping: maps price_id to tier name
 // This allows different price_ids to share the same tier limits
-// Supports new pricing structure: LITE, STARTER, GROWTH, ENTERPRISE
+// Supports new pricing structure: LITE, PRO, GROWTH, ENTERPRISE
 // Note: These env vars are replaced at build time by Next.js
 const TIER_MAPPING: Record<string, PricingTier> = {
-  // Map Creator Pro tier variant to STARTER tier
+  // Map Creator Pro tier variant to PRO tier
   ...(process.env.LEMONSQUEEZY_VARIANT_ID_PRO
-    ? { [process.env.LEMONSQUEEZY_VARIANT_ID_PRO]: "STARTER" }
+    ? { [process.env.LEMONSQUEEZY_VARIANT_ID_PRO]: "PRO" }
     : {}),
   // Map Growth tier variant
   ...(process.env.LEMONSQUEEZY_VARIANT_ID_GROWTH
@@ -36,17 +36,17 @@ const TIER_MAPPING: Record<string, PricingTier> = {
 const TIER_TO_PRICE_ID: Record<PricingTier, string | null> = {
   FREE: null, // Free tier doesn't have a price_id
   LITE: process.env.LEMONSQUEEZY_VARIANT_ID_LITE || null,
-  STARTER: process.env.LEMONSQUEEZY_VARIANT_ID_PRO || null,
+  PRO: process.env.LEMONSQUEEZY_VARIANT_ID_PRO || null,
   GROWTH: process.env.LEMONSQUEEZY_VARIANT_ID_GROWTH || null,
   ENTERPRISE: process.env.LEMONSQUEEZY_VARIANT_ID_ENTERPRISE || null,
 };
 
-const DEFAULT_TIER: PricingTier = "STARTER";
+const DEFAULT_TIER: PricingTier = "PRO";
 
 /**
  * Get tier name from price_id
  * @param priceId - The LemonSqueezy price_id/variant_id
- * @returns The tier name (FREE, LITE, STARTER, GROWTH, ENTERPRISE) or null if not found
+ * @returns The tier name (FREE, LITE, PRO, GROWTH, ENTERPRISE) or null if not found
  */
 export function getTierFromPriceId(
   priceId: string | null | undefined
@@ -60,7 +60,7 @@ export function getTierFromPriceId(
     return TIER_MAPPING[priceId];
   }
 
-  // Default to STARTER tier for active subscriptions without specific mapping
+  // Default to PRO tier for active subscriptions without specific mapping
   return DEFAULT_TIER;
 }
 
@@ -78,7 +78,7 @@ export function getPriceIdFromTier(tier: PricingTier): string | null {
  * @returns Array of tier names
  */
 export function getAllTiers(): PricingTier[] {
-  return ["FREE", "LITE", "STARTER", "GROWTH", "ENTERPRISE"];
+  return ["FREE", "LITE", "PRO", "GROWTH", "ENTERPRISE"];
 }
 
 /**
@@ -90,7 +90,7 @@ export function getTierDisplayName(tier: PricingTier): string {
   const displayNames: Record<PricingTier, string> = {
     FREE: "Free",
     LITE: "Creator Lite",
-    STARTER: "Creator Pro",
+    PRO: "Creator Pro",
     GROWTH: "Growth",
     ENTERPRISE: "Enterprise",
   };

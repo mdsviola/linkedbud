@@ -49,10 +49,10 @@ type GenerationCounts = {
 
 // Tier mapping: maps price_id to tier name
 // This allows different price_ids to share the same tier limits
-// Supports pricing structure: LITE (Creator Lite), STARTER (Creator Pro), GROWTH, ENTERPRISE
+// Supports pricing structure: LITE (Creator Lite), PRO (Creator Pro), GROWTH, ENTERPRISE
 const TIER_MAPPING: Record<string, string> = {
-  // Map Creator Pro tier variant to STARTER tier (display name: "Creator Pro")
-  [process.env.LEMONSQUEEZY_VARIANT_ID_PRO || ""]: "STARTER",
+  // Map Creator Pro tier variant to PRO tier (display name: "Creator Pro")
+  [process.env.LEMONSQUEEZY_VARIANT_ID_PRO || ""]: "PRO",
   // Map Growth tier variant
   [process.env.LEMONSQUEEZY_VARIANT_ID_GROWTH || ""]: "GROWTH",
   // Map Creator Lite tier variant to LITE tier (display name: "Creator Lite")
@@ -106,7 +106,7 @@ function getTierLimit(tier: string, type: LimitType): number {
         break;
     }
   } else {
-    // Subscription tiers (STARTER, GROWTH, ENTERPRISE) default to unlimited
+    // Subscription tiers (PRO, GROWTH, ENTERPRISE) default to unlimited
     defaultValue = "-1";
   }
 
@@ -114,7 +114,7 @@ function getTierLimit(tier: string, type: LimitType): number {
 }
 
 // Default tier limits (for backward compatibility and as fallback)
-const DEFAULT_TIER = "STARTER";
+const DEFAULT_TIER = "PRO";
 
 export async function getUser() {
   const supabase = createReadOnlyServerClient();
@@ -243,7 +243,7 @@ async function getUserTier(userId: string): Promise<string> {
     return TIER_MAPPING[subscription.price_id];
   }
 
-  // Default to STARTER tier for active subscriptions without specific mapping
+  // Default to PRO tier for active subscriptions without specific mapping
   return DEFAULT_TIER;
 }
 

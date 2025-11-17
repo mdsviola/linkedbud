@@ -202,7 +202,7 @@ export const PRICING_DATA: PricingData = {
       highlighted: false,
       badge: null,
     },
-    STARTER: {
+    PRO: {
       name: "Creator Pro",
       tagline: "Unlimited* usage for serious creators",
       targetUser: "Serious creators who need unlimited* AI features",
