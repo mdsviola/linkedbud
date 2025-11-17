@@ -587,8 +587,8 @@ export function SettingsClient({ user }: SettingsClientProps) {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Warning banner when only one step is complete */}
-              {((linkedinAccount && organizations.length === 0) ||
-                (!linkedinAccount && organizations.length > 0)) && (
+              {((linkedinAccount && !communityToken) ||
+                (!linkedinAccount && communityToken)) && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                   <div className="flex items-center gap-2">
                     <XCircle className="h-5 w-5 text-amber-600" />
@@ -604,7 +604,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
               )}
 
               {/* Success banner when both are connected */}
-              {linkedinAccount && organizations.length > 0 && (
+              {linkedinAccount && communityToken && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle className="h-5 w-5 text-green-600" />
@@ -710,8 +710,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
                 <div className="border rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      {organizations.length > 0 &&
-                      communityToken &&
+                      {communityToken &&
                       !isTokenExpired(communityToken.token_expires_at) ? (
                         <CheckCircle className="h-5 w-5 text-green-600" />
                       ) : (
@@ -721,7 +720,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
                         Community Management Permissions
                       </span>
                     </div>
-                    {organizations.length > 0 && (
+                    {communityToken && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -736,30 +735,38 @@ export function SettingsClient({ user }: SettingsClientProps) {
                     )}
                   </div>
 
-                  {organizations.length > 0 ? (
+                  {communityToken ? (
                     <div className="space-y-3">
                       <div>
-                        <p className="text-sm text-gray-700">
-                          Access to fetch metrics and publish to{" "}
-                          {organizations.length} organization
-                          {organizations.length !== 1 ? "s" : ""}
-                        </p>
-                        <div className="mt-2 space-y-2">
-                          {organizations.map((org) => (
-                            <div
-                              key={org.linkedin_org_id}
-                              className="flex items-center gap-2"
-                            >
-                              <Building2 className="h-4 w-4 text-blue-600" />
-                              <span className="text-sm text-gray-600">
-                                {org.org_name}
-                              </span>
+                        {organizations.length > 0 ? (
+                          <>
+                            <p className="text-sm text-gray-700">
+                              Access to fetch metrics and publish to{" "}
+                              {organizations.length} organization
+                              {organizations.length !== 1 ? "s" : ""}
+                            </p>
+                            <div className="mt-2 space-y-2">
+                              {organizations.map((org) => (
+                                <div
+                                  key={org.linkedin_org_id}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Building2 className="h-4 w-4 text-blue-600" />
+                                  <span className="text-sm text-gray-600">
+                                    {org.org_name}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
+                          </>
+                        ) : (
+                          <p className="text-sm text-gray-700">
+                            Community Management permissions granted. You can fetch metrics and publish to organization pages you administer.
+                          </p>
+                        )}
                       </div>
 
-                      {communityToken?.token_expires_at && (
+                      {communityToken.token_expires_at && (
                         <div className="pt-3 border-t">
                           <p className="text-xs text-gray-600">
                             <span className="font-medium">Expires:</span>{" "}
