@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { createClientClient } from "@/lib/supabase-client";
@@ -60,7 +61,9 @@ export function SharedNav({
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [linkedInProfilePicture, setLinkedInProfilePicture] = useState<string | null>(null);
+  const [linkedInProfilePicture, setLinkedInProfilePicture] = useState<
+    string | null
+  >(null);
   const pathname = usePathname();
   const router = useRouter();
   const postsDropdownRef = useRef<HTMLDivElement>(null);
@@ -95,13 +98,19 @@ export function SharedNav({
           const linkedInResponse = await fetch("/api/linkedin/status");
           if (linkedInResponse.ok) {
             const linkedInData = await linkedInResponse.json();
-            if (linkedInData.connected && linkedInData.profile?.profilePicture) {
+            if (
+              linkedInData.connected &&
+              linkedInData.profile?.profilePicture
+            ) {
               setLinkedInProfilePicture(linkedInData.profile.profilePicture);
             }
           }
         } catch (linkedInError) {
           // Silently fail - LinkedIn integration is optional
-          console.debug("Could not fetch LinkedIn profile picture:", linkedInError);
+          console.debug(
+            "Could not fetch LinkedIn profile picture:",
+            linkedInError
+          );
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -121,7 +130,7 @@ export function SharedNav({
       const targetElement = event.target as HTMLElement;
 
       // Don't close if clicking on a link (let navigation happen)
-      if (targetElement.closest('a')) {
+      if (targetElement.closest("a")) {
         return;
       }
 
@@ -332,10 +341,13 @@ export function SharedNav({
                 className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 {linkedInProfilePicture ? (
-                  <img
+                  <Image
                     src={linkedInProfilePicture}
                     alt="Profile"
-                    className="h-8 w-8 rounded-full object-cover"
+                    width={32}
+                    height={32}
+                    className="rounded-full object-cover"
+                    unoptimized
                   />
                 ) : (
                   <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
@@ -435,7 +447,10 @@ export function SharedNav({
 
                       {/* Mobile submenu */}
                       {postsDropdownOpen && (
-                        <div className="ml-6 mt-2 space-y-1" onClick={(e) => e.stopPropagation()}>
+                        <div
+                          className="ml-6 mt-2 space-y-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           {item.submenu?.map((subItem) => (
                             <Link
                               key={subItem.name}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ export function FeedbackDetailClient({ feedbackId }: { feedbackId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -117,7 +119,9 @@ export function FeedbackDetailClient({ feedbackId }: { feedbackId: string }) {
     }
   };
 
-  const handleStatusUpdate = async (newStatus: "new" | "reviewed" | "resolved") => {
+  const handleStatusUpdate = async (
+    newStatus: "new" | "reviewed" | "resolved"
+  ) => {
     if (!feedback || feedback.status === newStatus) {
       setStatusDropdownOpen(false);
       return;
@@ -126,7 +130,7 @@ export function FeedbackDetailClient({ feedbackId }: { feedbackId: string }) {
     try {
       setUpdatingStatus(true);
       setStatusDropdownOpen(false);
-      
+
       const response = await fetch(`/api/admin/feedback/${feedbackId}`, {
         method: "PATCH",
         headers: {
@@ -151,7 +155,10 @@ export function FeedbackDetailClient({ feedbackId }: { feedbackId: string }) {
       console.error("Error updating status:", err);
       toast({
         title: "Failed to update status",
-        description: err instanceof Error ? err.message : "An error occurred while updating the status",
+        description:
+          err instanceof Error
+            ? err.message
+            : "An error occurred while updating the status",
         variant: "destructive",
       });
     } finally {
@@ -198,7 +205,9 @@ export function FeedbackDetailClient({ feedbackId }: { feedbackId: string }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-500">Email:</span>
-                <span className="ml-2 text-gray-900 font-medium">{feedback.email}</span>
+                <span className="ml-2 text-gray-900 font-medium">
+                  {feedback.email}
+                </span>
               </div>
               <div>
                 <span className="text-gray-500">Type:</span>
@@ -314,32 +323,47 @@ export function FeedbackDetailClient({ feedbackId }: { feedbackId: string }) {
               </h4>
               {feedback.screenshot_url ? (
                 <div className="relative">
-                  <img
-                    src={feedback.screenshot_url}
-                    alt="Feedback screenshot"
-                    className="max-w-full h-auto rounded-lg border border-gray-200"
-                    onError={(e) => {
-                      console.error("Error loading screenshot:", feedback.screenshot_url);
-                      const parent = e.currentTarget.parentElement;
-                      if (parent) {
-                        parent.innerHTML = `
-                          <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
-                            <p class="text-sm text-red-600">Failed to load screenshot</p>
-                            <p class="text-xs text-red-500 mt-1">URL: ${feedback.screenshot_url}</p>
-                          </div>
-                        `;
-                      }
-                    }}
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="absolute top-2 right-2"
-                    onClick={() => window.open(feedback.screenshot_url!, "_blank")}
-                  >
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Open in New Tab
-                  </Button>
+                  {imageError ? (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-sm text-red-600">
+                        Failed to load screenshot
+                      </p>
+                      <p className="text-xs text-red-500 mt-1">
+                        URL: {feedback.screenshot_url}
+                      </p>
+                    </div>
+                  ) : (
+                    <div
+                      className="relative w-full"
+                      style={{ minHeight: "200px", maxHeight: "600px" }}
+                    >
+                      <Image
+                        src={feedback.screenshot_url}
+                        alt="Feedback screenshot"
+                        fill
+                        className="rounded-lg border border-gray-200 object-contain"
+                        unoptimized
+                        onError={() => {
+                          console.error(
+                            "Error loading screenshot:",
+                            feedback.screenshot_url
+                          );
+                          setImageError(true);
+                        }}
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() =>
+                          window.open(feedback.screenshot_url!, "_blank")
+                        }
+                      >
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Open in New Tab
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-sm text-gray-500">No screenshot provided</p>
@@ -364,4 +388,3 @@ export function FeedbackDetailClient({ feedbackId }: { feedbackId: string }) {
     </>
   );
 }
-

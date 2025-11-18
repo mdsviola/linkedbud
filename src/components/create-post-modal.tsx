@@ -41,6 +41,7 @@ import {
   Wand2,
   Video,
 } from "lucide-react";
+import NextImage from "next/image";
 
 export interface CreatePostFormData {
   topicTitle: string;
@@ -404,28 +405,25 @@ export function CreatePostModal({
   }, []);
 
   // Get default values: use user preferences first, then fallback to defaults
-  const getDefaultFormData = useCallback(
-    (): CreatePostFormData => {
-      const storedLanguage = getStoredLanguage();
-      return {
-        topicTitle: "",
-        tone: userPreferences?.tone || "Professional",
-        postType: userPreferences?.postType || "Thought Leadership",
-        customPrompt: "",
-        targetAudience:
-          userPreferences?.targetAudience || "Industry Professionals",
-        keyPoints: "",
-        callToAction: "",
-        includeHashtags: userPreferences?.includeHashtags ?? false,
-        includeSourceArticle: userPreferences?.includeSourceArticle ?? true,
-        maxLength: userPreferences?.maxLength || 2000,
-        language: userPreferences?.language || storedLanguage,
-        userName: userPreferences?.userName,
-        userInitials: userPreferences?.userInitials,
-      };
-    },
-    [userPreferences, getStoredLanguage]
-  );
+  const getDefaultFormData = useCallback((): CreatePostFormData => {
+    const storedLanguage = getStoredLanguage();
+    return {
+      topicTitle: "",
+      tone: userPreferences?.tone || "Professional",
+      postType: userPreferences?.postType || "Thought Leadership",
+      customPrompt: "",
+      targetAudience:
+        userPreferences?.targetAudience || "Industry Professionals",
+      keyPoints: "",
+      callToAction: "",
+      includeHashtags: userPreferences?.includeHashtags ?? false,
+      includeSourceArticle: userPreferences?.includeSourceArticle ?? true,
+      maxLength: userPreferences?.maxLength || 2000,
+      language: userPreferences?.language || storedLanguage,
+      userName: userPreferences?.userName,
+      userInitials: userPreferences?.userInitials,
+    };
+  }, [userPreferences, getStoredLanguage]);
 
   const [formData, setFormData] = useState<CreatePostFormData>(() => ({
     ...getDefaultFormData(),
@@ -438,6 +436,7 @@ export function CreatePostModal({
     Array<{ hook: string; body: string }>
   >([]);
   const [currentVariantIndex, setCurrentVariantIndex] = useState(0);
+  const variantSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [twoParaSummary, setTwoParaSummary] = useState<string>("");
   const [showSettings, setShowSettings] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -465,10 +464,6 @@ export function CreatePostModal({
   const publishTargetDropdownRef = useRef<HTMLDivElement>(null);
   const settingsPanelRef = useRef<HTMLDivElement>(null);
   const editableAreaRef = useRef<HTMLDivElement>(null);
-
-  // State for settings scrollability
-  const [isSettingsScrollable, setIsSettingsScrollable] = useState(false);
-  const [showSettingsShadow, setShowSettingsShadow] = useState(false);
 
   // Article loading state
   const [articleUrl, setArticleUrl] = useState("");
@@ -560,6 +555,11 @@ export function CreatePostModal({
       setShowPolishInput(false); // Reset polish input state
       setPolishPrompt(""); // Reset polish prompt
       setIsPolishing(false); // Reset polishing state
+      // Clear variant save timeout
+      if (variantSaveTimeoutRef.current) {
+        clearTimeout(variantSaveTimeoutRef.current);
+        variantSaveTimeoutRef.current = null;
+      }
       // Reset auto-load tracking when modal opens
       hasAutoLoadedRef.current = null;
     }
@@ -663,6 +663,16 @@ export function CreatePostModal({
     };
   }, [formData.imagePreview]);
 
+  // Cleanup variant save timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (variantSaveTimeoutRef.current) {
+        clearTimeout(variantSaveTimeoutRef.current);
+        variantSaveTimeoutRef.current = null;
+      }
+    };
+  }, []);
+
   // Close emoji picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -724,39 +734,6 @@ export function CreatePostModal({
     }
   }, [isOpen]);
 
-  // Check if settings panel is scrollable and show shadow
-  useEffect(() => {
-    const checkScrollability = () => {
-      if (settingsPanelRef.current) {
-        const { scrollHeight, clientHeight, scrollTop } = settingsPanelRef.current;
-        const isScrollable = scrollHeight > clientHeight;
-        setIsSettingsScrollable(isScrollable);
-        // Show shadow if scrollable and not at bottom
-        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 5; // 5px threshold
-        setShowSettingsShadow(isScrollable && !isAtBottom);
-      }
-    };
-
-    if (showSettings && settingsPanelRef.current) {
-      checkScrollability();
-      // Check again after a short delay to account for layout changes
-      const timeout = setTimeout(checkScrollability, 100);
-      // Also check on scroll
-      settingsPanelRef.current.addEventListener('scroll', checkScrollability);
-      // Check on resize as well
-      window.addEventListener('resize', checkScrollability);
-
-      return () => {
-        clearTimeout(timeout);
-        settingsPanelRef.current?.removeEventListener('scroll', checkScrollability);
-        window.removeEventListener('resize', checkScrollability);
-      };
-    } else {
-      setIsSettingsScrollable(false);
-      setShowSettingsShadow(false);
-    }
-  }, [showSettings, formData]);
-
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -783,7 +760,8 @@ export function CreatePostModal({
 
   // Position polish popover above button on mobile (centered on screen)
   useEffect(() => {
-    if (!showPolishInput || !polishButtonRef.current || !polishInputRef.current) return;
+    if (!showPolishInput || !polishButtonRef.current || !polishInputRef.current)
+      return;
 
     const updatePosition = () => {
       if (!polishInputRef.current || !polishButtonRef.current) return;
@@ -791,32 +769,69 @@ export function CreatePostModal({
       const isMobile = window.innerWidth < 640;
       if (!isMobile) {
         // Desktop: let CSS handle positioning
-        polishInputRef.current.style.bottom = '';
+        polishInputRef.current.style.bottom = "";
         return;
       }
 
       // Mobile: position above button, centered horizontally
       const buttonRect = polishButtonRef.current.getBoundingClientRect();
-      polishInputRef.current.style.bottom = `${window.innerHeight - buttonRect.top + 8}px`;
+      polishInputRef.current.style.bottom = `${
+        window.innerHeight - buttonRect.top + 8
+      }px`;
     };
 
     updatePosition();
 
-    window.addEventListener('resize', updatePosition);
-    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
 
     return () => {
-      window.removeEventListener('resize', updatePosition);
-      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
     };
   }, [showPolishInput]);
+
+  // Helper function to save text to current variant
+  const saveTextToCurrentVariant = useCallback(
+    (text: string, variantIndex: number) => {
+      const hookBodyMatch = text.match(/^(.+?)\n\n([\s\S]+)$/);
+      if (hookBodyMatch) {
+        const [, hook, body] = hookBodyMatch;
+        setRewrittenVariants((prev) => {
+          const updated = [...prev];
+          updated[variantIndex] = { hook, body };
+          return updated;
+        });
+      } else {
+        setRewrittenVariants((prev) => {
+          const updated = [...prev];
+          updated[variantIndex] = { hook: "", body: text };
+          return updated;
+        });
+      }
+    },
+    []
+  );
 
   // Memoize textarea onChange handler to prevent unnecessary re-renders
   const handleTextareaChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setPostText(e.target.value);
+      const newText = e.target.value;
+      setPostText(newText);
+      // Save edits back to the current variant if we're viewing one
+      if (rewrittenVariants.length > 0 && currentVariantIndex >= 0) {
+        // Clear any pending save
+        if (variantSaveTimeoutRef.current) {
+          clearTimeout(variantSaveTimeoutRef.current);
+        }
+        // Use a small delay to batch updates and avoid excessive state updates
+        variantSaveTimeoutRef.current = setTimeout(() => {
+          saveTextToCurrentVariant(newText, currentVariantIndex);
+          variantSaveTimeoutRef.current = null;
+        }, 100);
+      }
     },
-    []
+    [rewrittenVariants.length, currentVariantIndex, saveTextToCurrentVariant]
   );
 
   // Memoize insertEmoji to prevent recreation on every render
@@ -832,6 +847,16 @@ export function CreatePostModal({
 
       setPostText(newText);
 
+      // Save to variant if viewing one
+      if (rewrittenVariants.length > 0 && currentVariantIndex >= 0) {
+        // Clear any pending save
+        if (variantSaveTimeoutRef.current) {
+          clearTimeout(variantSaveTimeoutRef.current);
+        }
+        // Save immediately since this is a direct user action
+        saveTextToCurrentVariant(newText, currentVariantIndex);
+      }
+
       // Set cursor position after the inserted emoji
       setTimeout(() => {
         textarea.focus();
@@ -840,7 +865,12 @@ export function CreatePostModal({
 
       setShowEmojiPicker(false);
     },
-    [postText]
+    [
+      postText,
+      rewrittenVariants.length,
+      currentVariantIndex,
+      saveTextToCurrentVariant,
+    ]
   );
 
   const handleSubmit = async () => {
@@ -1152,9 +1182,31 @@ export function CreatePostModal({
 
   const handlePreviousVariant = () => {
     if (rewrittenVariants.length > 0 && currentVariantIndex > 0) {
+      // Clear any pending save timeout
+      if (variantSaveTimeoutRef.current) {
+        clearTimeout(variantSaveTimeoutRef.current);
+        variantSaveTimeoutRef.current = null;
+      }
+
+      // Save current edits before switching (synchronously)
+      const currentText = postText;
+      saveTextToCurrentVariant(currentText, currentVariantIndex);
+
+      // Get updated variants array (we need to read from state, but since we just updated it,
+      // we'll create a local copy with the current edits)
+      const updatedVariants = [...rewrittenVariants];
+      const hookBodyMatch = currentText.match(/^(.+?)\n\n([\s\S]+)$/);
+      if (hookBodyMatch) {
+        const [, hook, body] = hookBodyMatch;
+        updatedVariants[currentVariantIndex] = { hook, body };
+      } else {
+        updatedVariants[currentVariantIndex] = { hook: "", body: currentText };
+      }
+
+      // Switch to previous variant
       const newIndex = currentVariantIndex - 1;
       setCurrentVariantIndex(newIndex);
-      const variant = rewrittenVariants[newIndex];
+      const variant = updatedVariants[newIndex];
       const variantText = variant.hook
         ? `${variant.hook}\n\n${variant.body}`
         : variant.body;
@@ -1167,9 +1219,31 @@ export function CreatePostModal({
       rewrittenVariants.length > 0 &&
       currentVariantIndex < rewrittenVariants.length - 1
     ) {
+      // Clear any pending save timeout
+      if (variantSaveTimeoutRef.current) {
+        clearTimeout(variantSaveTimeoutRef.current);
+        variantSaveTimeoutRef.current = null;
+      }
+
+      // Save current edits before switching (synchronously)
+      const currentText = postText;
+      saveTextToCurrentVariant(currentText, currentVariantIndex);
+
+      // Get updated variants array (we need to read from state, but since we just updated it,
+      // we'll create a local copy with the current edits)
+      const updatedVariants = [...rewrittenVariants];
+      const hookBodyMatch = currentText.match(/^(.+?)\n\n([\s\S]+)$/);
+      if (hookBodyMatch) {
+        const [, hook, body] = hookBodyMatch;
+        updatedVariants[currentVariantIndex] = { hook, body };
+      } else {
+        updatedVariants[currentVariantIndex] = { hook: "", body: currentText };
+      }
+
+      // Switch to next variant
       const newIndex = currentVariantIndex + 1;
       setCurrentVariantIndex(newIndex);
-      const variant = rewrittenVariants[newIndex];
+      const variant = updatedVariants[newIndex];
       const variantText = variant.hook
         ? `${variant.hook}\n\n${variant.body}`
         : variant.body;
@@ -1205,6 +1279,18 @@ export function CreatePostModal({
 
       // Update the textarea with the polished content
       setPostText(data.polishedContent);
+
+      // Save to variant if viewing one
+      if (rewrittenVariants.length > 0 && currentVariantIndex >= 0) {
+        // Clear any pending save
+        if (variantSaveTimeoutRef.current) {
+          clearTimeout(variantSaveTimeoutRef.current);
+          variantSaveTimeoutRef.current = null;
+        }
+        // Save immediately since this is a direct user action
+        saveTextToCurrentVariant(data.polishedContent, currentVariantIndex);
+      }
+
       setPolishPrompt("");
       setShowPolishInput(false);
     } catch (err) {
@@ -1571,10 +1657,10 @@ export function CreatePostModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl lg:max-w-3xl bg-transparent border-none shadow-none overflow-hidden max-h-[90vh] [&>div]:p-0">
-        <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900 flex flex-col max-h-[90vh] min-h-0">
+      <DialogContent className="w-full sm:max-w-6xl lg:max-w-5xl bg-transparent border-none shadow-none overflow-hidden max-h-[98vh] min-h-[700px] [&>div]:p-0">
+        <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900 flex flex-col min-h-[700px] max-h-[98vh]">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 pr-12 dark:border-slate-800 dark:bg-slate-900 flex-shrink-0">
+          <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 pr-12 dark:border-slate-800 dark:bg-slate-900 flex-shrink-0 sticky top-0 z-10">
             {!previewMode && (
               <div className="flex items-center gap-3">
                 {/* Profile Picture */}
@@ -1686,558 +1772,657 @@ export function CreatePostModal({
             </div>
           </div>
 
-          {/* Scrollable content area (settings + editable) */}
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-            {/* Settings Panel */}
-            {showSettings && !previewMode && (
-              <div
-                ref={settingsPanelRef}
-                className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-4 py-4 space-y-4 overflow-y-auto relative min-h-[250px]"
-              >
-              {/* Shadow overlay at bottom when scrollable and not at bottom */}
-              {showSettingsShadow && (
-                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-slate-50 to-transparent dark:from-slate-950 pointer-events-none z-10" />
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Tone Selection */}
-                <div className="space-y-2">
-                  <Label htmlFor="tone">Writing Tone</Label>
-                  <select
-                    id="tone"
-                    value={formData.tone}
-                    onChange={(e) => handleInputChange("tone", e.target.value)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    {TONE_OPTIONS.map((tone) => (
-                      <option key={tone} value={tone}>
-                        {tone}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Post Type */}
-                <div className="space-y-2">
-                  <Label htmlFor="postType">Post Type</Label>
-                  <select
-                    id="postType"
-                    value={formData.postType}
-                    onChange={(e) =>
-                      handleInputChange("postType", e.target.value)
-                    }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    {POST_TYPE_OPTIONS.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Target Audience */}
-                <div className="space-y-2">
-                  <Label htmlFor="targetAudience">Target Audience</Label>
-                  <select
-                    id="targetAudience"
-                    value={formData.targetAudience}
-                    onChange={(e) =>
-                      handleInputChange("targetAudience", e.target.value)
-                    }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    {AUDIENCE_OPTIONS.map((audience) => (
-                      <option key={audience} value={audience}>
-                        {audience}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Max Length */}
-                <div className="space-y-2">
-                  <Label htmlFor="maxLength">Max Character Length</Label>
-                  <Input
-                    id="maxLength"
-                    type="number"
-                    value={formData.maxLength}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "maxLength",
-                        parseInt(e.target.value) || 2000
-                      )
-                    }
-                    min="500"
-                    max="3000"
-                    step="100"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Output Language */}
-                <div className="space-y-2">
-                  <Label htmlFor="language">Output Language</Label>
-                  <select
-                    id="language"
-                    value={formData.language || "English"}
-                    onChange={(e) =>
-                      handleInputChange("language", e.target.value)
-                    }
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  >
-                    {LANGUAGE_OPTIONS.map((lang) => (
-                      <option key={lang.value} value={lang.value}>
-                        {lang.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Checkboxes */}
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="includeHashtags"
-                    checked={formData.includeHashtags}
-                    onChange={(e) =>
-                      handleInputChange("includeHashtags", e.target.checked)
-                    }
-                    className="h-4 w-4 rounded border border-input text-blue-600 focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  />
-                  <Label htmlFor="includeHashtags" className="cursor-pointer">
-                    Include hashtags
-                  </Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="includeSourceArticle"
-                    checked={formData.includeSourceArticle}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "includeSourceArticle",
-                        e.target.checked
-                      )
-                    }
-                    className="h-4 w-4 rounded border border-input text-blue-600 focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  />
-                  <Label
-                    htmlFor="includeSourceArticle"
-                    className="cursor-pointer"
-                  >
-                    Mention article source
-                  </Label>
-                </div>
-              </div>
-            </div>
-          )}
-
+          {/* Scrollable content area (editor / preview) */}
+          <div className="relative flex-1 flex flex-col min-h-0">
             {previewMode ? (
               /* LinkedIn Feed Preview */
-              <div className="bg-white dark:bg-slate-900 flex-1 min-h-0 overflow-y-auto" style={{ minHeight: '200px' }}>
-              {/* Post Header - LinkedIn Style */}
-              <div className="px-4 py-3 pb-2">
-                <div className="flex items-start gap-3">
-                  {/* Profile Picture */}
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-base font-semibold text-white flex-shrink-0">
-                    {formData.userInitials || "U"}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        {formData.userName || "You"}
-                      </span>
-                      {/* Verification Badge */}
-                      <div className="h-4 w-4 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                        <Check className="h-2.5 w-2.5 text-white" />
+              <div
+                className="bg-white dark:bg-slate-900 flex-1 min-h-0"
+                style={{ minHeight: "200px" }}
+              >
+                {/* Post Header - LinkedIn Style */}
+                <div className="px-4 py-3 pb-2">
+                  <div className="flex items-start gap-3">
+                    {/* Profile Picture */}
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-base font-semibold text-white flex-shrink-0">
+                      {formData.userInitials || "U"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                          {formData.userName || "You"}
+                        </span>
+                        {/* Verification Badge */}
+                        <div className="h-4 w-4 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+                          <Check className="h-2.5 w-2.5 text-white" />
+                        </div>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                          • 1st
+                        </span>
                       </div>
-                      <span className="text-sm text-slate-500 dark:text-slate-400">
-                        • 1st
-                      </span>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        Your Company
+                      </div>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                          1w •
+                        </span>
+                        <Globe className="h-3 w-3 text-slate-500 dark:text-slate-400" />
+                      </div>
                     </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Your Company
-                    </div>
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="text-xs text-slate-500 dark:text-slate-400">
-                        1w •
-                      </span>
-                      <Globe className="h-3 w-3 text-slate-500 dark:text-slate-400" />
+                    <div className="flex items-center gap-1">
+                      <button className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <MoreVertical className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
-                      <MoreVertical className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                </div>
+
+                {/* Post Content */}
+                <div className="px-4 pb-3">
+                  <div
+                    ref={textPreviewRef}
+                    className="text-sm text-slate-900 dark:text-slate-100 leading-[1.5] whitespace-pre-wrap"
+                  >
+                    {displayText}
+                    {shouldShowMoreButton && (
+                      <>
+                        {" "}
+                        <button
+                          onClick={() => setIsTextExpanded(true)}
+                          className="text-slate-500 dark:text-slate-400 font-medium hover:underline"
+                        >
+                          ...more
+                        </button>
+                      </>
+                    )}
+                    {isTextExpanded && shouldClipText(postText) && (
+                      <>
+                        <button
+                          onClick={() => setIsTextExpanded(false)}
+                          className="text-slate-500 dark:text-slate-400 font-medium hover:underline ml-1"
+                        >
+                          ...less
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {/* Show translation link */}
+                  {hasText && (
+                    <button className="text-xs text-slate-500 dark:text-slate-400 mt-2 hover:underline">
+                      Show translation
+                    </button>
+                  )}
+                </div>
+
+                {/* Image Preview - LinkedIn Style */}
+                {formData.imagePreview && (
+                  <div className="px-4 pb-3">
+                    <div
+                      className="relative w-full"
+                      style={{ height: "600px" }}
+                    >
+                      <NextImage
+                        src={formData.imagePreview}
+                        alt="Post image"
+                        fill
+                        className="rounded-md object-contain"
+                        unoptimized
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Engagement Section */}
+                <div className="px-4 pb-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1">
+                      <div className="flex items-center -space-x-1">
+                        <div className="h-5 w-5 rounded-full bg-blue-600 border-2 border-white dark:border-slate-900 flex items-center justify-center">
+                          <ThumbsUp className="h-3 w-3 text-white" />
+                        </div>
+                        <div className="h-5 w-5 rounded-full bg-red-500 border-2 border-white dark:border-slate-900 flex items-center justify-center">
+                          <Heart className="h-3 w-3 text-white" />
+                        </div>
+                        <div className="h-5 w-5 rounded-full bg-green-500 border-2 border-white dark:border-slate-900 flex items-center justify-center">
+                          <span className="text-xs">👏</span>
+                        </div>
+                      </div>
+                      <span className="text-xs text-slate-600 dark:text-slate-400 ml-1">
+                        You and X others
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400">
+                      X comments
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-1 border-t border-slate-200 dark:border-slate-800 pt-2">
+                    <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
+                      <ThumbsUp className="h-5 w-5" />
+                      <span className="text-sm font-medium">Like</span>
+                    </button>
+                    <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
+                      <MessageCircle className="h-5 w-5" />
+                      <span className="text-sm font-medium">Comment</span>
+                    </button>
+                    <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
+                      <Repeat2 className="h-5 w-5" />
+                      <span className="text-sm font-medium">Repost</span>
+                    </button>
+                    <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
+                      <Send className="h-5 w-5" />
+                      <span className="text-sm font-medium">Send</span>
                     </button>
                   </div>
                 </div>
               </div>
-
-              {/* Post Content */}
-              <div className="px-4 pb-3">
-                <div
-                  ref={textPreviewRef}
-                  className="text-sm text-slate-900 dark:text-slate-100 leading-[1.5] whitespace-pre-wrap"
-                >
-                  {displayText}
-                  {shouldShowMoreButton && (
-                    <>
-                      {" "}
-                      <button
-                        onClick={() => setIsTextExpanded(true)}
-                        className="text-slate-500 dark:text-slate-400 font-medium hover:underline"
-                      >
-                        ...more
-                      </button>
-                    </>
-                  )}
-                  {isTextExpanded && shouldClipText(postText) && (
-                    <>
-                      <button
-                        onClick={() => setIsTextExpanded(false)}
-                        className="text-slate-500 dark:text-slate-400 font-medium hover:underline ml-1"
-                      >
-                        ...less
-                      </button>
-                    </>
-                  )}
-                </div>
-                {/* Show translation link */}
-                {hasText && (
-                  <button className="text-xs text-slate-500 dark:text-slate-400 mt-2 hover:underline">
-                    Show translation
-                  </button>
-                )}
-              </div>
-
-              {/* Image Preview - LinkedIn Style */}
-              {formData.imagePreview && (
-                <div className="px-4 pb-3">
-                  <div className="relative w-full">
-                    <img
-                      src={formData.imagePreview}
-                      alt="Post image"
-                      className="w-full rounded-md object-contain"
-                      style={{ maxHeight: "600px" }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Engagement Section */}
-              <div className="px-4 pb-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1">
-                    <div className="flex items-center -space-x-1">
-                      <div className="h-5 w-5 rounded-full bg-blue-600 border-2 border-white dark:border-slate-900 flex items-center justify-center">
-                        <ThumbsUp className="h-3 w-3 text-white" />
-                      </div>
-                      <div className="h-5 w-5 rounded-full bg-red-500 border-2 border-white dark:border-slate-900 flex items-center justify-center">
-                        <Heart className="h-3 w-3 text-white" />
-                      </div>
-                      <div className="h-5 w-5 rounded-full bg-green-500 border-2 border-white dark:border-slate-900 flex items-center justify-center">
-                        <span className="text-xs">👏</span>
-                      </div>
-                    </div>
-                    <span className="text-xs text-slate-600 dark:text-slate-400 ml-1">
-                      You and X others
-                    </span>
-                  </div>
-                  <div className="text-xs text-slate-600 dark:text-slate-400">
-                    X comments
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-1 border-t border-slate-200 dark:border-slate-800 pt-2">
-                  <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
-                    <ThumbsUp className="h-5 w-5" />
-                    <span className="text-sm font-medium">Like</span>
-                  </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
-                    <MessageCircle className="h-5 w-5" />
-                    <span className="text-sm font-medium">Comment</span>
-                  </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
-                    <Repeat2 className="h-5 w-5" />
-                    <span className="text-sm font-medium">Repost</span>
-                  </button>
-                  <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
-                    <Send className="h-5 w-5" />
-                    <span className="text-sm font-medium">Send</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
+            ) : (
               /* Text Input Area - LinkedIn Style */
-              <div ref={editableAreaRef} className="flex flex-col px-4 py-4 flex-1 min-h-0 overflow-y-auto" style={{ minHeight: '200px' }}>
-              {/* Article Reference Section */}
-              {isLoadingArticle &&
-              formData.articleUrl &&
-              !formData.articleContent ? (
-                <div className="mb-3 flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950">
-                  <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
-                  <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                    Loading article...
-                  </span>
-                </div>
-              ) : articleError &&
+              <div
+                ref={editableAreaRef}
+                className="flex flex-col px-4 py-4 flex-1 min-h-[260px] sm:min-h-[400px]"
+              >
+                {/* Article Reference Section */}
+                {isLoadingArticle &&
                 formData.articleUrl &&
                 !formData.articleContent ? (
-                <div className="mb-3 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 dark:border-red-800 dark:bg-red-950">
-                  <span className="text-sm font-medium text-red-900 dark:text-red-100">
-                    Failed to load article. Please try again or enter a
-                    different URL.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setArticleError("");
-                      handleUrlChange("");
-                    }}
-                    className="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
-                  >
-                    Dismiss
-                  </button>
-                </div>
-              ) : !formData.articleUrl ? (
-                <div className="relative mb-3 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowArticleInput(!showArticleInput)}
-                    className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                  >
-                    <LinkIcon className="h-4 w-4" />
-                    Load article to write about
-                  </button>
-                  {/* Article Input Popover */}
-                  {showArticleInput && (
-                    <div
-                      className="absolute top-full left-0 mt-2 z-[100] w-80 rounded-lg border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-800 dark:bg-slate-900"
-                      ref={articleInputRef}
-                    >
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-2">
-                          <LinkIcon className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-                          <Label
-                            htmlFor="articleUrl-input"
-                            className="text-sm font-medium text-slate-700 dark:text-slate-300"
-                          >
-                            Article URL
-                          </Label>
-                        </div>
-                        <div className="flex gap-2">
-                          <Input
-                            id="articleUrl-input"
-                            type="url"
-                            placeholder="https://example.com/article"
-                            value={articleUrl}
-                            onChange={(e) => handleUrlChange(e.target.value)}
-                            className="flex-1 border-slate-300 text-sm dark:border-slate-700"
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                handleLoadArticle();
-                              }
-                            }}
-                          />
-                          <Button
-                            type="button"
-                            onClick={handleLoadArticle}
-                            disabled={isLoadingArticle || !articleUrl.trim()}
-                            size="sm"
-                            className="bg-blue-600 text-white hover:bg-blue-700"
-                          >
-                            {isLoadingArticle ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              "Load"
-                            )}
-                          </Button>
-                        </div>
-
-                        {/* Article loading feedback */}
-                        {articleError && (
-                          <div className="text-xs text-red-600 dark:text-red-400">
-                            {articleError}
-                          </div>
-                        )}
-
-                        {articleSuccess && formData.articleTitle && (
-                          <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                            <Check className="h-3 w-3" />
-                            <span className="truncate">
-                              Loaded: {formData.articleTitle}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="mb-3 flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950">
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <div className="mb-3 flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950">
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
                     <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                      Article loaded: {formData.articleTitle || "Article"}
+                      Loading article...
                     </span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleUrlChange("");
-                      setShowArticleInput(false);
-                    }}
-                    className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-                  >
-                    Remove
-                  </button>
-                </div>
-              )}
-              <div className="relative flex flex-col flex-1 min-h-0">
-                {!hasText &&
-                  !formData.imagePreview &&
-                  !formData.documentFile &&
-                  !formData.documentPreview &&
-                  !formData.videoFile &&
-                  !formData.videoPreview && (
-                    <div className="absolute inset-0 flex items-start pt-0 pointer-events-none">
-                      <span className="text-[15px] text-slate-400 leading-[1.5]">
-                        What do you want to talk about?
+                ) : articleError &&
+                  formData.articleUrl &&
+                  !formData.articleContent ? (
+                  <div className="mb-3 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 dark:border-red-800 dark:bg-red-950">
+                    <span className="text-sm font-medium text-red-900 dark:text-red-100">
+                      Failed to load article. Please try again or enter a
+                      different URL.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setArticleError("");
+                        handleUrlChange("");
+                      }}
+                      className="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                ) : !formData.articleUrl ? (
+                  <div className="relative mb-3 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowArticleInput(!showArticleInput)}
+                      className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                    >
+                      <LinkIcon className="h-4 w-4" />
+                      Load article to write about
+                    </button>
+                    {/* Article Input Popover */}
+                    {showArticleInput && (
+                      <div
+                        className="absolute top-full left-0 mt-2 z-[100] w-80 rounded-lg border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-800 dark:bg-slate-900"
+                        ref={articleInputRef}
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <LinkIcon className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                            <Label
+                              htmlFor="articleUrl-input"
+                              className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                            >
+                              Article URL
+                            </Label>
+                          </div>
+                          <div className="flex gap-2">
+                            <Input
+                              id="articleUrl-input"
+                              type="url"
+                              placeholder="https://example.com/article"
+                              value={articleUrl}
+                              onChange={(e) => handleUrlChange(e.target.value)}
+                              className="flex-1 border-slate-300 text-sm dark:border-slate-700"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleLoadArticle();
+                                }
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              onClick={handleLoadArticle}
+                              disabled={isLoadingArticle || !articleUrl.trim()}
+                              size="sm"
+                              className="bg-blue-600 text-white hover:bg-blue-700"
+                            >
+                              {isLoadingArticle ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                "Load"
+                              )}
+                            </Button>
+                          </div>
+
+                          {/* Article loading feedback */}
+                          {articleError && (
+                            <div className="text-xs text-red-600 dark:text-red-400">
+                              {articleError}
+                            </div>
+                          )}
+
+                          {articleSuccess && formData.articleTitle && (
+                            <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                              <Check className="h-3 w-3" />
+                              <span className="truncate">
+                                Loaded: {formData.articleTitle}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mb-3 flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950">
+                    <div className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                        Article loaded: {formData.articleTitle || "Article"}
                       </span>
                     </div>
-                  )}
-                <textarea
-                  ref={textareaRef}
-                  value={postText}
-                  onChange={handleTextareaChange}
-                  placeholder=""
-                  className="relative w-full text-[15px] leading-[1.5] text-slate-900 dark:text-slate-100 bg-transparent border-none outline-none resize-none focus:outline-none pt-0"
-                  style={
-                    {
-                      fontFamily: "inherit",
-                      overflowY: "auto",
-                      minHeight: "200px",
-                      fieldSizing: "content",
-                    } as React.CSSProperties
-                  }
-                />
-              </div>
-
-              {/* Image Preview */}
-              {formData.imagePreview && (
-                <div className="relative mt-4">
-                  <div className="relative inline-block max-w-full">
-                    <img
-                      src={formData.imagePreview}
-                      alt="Post image preview"
-                      className="max-w-full max-h-[400px] rounded-lg object-contain"
-                    />
                     <button
                       type="button"
-                      onClick={handleRemoveImage}
-                      className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
-                      aria-label="Remove image"
+                      onClick={() => {
+                        handleUrlChange("");
+                        setShowArticleInput(false);
+                      }}
+                      className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                     >
-                      <X className="h-4 w-4" />
+                      Remove
                     </button>
                   </div>
-                </div>
-              )}
-
-              {/* Video Preview */}
-              {(formData.videoFile || formData.videoPreview) && (
-                <div className="relative mt-4">
-                  <div className="relative inline-block max-w-full">
-                    <video
-                      src={
-                        formData.videoPreview ||
-                        (formData.videoFile
-                          ? URL.createObjectURL(formData.videoFile)
-                          : undefined)
-                      }
-                      controls
-                      className="max-w-full max-h-[400px] rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemoveVideo}
-                      className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
-                      aria-label="Remove video"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Document Preview */}
-              {(formData.documentFile || formData.documentPreview) && (
-                <div className="relative mt-4">
-                  <div className="relative inline-block max-w-full rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
-                    <div className="flex items-center gap-3">
-                      <FileText className="h-8 w-8 text-slate-600 dark:text-slate-400" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
-                          {formData.documentFile
-                            ? formData.documentFile.name
-                            : (() => {
-                                // Extract filename from URL (remove query params first)
-                                if (!formData.documentPreview)
-                                  return "Document";
-                                const withoutParams =
-                                  formData.documentPreview.split("?")[0];
-                                const parts = withoutParams.split("/");
-                                const filename = parts[parts.length - 1];
-                                try {
-                                  return decodeURIComponent(filename);
-                                } catch {
-                                  return filename || "Document";
-                                }
-                              })()}
-                        </p>
-                        {formData.documentFile && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
-                            {(formData.documentFile.size / 1024).toFixed(1)} KB
-                          </p>
-                        )}
-                        {formData.documentPreview && !formData.documentFile && (
-                          <p className="text-xs text-slate-500 dark:text-slate-400">
-                            Existing document
-                          </p>
-                        )}
+                )}
+                <div className="relative flex flex-col flex-1 min-h-0">
+                  {!hasText &&
+                    !formData.imagePreview &&
+                    !formData.documentFile &&
+                    !formData.documentPreview &&
+                    !formData.videoFile &&
+                    !formData.videoPreview && (
+                      <div className="absolute inset-0 flex items-start pt-0 pointer-events-none">
+                        <span className="text-[15px] text-slate-400 leading-[1.5]">
+                          What do you want to talk about?
+                        </span>
                       </div>
+                    )}
+                  <textarea
+                    ref={textareaRef}
+                    value={postText}
+                    onChange={handleTextareaChange}
+                    placeholder=""
+                    className="relative w-full text-[15px] leading-[1.5] text-slate-900 dark:text-slate-100 bg-transparent border-none outline-none resize-none focus:outline-none pt-0"
+                    style={
+                      {
+                        fontFamily: "inherit",
+                        overflowY: "auto",
+                        minHeight: "200px",
+                        fieldSizing: "content",
+                      } as React.CSSProperties
+                    }
+                  />
+                </div>
+
+                {/* Image Preview */}
+                {formData.imagePreview && (
+                  <div className="relative mt-4">
+                    <div
+                      className="relative inline-block max-w-full"
+                      style={{ height: "400px", width: "100%" }}
+                    >
+                      <NextImage
+                        src={formData.imagePreview}
+                        alt="Post image preview"
+                        fill
+                        className="rounded-lg object-contain"
+                        unoptimized
+                      />
                       <button
                         type="button"
-                        onClick={handleRemoveDocument}
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-400 transition-colors"
-                        aria-label="Remove document"
+                        onClick={handleRemoveImage}
+                        className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                        aria-label="Remove image"
                       >
                         <X className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+
+                {/* Video Preview */}
+                {(formData.videoFile || formData.videoPreview) && (
+                  <div className="relative mt-4">
+                    <div className="relative inline-block max-w-full">
+                      <video
+                        src={
+                          formData.videoPreview ||
+                          (formData.videoFile
+                            ? URL.createObjectURL(formData.videoFile)
+                            : undefined)
+                        }
+                        controls
+                        className="max-w-full max-h-[400px] rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveVideo}
+                        className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                        aria-label="Remove video"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Document Preview */}
+                {(formData.documentFile || formData.documentPreview) && (
+                  <div className="relative mt-4">
+                    <div className="relative inline-block max-w-full rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-8 w-8 text-slate-600 dark:text-slate-400" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                            {formData.documentFile
+                              ? formData.documentFile.name
+                              : (() => {
+                                  // Extract filename from URL (remove query params first)
+                                  if (!formData.documentPreview)
+                                    return "Document";
+                                  const withoutParams =
+                                    formData.documentPreview.split("?")[0];
+                                  const parts = withoutParams.split("/");
+                                  const filename = parts[parts.length - 1];
+                                  try {
+                                    return decodeURIComponent(filename);
+                                  } catch {
+                                    return filename || "Document";
+                                  }
+                                })()}
+                          </p>
+                          {formData.documentFile && (
+                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                              {(formData.documentFile.size / 1024).toFixed(1)}{" "}
+                              KB
+                            </p>
+                          )}
+                          {formData.documentPreview &&
+                            !formData.documentFile && (
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                Existing document
+                              </p>
+                            )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleRemoveDocument}
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-400 transition-colors"
+                          aria-label="Remove document"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
+
+          {!previewMode && (
+            <div
+              className={`absolute inset-0 z-30 transition duration-300 ${
+                showSettings ? "pointer-events-auto" : "pointer-events-none"
+              }`}
+            >
+              <div
+                className={`absolute inset-0 bg-slate-900/40 transition-opacity duration-300 ${
+                  showSettings ? "opacity-100" : "opacity-0"
+                }`}
+                onClick={() => setShowSettings(false)}
+              />
+              <div
+                className={`absolute left-0 right-0 top-0 bottom-0 bg-white dark:bg-slate-900 transform transition-transform duration-300 ${
+                  showSettings
+                    ? "translate-y-0 shadow-2xl"
+                    : "-translate-y-full shadow-none"
+                }`}
+              >
+                <div className="absolute left-0 right-0 top-0 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-4 bg-white dark:bg-slate-900">
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      Post settings
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Adjust rewrite preferences
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowSettings(false)}
+                    className="rounded-full p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    aria-label="Close settings"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="flex flex-col h-full">
+                  <div
+                    ref={settingsPanelRef}
+                    className="flex-1 overflow-y-auto px-4 py-6 space-y-6 pt-[100px] pb-20"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="tone"
+                          className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                        >
+                          Writing Tone
+                        </Label>
+                        <select
+                          id="tone"
+                          value={formData.tone}
+                          onChange={(e) =>
+                            handleInputChange("tone", e.target.value)
+                          }
+                          className="h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                        >
+                          {TONE_OPTIONS.map((tone) => (
+                            <option key={tone} value={tone}>
+                              {tone}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="postType"
+                          className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                        >
+                          Post Type
+                        </Label>
+                        <select
+                          id="postType"
+                          value={formData.postType}
+                          onChange={(e) =>
+                            handleInputChange("postType", e.target.value)
+                          }
+                          className="h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                        >
+                          {POST_TYPE_OPTIONS.map((type) => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="targetAudience"
+                          className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                        >
+                          Target Audience
+                        </Label>
+                        <select
+                          id="targetAudience"
+                          value={formData.targetAudience}
+                          onChange={(e) =>
+                            handleInputChange("targetAudience", e.target.value)
+                          }
+                          className="h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                        >
+                          {AUDIENCE_OPTIONS.map((audience) => (
+                            <option key={audience} value={audience}>
+                              {audience}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="maxLength"
+                          className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                        >
+                          Max Character Length
+                        </Label>
+                        <Input
+                          id="maxLength"
+                          type="number"
+                          value={formData.maxLength}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "maxLength",
+                              parseInt(e.target.value) || 2000
+                            )
+                          }
+                          min="500"
+                          max="3000"
+                          step="100"
+                          className="h-11 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="language"
+                          className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                        >
+                          Output Language
+                        </Label>
+                        <select
+                          id="language"
+                          value={formData.language || "English"}
+                          onChange={(e) =>
+                            handleInputChange("language", e.target.value)
+                          }
+                          className="h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                        >
+                          {LANGUAGE_OPTIONS.map((lang) => (
+                            <option key={lang.value} value={lang.value}>
+                              {lang.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="includeHashtags"
+                          checked={formData.includeHashtags}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "includeHashtags",
+                              e.target.checked
+                            )
+                          }
+                          className="h-4 w-4 rounded border border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        />
+                        <Label
+                          htmlFor="includeHashtags"
+                          className="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300"
+                        >
+                          Include hashtags
+                        </Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="includeSourceArticle"
+                          checked={formData.includeSourceArticle}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "includeSourceArticle",
+                              e.target.checked
+                            )
+                          }
+                          className="h-4 w-4 rounded border border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        />
+                        <Label
+                          htmlFor="includeSourceArticle"
+                          className="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300"
+                        >
+                          Mention article source
+                        </Label>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="absolute left-0 right-0 bottom-0 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 flex items-center justify-end gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowSettings(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setShowSettings(false)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Save Settings
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Footer */}
           {!previewMode && (
             <div className="border-t border-slate-200 bg-white px-3 py-2.5 sm:px-4 sm:py-3 dark:border-slate-800 dark:bg-slate-900 flex-shrink-0">
               <div className="flex flex-col gap-2.5 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:gap-3 relative min-w-0">
+                <div
+                  className={`flex ${
+                    rewrittenVariants.length > 1
+                      ? "flex-row items-center"
+                      : "flex-col sm:flex-row sm:items-center"
+                  } gap-2.5 sm:gap-3 relative min-w-0`}
+                >
                   {/* First Row: Emoji, Upload Icons */}
                   <div className="flex items-center gap-2 sm:gap-3">
                     {/* Emoji Picker Button */}
-                    <div className="relative flex-shrink-0" ref={emojiPickerRef}>
+                    <div
+                      className="relative flex-shrink-0"
+                      ref={emojiPickerRef}
+                    >
                       <button
                         type="button"
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
@@ -2329,7 +2514,11 @@ export function CreatePostModal({
                   </div>
 
                   {/* Second Row on Mobile: Rewrite, Polish, Variants, Undo */}
-                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap min-w-0">
+                  <div
+                    className={`flex items-center gap-2 sm:gap-3 ${
+                      rewrittenVariants.length > 1 ? "flex-nowrap" : "flex-wrap"
+                    } min-w-0`}
+                  >
                     {/* Rewrite with AI Button */}
                     <button
                       type="button"
@@ -2355,7 +2544,9 @@ export function CreatePostModal({
                       <button
                         type="button"
                         onClick={() => setShowPolishInput(!showPolishInput)}
-                        disabled={!hasText || isRewriting || isGenerating || isPolishing}
+                        disabled={
+                          !hasText || isRewriting || isGenerating || isPolishing
+                        }
                         className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap"
                         title="Polish your post"
                         ref={polishButtonRef}
@@ -2438,7 +2629,8 @@ export function CreatePostModal({
                           <ChevronLeft className="h-4 w-4" />
                         </button>
                         <span className="px-2 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                          Opt. {currentVariantIndex + 1} of {rewrittenVariants.length}
+                          Opt. {currentVariantIndex + 1} of{" "}
+                          {rewrittenVariants.length}
                         </span>
                         <button
                           type="button"
@@ -2500,7 +2692,6 @@ export function CreatePostModal({
           )}
         </div>
       </DialogContent>
-
     </Dialog>
   );
 }

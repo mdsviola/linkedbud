@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -835,9 +836,7 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
     <PageWrapper>
       {/* Back button positioned above the title */}
       <div className="mb-6">
-        <BackButton href={getBackUrl()}>
-          Back to {getStatusInfo()}
-        </BackButton>
+        <BackButton href={getBackUrl()}>Back to {getStatusInfo()}</BackButton>
       </div>
 
       {/* Title and action buttons section */}
@@ -940,7 +939,9 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
                     {/* Profile Picture */}
                     {(() => {
                       const orgInfo = getOrganizationInfo(currentPost);
-                      const orgInitials = getOrganizationInitials(orgInfo.organizationName);
+                      const orgInitials = getOrganizationInitials(
+                        orgInfo.organizationName
+                      );
                       const backgroundColor = orgInfo.isPersonal
                         ? "hsl(217 91% 60%)" // Blue for personal
                         : "hsl(142 76% 36%)"; // Green for organizations
@@ -1004,69 +1005,73 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
                 {/* Content Area - Grows to fill space */}
                 <div className="flex-1 flex flex-col min-h-0">
                   {/* Post Content */}
-                <div
-                  className={`px-4 pb-3 relative ${
-                    currentPost.status === "DRAFT" ||
-                    currentPost.status === "SCHEDULED"
-                      ? "cursor-pointer"
-                      : ""
-                  }`}
-                  onClick={
-                    currentPost.status === "DRAFT" ||
-                    currentPost.status === "SCHEDULED"
-                      ? handleOpenEditModal
-                      : undefined
-                  }
-                >
-                  <div className="text-sm text-slate-900 dark:text-slate-100 leading-[1.5] whitespace-pre-wrap">
-                    {currentPost.content}
-                  </div>
-                  {(currentPost.status === "DRAFT" ||
-                    currentPost.status === "SCHEDULED") && (
-                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <div className="flex items-center gap-2">
-                        <Edit className="h-3 w-3" />
-                        <span>Click to edit</span>
+                  <div
+                    className={`px-4 pb-3 relative ${
+                      currentPost.status === "DRAFT" ||
+                      currentPost.status === "SCHEDULED"
+                        ? "cursor-pointer"
+                        : ""
+                    }`}
+                    onClick={
+                      currentPost.status === "DRAFT" ||
+                      currentPost.status === "SCHEDULED"
+                        ? handleOpenEditModal
+                        : undefined
+                    }
+                  >
+                    <div className="text-sm text-slate-900 dark:text-slate-100 leading-[1.5] whitespace-pre-wrap">
+                      {currentPost.content}
+                    </div>
+                    {(currentPost.status === "DRAFT" ||
+                      currentPost.status === "SCHEDULED") && (
+                      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <div className="flex items-center gap-2">
+                          <Edit className="h-3 w-3" />
+                          <span>Click to edit</span>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyPost();
+                          }}
+                          className={`flex items-center gap-2 ${
+                            copiedContent
+                              ? "text-green-600"
+                              : "text-slate-500 dark:text-slate-400"
+                          }`}
+                        >
+                          {copiedContent ? (
+                            <Check className="h-3 w-3" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                          <span>Copy</span>
+                        </button>
                       </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCopyPost();
-                        }}
-                        className={`flex items-center gap-2 ${
-                          copiedContent ? "text-green-600" : "text-slate-500 dark:text-slate-400"
-                        }`}
-                      >
-                        {copiedContent ? (
-                          <Check className="h-3 w-3" />
-                        ) : (
-                          <Copy className="h-3 w-3" />
-                        )}
-                        <span>Copy</span>
-                      </button>
-                    </div>
-                  )}
-                  {currentPost.status === "PUBLISHED" && (
-                    <div className="flex items-center justify-end text-xs text-slate-500 dark:text-slate-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleCopyPost();
-                        }}
-                        className={`flex items-center gap-2 ${
-                          copiedContent ? "text-green-600" : "text-slate-500 dark:text-slate-400"
-                        }`}
-                      >
-                        {copiedContent ? (
-                          <Check className="h-3 w-3" />
-                        ) : (
-                          <Copy className="h-3 w-3" />
-                        )}
-                        <span>Copy</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
+                    )}
+                    {currentPost.status === "PUBLISHED" && (
+                      <div className="flex items-center justify-end text-xs text-slate-500 dark:text-slate-400 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyPost();
+                          }}
+                          className={`flex items-center gap-2 ${
+                            copiedContent
+                              ? "text-green-600"
+                              : "text-slate-500 dark:text-slate-400"
+                          }`}
+                        >
+                          {copiedContent ? (
+                            <Check className="h-3 w-3" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                          <span>Copy</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Image Preview - LinkedIn Style */}
                   {currentPost.image_url &&
@@ -1075,13 +1080,16 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
                       if (!imageUrl) return null;
                       return (
                         <div className="px-4 pb-3">
-                          <div className="relative w-full">
-                            <img
+                          <div
+                            className="relative w-full"
+                            style={{ height: "600px" }}
+                          >
+                            <Image
                               src={imageUrl}
                               alt="Post image"
-                              className="w-full rounded-md object-contain"
-                              style={{ maxHeight: "600px" }}
-                              loading="lazy"
+                              fill
+                              className="rounded-md object-contain"
+                              unoptimized
                               onError={(e) => {
                                 e.currentTarget.style.display = "none";
                               }}
@@ -1202,9 +1210,7 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
                               publishTarget
                             )
                           }
-                          isPublishing={
-                            publishingToLinkedin === currentPost.id
-                          }
+                          isPublishing={publishingToLinkedin === currentPost.id}
                         />
 
                         <Button
@@ -1276,9 +1282,7 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
                               publishTarget
                             )
                           }
-                          isPublishing={
-                            publishingToLinkedin === currentPost.id
-                          }
+                          isPublishing={publishingToLinkedin === currentPost.id}
                         />
                       </>
                     )}

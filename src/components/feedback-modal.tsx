@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { ModalWrapper } from "@/components/ui/modal-wrapper";
@@ -10,7 +11,15 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { toast } from "@/hooks/use-toast";
-import { X, Camera, XCircle, Loader2, AlertCircle, Lightbulb, MessageSquare } from "lucide-react";
+import {
+  X,
+  Camera,
+  XCircle,
+  Loader2,
+  AlertCircle,
+  Lightbulb,
+  MessageSquare,
+} from "lucide-react";
 import { createClientClient } from "@/lib/supabase-client";
 
 interface FeedbackModalProps {
@@ -21,12 +30,18 @@ interface FeedbackModalProps {
 
 type FeedbackType = "issue" | "idea" | "other";
 
-export function FeedbackModal({ isOpen, onClose, onCapturingChange }: FeedbackModalProps) {
+export function FeedbackModal({
+  isOpen,
+  onClose,
+  onCapturingChange,
+}: FeedbackModalProps) {
   const [type, setType] = useState<FeedbackType>("issue");
   const [message, setMessage] = useState("");
   const [email, setEmail] = useState<string>("");
   const [screenshot, setScreenshot] = useState<File | null>(null);
-  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(
+    null
+  );
   const [isCapturing, setIsCapturing] = useState(false);
   const [shouldCloseForCapture, setShouldCloseForCapture] = useState(false);
   const { status, message: formMessage, submit, reset } = useFormSubmission();
@@ -74,8 +89,8 @@ export function FeedbackModal({ isOpen, onClose, onCapturingChange }: FeedbackMo
     setIsCapturing(true);
     onCapturingChange?.(true);
     setShouldCloseForCapture(true);
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia) {
         const stream = await navigator.mediaDevices.getDisplayMedia({
@@ -89,12 +104,15 @@ export function FeedbackModal({ isOpen, onClose, onCapturingChange }: FeedbackMo
         video.srcObject = stream;
         video.autoplay = true;
         video.playsInline = true;
-        
+
         await new Promise<void>((resolve, reject) => {
           video.onloadedmetadata = () => {
-            video.play().then(() => {
-              setTimeout(() => resolve(), 300);
-            }).catch(reject);
+            video
+              .play()
+              .then(() => {
+                setTimeout(() => resolve(), 300);
+              })
+              .catch(reject);
           };
           video.onerror = reject;
         });
@@ -102,7 +120,7 @@ export function FeedbackModal({ isOpen, onClose, onCapturingChange }: FeedbackMo
         const canvas = document.createElement("canvas");
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        
+
         const ctx = canvas.getContext("2d");
         if (ctx) {
           ctx.drawImage(video, 0, 0);
@@ -131,7 +149,11 @@ export function FeedbackModal({ isOpen, onClose, onCapturingChange }: FeedbackMo
       setIsCapturing(false);
       onCapturingChange?.(false);
       setShouldCloseForCapture(false);
-      if (error instanceof Error && error.name !== "NotAllowedError" && error.name !== "AbortError") {
+      if (
+        error instanceof Error &&
+        error.name !== "NotAllowedError" &&
+        error.name !== "AbortError"
+      ) {
         toast({
           title: "Screenshot Capture Failed",
           description: "Failed to capture screenshot. Please try again.",
@@ -213,130 +235,154 @@ export function FeedbackModal({ isOpen, onClose, onCapturingChange }: FeedbackMo
           What&apos;s on your mind?
         </DialogPrimitive.Title>
         <DialogPrimitive.Description className="text-sm text-muted-foreground">
-          Share your feedback, ideas, or report issues. We&apos;d love to hear from
-          you!
+          Share your feedback, ideas, or report issues. We&apos;d love to hear
+          from you!
         </DialogPrimitive.Description>
       </div>
 
-            <div className="space-y-4">
-              <Tabs value={type} onValueChange={(v) => setType(v as FeedbackType)}>
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger 
-                    value="issue"
-                    className="flex items-center gap-2 data-[state=active]:bg-red-50 data-[state=active]:text-red-700 dark:data-[state=active]:bg-red-950 dark:data-[state=active]:text-red-300"
-                  >
-                    <AlertCircle className={`h-4 w-4 ${type === "issue" ? "text-red-600 dark:text-red-400" : "text-muted-foreground"}`} />
-                    Issue
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="idea"
-                    className="flex items-center gap-2 data-[state=active]:bg-yellow-50 data-[state=active]:text-yellow-700 dark:data-[state=active]:bg-yellow-950 dark:data-[state=active]:text-yellow-300"
-                  >
-                    <Lightbulb className={`h-4 w-4 ${type === "idea" ? "text-yellow-600 dark:text-yellow-400" : "text-muted-foreground"}`} />
-                    Idea
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="other"
-                    className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-950 dark:data-[state=active]:text-blue-300"
-                  >
-                    <MessageSquare className={`h-4 w-4 ${type === "other" ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}`} />
-                    Other
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+      <div className="space-y-4">
+        <Tabs value={type} onValueChange={(v) => setType(v as FeedbackType)}>
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger
+              value="issue"
+              className="flex items-center gap-2 data-[state=active]:bg-red-50 data-[state=active]:text-red-700 dark:data-[state=active]:bg-red-950 dark:data-[state=active]:text-red-300"
+            >
+              <AlertCircle
+                className={`h-4 w-4 ${
+                  type === "issue"
+                    ? "text-red-600 dark:text-red-400"
+                    : "text-muted-foreground"
+                }`}
+              />
+              Issue
+            </TabsTrigger>
+            <TabsTrigger
+              value="idea"
+              className="flex items-center gap-2 data-[state=active]:bg-yellow-50 data-[state=active]:text-yellow-700 dark:data-[state=active]:bg-yellow-950 dark:data-[state=active]:text-yellow-300"
+            >
+              <Lightbulb
+                className={`h-4 w-4 ${
+                  type === "idea"
+                    ? "text-yellow-600 dark:text-yellow-400"
+                    : "text-muted-foreground"
+                }`}
+              />
+              Idea
+            </TabsTrigger>
+            <TabsTrigger
+              value="other"
+              className="flex items-center gap-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 dark:data-[state=active]:bg-blue-950 dark:data-[state=active]:text-blue-300"
+            >
+              <MessageSquare
+                className={`h-4 w-4 ${
+                  type === "other"
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-muted-foreground"
+                }`}
+              />
+              Other
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  readOnly
-                  className="bg-muted cursor-not-allowed"
-                />
-              </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            readOnly
+            className="bg-muted cursor-not-allowed"
+          />
+        </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="message">
-                  Message <span className="text-destructive">*</span>
-                </Label>
-                <Textarea
-                  id="message"
-                  placeholder="Tell us what you think..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  rows={5}
-                  required
-                />
-              </div>
+        <div className="space-y-2">
+          <Label htmlFor="message">
+            Message <span className="text-destructive">*</span>
+          </Label>
+          <Textarea
+            id="message"
+            placeholder="Tell us what you think..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            rows={5}
+            required
+          />
+        </div>
 
-              <div className="space-y-2">
-                <Label>Screenshot (optional)</Label>
-                {screenshotPreview ? (
-                  <div className="relative">
-                    <img
-                      src={screenshotPreview}
-                      alt="Screenshot preview"
-                      className="w-full rounded-md border"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2"
-                      onClick={removeScreenshot}
-                    >
-                      <XCircle className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={captureScreenshot}
-                      disabled={isCapturing}
-                      className="w-full"
-                    >
-                      {isCapturing ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Capturing...
-                        </>
-                      ) : (
-                        <>
-                          <Camera className="mr-2 h-4 w-4" />
-                          Capture Screenshot
-                        </>
-                      )}
-                    </Button>
-                    <p className="text-xs text-muted-foreground">
-                      Opens browser screen capture. Select your browser window from the Window tab.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 mt-6">
-              <Button variant="outline" onClick={onClose} disabled={status === "submitting"}>
-                Cancel
-              </Button>
+        <div className="space-y-2">
+          <Label>Screenshot (optional)</Label>
+          {screenshotPreview ? (
+            <div className="relative w-full" style={{ height: "300px" }}>
+              <Image
+                src={screenshotPreview}
+                alt="Screenshot preview"
+                fill
+                className="rounded-md border object-contain"
+                unoptimized
+              />
               <Button
-                onClick={handleSubmit}
-                disabled={!message.trim() || status === "submitting"}
+                type="button"
+                variant="destructive"
+                size="icon"
+                className="absolute top-2 right-2"
+                onClick={removeScreenshot}
               >
-                {status === "submitting" ? (
+                <XCircle className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={captureScreenshot}
+                disabled={isCapturing}
+                className="w-full"
+              >
+                {isCapturing ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
+                    Capturing...
                   </>
                 ) : (
-                  "Submit Feedback"
+                  <>
+                    <Camera className="mr-2 h-4 w-4" />
+                    Capture Screenshot
+                  </>
                 )}
               </Button>
+              <p className="text-xs text-muted-foreground">
+                Opens browser screen capture. Select your browser window from
+                the Window tab.
+              </p>
             </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2 mt-6">
+        <Button
+          variant="outline"
+          onClick={onClose}
+          disabled={status === "submitting"}
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={!message.trim() || status === "submitting"}
+        >
+          {status === "submitting" ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Submitting...
+            </>
+          ) : (
+            "Submit Feedback"
+          )}
+        </Button>
+      </div>
     </ModalWrapper>
   );
 }
-
