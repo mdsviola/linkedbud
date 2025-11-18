@@ -71,7 +71,7 @@ Provide improved content (preserve all source URLs):`;
 
     // Call OpenAI to polish the content
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",

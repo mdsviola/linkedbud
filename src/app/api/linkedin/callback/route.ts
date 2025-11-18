@@ -9,6 +9,34 @@ import {
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const state = searchParams.get("state") || "";
+
+  // Parse state to check if coming from onboarding
+  const isOnboarding = state.includes("onboarding=true");
+  const inviteTokenMatch = state.match(/invite_token=([^|]+)/);
+  const inviteToken = inviteTokenMatch ? inviteTokenMatch[1] : null;
+
+  // Build redirect URL based on context
+  const getRedirectUrl = (success: boolean, errorCode?: string) => {
+    if (isOnboarding) {
+      const baseUrl = "/onboarding";
+      const params = new URLSearchParams();
+      if (inviteToken) {
+        params.set("invite_token", inviteToken);
+      }
+      if (success) {
+        params.set("linkedin_success", "1");
+      } else if (errorCode) {
+        params.set("linkedin_error", errorCode);
+      }
+      const queryString = params.toString();
+      return `${baseUrl}${queryString ? `?${queryString}` : ""}`;
+    } else {
+      return `/settings?${success ? "linkedin_success=1" : `linkedin_error=${errorCode || "1"}`}#integrations`;
+    }
+  };
+
   try {
     const supabase = createServerClient();
     const {
@@ -20,20 +48,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(new URL("/auth/signin", request.url));
     }
 
-    const { searchParams } = new URL(request.url);
     const code = searchParams.get("code");
     const error = searchParams.get("error");
 
     if (error) {
       console.error("LinkedIn OAuth error:", error);
       return NextResponse.redirect(
-        new URL("/settings?linkedin_error=1#integrations", request.url)
+        new URL(getRedirectUrl(false, "1"), request.url)
       );
     }
 
     if (!code) {
       return NextResponse.redirect(
-        new URL("/settings?linkedin_error=2#integrations", request.url)
+        new URL(getRedirectUrl(false, "2"), request.url)
       );
     }
 
@@ -100,7 +127,7 @@ export async function GET(request: NextRequest) {
     if (tokenError) {
       console.error("Error storing LinkedIn token:", tokenError);
       return NextResponse.redirect(
-        new URL("/settings?linkedin_error=3#integrations", request.url)
+        new URL(getRedirectUrl(false, "3"), request.url)
       );
     }
 
@@ -160,12 +187,12 @@ export async function GET(request: NextRequest) {
     // Personal app no longer writes organizations; use Community flow instead
 
     return NextResponse.redirect(
-      new URL("/settings?linkedin_success=1#integrations", request.url)
+      new URL(getRedirectUrl(true), request.url)
     );
   } catch (error) {
     console.error("LinkedIn callback error:", error);
     return NextResponse.redirect(
-      new URL("/settings?linkedin_error=4#integrations", request.url)
+      new URL(getRedirectUrl(false, "4"), request.url)
     );
   }
 }

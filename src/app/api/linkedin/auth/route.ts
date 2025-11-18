@@ -16,7 +16,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const authURL = getLinkedInAuthURL();
+    const { searchParams } = new URL(request.url);
+    const onboarding = searchParams.get("onboarding");
+    const inviteToken = searchParams.get("invite_token");
+
+    // Build state parameter with onboarding info
+    const stateParams: string[] = ["linkedin_auth"];
+    if (onboarding === "true") {
+      stateParams.push("onboarding=true");
+    }
+    if (inviteToken) {
+      stateParams.push(`invite_token=${inviteToken}`);
+    }
+    const state = stateParams.join("|");
+
+    const baseAuthURL = getLinkedInAuthURL();
+    // Replace the state parameter in the URL
+    const authURL = baseAuthURL.replace(/state=[^&]+/, `state=${encodeURIComponent(state)}`);
+
     return NextResponse.redirect(authURL);
   } catch (error) {
     console.error("LinkedIn auth error:", error);

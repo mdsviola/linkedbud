@@ -22,23 +22,16 @@ import {
   Mail,
   User,
   Linkedin,
-  CheckCircle,
-  XCircle,
-  Building2,
   Users,
 } from "lucide-react";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal";
-import {
-  isTokenExpired,
-  isTokenExpiringSoon,
-  getDaysUntilExpiration,
-} from "@/lib/linkedin-token-utils";
 import { LinkedInOrganizationDB } from "@/lib/linkedin";
 import { CommaSeparatedInput } from "@/components/ui/comma-separated-input";
 import { getTierPricing, formatPrice, getPricingConfig } from "@/lib/pricing-config";
 import { getTierFromPriceId, getTierDisplayName, type PricingTier } from "@/lib/tier-utils";
 import { CollaborationTabContent } from "./collaboration-tab-content";
+import { LinkedInIntegrationBlocks } from "@/components/linkedin-integration-blocks";
 
 interface User {
   id: string;
@@ -586,226 +579,17 @@ export function SettingsClient({ user }: SettingsClientProps) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Warning banner when only one step is complete */}
-              {((linkedinAccount && !communityToken) ||
-                (!linkedinAccount && communityToken)) && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2">
-                    <XCircle className="h-5 w-5 text-amber-600" />
-                    <span className="font-medium text-amber-900">
-                      Incomplete Setup
-                    </span>
-                  </div>
-                  <p className="text-sm text-amber-700 mt-1">
-                    Both personal and community management permissions are
-                    required for full LinkedIn functionality.
-                  </p>
-                </div>
-              )}
-
-              {/* Success banner when both are connected */}
-              {linkedinAccount && communityToken && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    <span className="font-medium text-green-900">
-                      LinkedIn Integration Complete
-                    </span>
-                  </div>
-                  <p className="text-sm text-green-700">
-                    Full access enabled - you can publish to personal pages
-                    and fetch metrics/publish to organization pages
-                  </p>
-                </div>
-              )}
-
-              {/* Unified layout - always show both permission blocks */}
-              <div className="space-y-6">
-                {/* Personal Permissions Block */}
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {linkedinAccount &&
-                      !isTokenExpired(linkedinAccount.token_expires_at) ? (
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-gray-400" />
-                      )}
-                      <span className="font-medium text-gray-900">
-                        Personal Permissions
-                      </span>
-                    </div>
-                    {linkedinAccount && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleLinkedInDisconnect}
-                        disabled={linkedinForm.status === "submitting"}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        {linkedinForm.status === "submitting"
-                          ? "Disconnecting..."
-                          : "Revoke"}
-                      </Button>
-                    )}
-                  </div>
-
-                  {linkedinAccount ? (
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm text-gray-700">
-                          {linkedinAccount.profile_data?.firstName &&
-                          linkedinAccount.profile_data?.lastName
-                            ? `${linkedinAccount.profile_data.firstName} ${linkedinAccount.profile_data.lastName}`
-                            : "LinkedIn Account Connected"}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Connected since{" "}
-                          {new Date(
-                            linkedinAccount.created_at
-                          ).toLocaleDateString()}
-                        </p>
-                      </div>
-
-                      {linkedinAccount.token_expires_at && (
-                        <div className="pt-3 border-t">
-                          <p className="text-xs text-gray-600">
-                            <span className="font-medium">Expires:</span>{" "}
-                            {new Date(
-                              linkedinAccount.token_expires_at
-                            ).toLocaleDateString()}{" "}
-                            {isTokenExpired(linkedinAccount.token_expires_at) ? (
-                              <span className="text-red-600 font-medium">
-                                (Expired)
-                              </span>
-                            ) : isTokenExpiringSoon(linkedinAccount.token_expires_at) ? (
-                              <span className="text-amber-600 font-medium">
-                                (Expires in {getDaysUntilExpiration(linkedinAccount.token_expires_at)} days)
-                              </span>
-                            ) : (
-                              <span className="text-green-600">
-                                (Expires in {getDaysUntilExpiration(linkedinAccount.token_expires_at)} days)
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <p className="text-sm text-gray-600">
-                        Grant access to publish posts to your personal profile
-                      </p>
-                      <Button
-                        onClick={handleLinkedInConnect}
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        Grant Personal Permissions
-                      </Button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Community Management Permissions Block */}
-                <div className="border rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      {communityToken &&
-                      !isTokenExpired(communityToken.token_expires_at) ? (
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <XCircle className="h-5 w-5 text-gray-400" />
-                      )}
-                      <span className="font-medium text-gray-900">
-                        Community Management Permissions
-                      </span>
-                    </div>
-                    {communityToken && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleLinkedInOrganizationsDisconnect}
-                        disabled={linkedinForm.status === "submitting"}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        {linkedinForm.status === "submitting"
-                          ? "Disconnecting..."
-                          : "Revoke"}
-                      </Button>
-                    )}
-                  </div>
-
-                  {communityToken ? (
-                    <div className="space-y-3">
-                      <div>
-                        {organizations.length > 0 ? (
-                          <>
-                            <p className="text-sm text-gray-700">
-                              Access to fetch metrics and publish to{" "}
-                              {organizations.length} organization
-                              {organizations.length !== 1 ? "s" : ""}
-                            </p>
-                            <div className="mt-2 space-y-2">
-                              {organizations.map((org) => (
-                                <div
-                                  key={org.linkedin_org_id}
-                                  className="flex items-center gap-2"
-                                >
-                                  <Building2 className="h-4 w-4 text-blue-600" />
-                                  <span className="text-sm text-gray-600">
-                                    {org.org_name}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </>
-                        ) : (
-                          <p className="text-sm text-gray-700">
-                            Community Management permissions granted. You can fetch metrics and publish to organization pages you administer.
-                          </p>
-                        )}
-                      </div>
-
-                      {communityToken.token_expires_at && (
-                        <div className="pt-3 border-t">
-                          <p className="text-xs text-gray-600">
-                            <span className="font-medium">Expires:</span>{" "}
-                            {new Date(
-                              communityToken.token_expires_at
-                            ).toLocaleDateString()}{" "}
-                            {isTokenExpired(communityToken.token_expires_at) ? (
-                              <span className="text-red-600 font-medium">
-                                (Expired)
-                              </span>
-                            ) : isTokenExpiringSoon(communityToken.token_expires_at) ? (
-                              <span className="text-amber-600 font-medium">
-                                (Expires in {getDaysUntilExpiration(communityToken.token_expires_at)} days)
-                              </span>
-                            ) : (
-                              <span className="text-green-600">
-                                (Expires in {getDaysUntilExpiration(communityToken.token_expires_at)} days)
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <p className="text-sm text-gray-600">
-                        Grant access to fetch metrics and publish to
-                        organization pages you administer
-                      </p>
-                      <Button
-                        onClick={handleLinkedInOrganizationsConnect}
-                        className="bg-blue-600 hover:bg-blue-700"
-                      >
-                        Grant Community Management Permissions
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
+              <LinkedInIntegrationBlocks
+                linkedinAccount={linkedinAccount}
+                communityToken={communityToken}
+                organizations={organizations}
+                onPersonalConnect={handleLinkedInConnect}
+                onCommunityConnect={handleLinkedInOrganizationsConnect}
+                onPersonalDisconnect={handleLinkedInDisconnect}
+                onCommunityDisconnect={handleLinkedInOrganizationsDisconnect}
+                isDisconnecting={linkedinForm.status === "submitting"}
+                showRevokeButtons={true}
+              />
             </CardContent>
           </Card>
         </TabsContent>

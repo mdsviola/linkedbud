@@ -14,11 +14,28 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { createClientClient } from "@/lib/supabase-client";
-import { Plus, X, Check, Mail, CheckCircle2, LogOut } from "lucide-react";
+import { Plus, X, Check, Mail, CheckCircle2, LogOut, Linkedin } from "lucide-react";
 import { RssFeedSelector } from "@/components/rss-feed-selector";
+import { LinkedInIntegrationBlocks } from "@/components/linkedin-integration-blocks";
+import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal";
+import { useFormSubmission } from "@/hooks/useFormSubmission";
+import { LinkedInOrganizationDB } from "@/lib/linkedin";
+
+interface LinkedInAccount {
+  id: number;
+  linkedin_user_id: string;
+  profile_data: {
+    firstName: string;
+    lastName: string;
+    profilePicture?: string;
+  };
+  is_active: boolean;
+  created_at: string;
+  token_expires_at: string | null;
+}
 
 export default function OnboardingPage() {
-  const [step, setStep] = useState<"verification" | "preferences">(
+  const [step, setStep] = useState<"verification" | "preferences" | "integrations">(
     "verification"
   );
   const [firstName, setFirstName] = useState("");
@@ -33,6 +50,12 @@ export default function OnboardingPage() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
+  const [linkedinAccount, setLinkedinAccount] = useState<LinkedInAccount | null>(null);
+  const [communityToken, setCommunityToken] = useState<LinkedInAccount | null>(null);
+  const [organizations, setOrganizations] = useState<LinkedInOrganizationDB[]>([]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletingType, setDeletingType] = useState<"personal" | "organizations" | null>(null);
+  const linkedinForm = useFormSubmission();
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClientClient();
@@ -47,6 +70,95 @@ export default function OnboardingPage() {
     }
     return "/";
   };
+
+  // Fetch LinkedIn token status
+  const fetchLinkedInStatus = async (userId: string) => {
+    try {
+      // Fetch LinkedIn personal token status
+      const { data: personalToken, error: personalTokenError } = await supabase
+        .from("linkedin_tokens")
+        .select(
+          "id, linkedin_user_id, profile_data, is_active, created_at, token_expires_at"
+        )
+        .eq("user_id", userId)
+        .eq("type", "personal")
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (!personalTokenError && personalToken) {
+        setLinkedinAccount(personalToken);
+      } else {
+        setLinkedinAccount(null);
+      }
+
+      // Fetch LinkedIn community token status
+      const { data: communityTokenData, error: communityTokenError } = await supabase
+        .from("linkedin_tokens")
+        .select(
+          "id, linkedin_user_id, profile_data, is_active, created_at, token_expires_at"
+        )
+        .eq("user_id", userId)
+        .eq("type", "community")
+        .eq("is_active", true)
+        .maybeSingle();
+
+      const hasCommunityToken = !communityTokenError && communityTokenData;
+
+      if (hasCommunityToken) {
+        setCommunityToken(communityTokenData);
+      } else {
+        setCommunityToken(null);
+      }
+
+      // Fetch LinkedIn organizations
+      if (hasCommunityToken) {
+        const { data: orgData, error: orgError } = await supabase
+          .from("linkedin_organizations")
+          .select("*")
+          .eq("user_id", userId);
+
+        if (!orgError && orgData) {
+          setOrganizations(orgData);
+        } else {
+          setOrganizations([]);
+        }
+      } else {
+        setOrganizations([]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch LinkedIn status:", err);
+    }
+  };
+
+  // Check for LinkedIn connection success/error from callback
+  useEffect(() => {
+    const checkLinkedInCallback = async () => {
+      if (typeof window === "undefined" || !user) return;
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const linkedinSuccess = urlParams.get("linkedin_success");
+      const linkedinError = urlParams.get("linkedin_error");
+
+      if (linkedinSuccess || linkedinError) {
+        // Set step to integrations if not already there
+        if (step !== "integrations") {
+          setStep("integrations");
+        }
+
+        // Refresh LinkedIn status
+        if (user.id) {
+          await fetchLinkedInStatus(user.id);
+        }
+
+        // Clean up URL
+        const cleanUrl = window.location.origin + window.location.pathname +
+          (inviteToken ? `?invite_token=${inviteToken}` : "");
+        window.history.replaceState({}, document.title, cleanUrl);
+      }
+    };
+
+    checkLinkedInCallback();
+  }, [user, inviteToken, supabase, step]);
 
   // Check authentication status on mount
   useEffect(() => {
@@ -128,15 +240,25 @@ export default function OnboardingPage() {
           // only if the user has updated their preferences (either filled or skipped)
           const { data: prefs } = await supabase
             .from("user_prefs")
-            .select("created_at, updated_at")
+            .select("created_at, updated_at, topics, custom_rss_feeds, user_corpus")
             .eq("user_id", currentUser.id)
             .single();
 
-          // If prefs exist and updated_at is different from created_at, onboarding is complete
-          // Check if they're accessing via direct URL (no redirect from signup flow)
-          // If they're coming from a direct URL and have completed onboarding, allow them to stay
-          // Users who haven't completed onboarding should always be able to access the page
+          // Onboarding is only complete after integrations step is finished
+          // We check if updated_at was updated very recently (within last 10 seconds)
+          // which indicates they just completed integrations
+          // Otherwise, if updated_at was updated but not recently, they're in the middle of onboarding
+          let onboardingComplete = false;
           if (prefs && prefs.created_at !== prefs.updated_at) {
+            const updatedAt = new Date(prefs.updated_at);
+            const now = new Date();
+            const secondsSinceUpdate = (now.getTime() - updatedAt.getTime()) / 1000;
+            // If updated within last 10 seconds, they likely just completed integrations
+            // Otherwise, they completed preferences but not integrations yet
+            onboardingComplete = secondsSinceUpdate < 10;
+          }
+
+          if (onboardingComplete) {
             // Check if they're accessing via direct URL (not from a signup/auth flow)
             let fromDirectAccess = false;
             if (typeof window !== "undefined") {
@@ -155,9 +277,21 @@ export default function OnboardingPage() {
             }
           }
 
-          // User has a session but hasn't set preferences, show preferences step
-          // This allows authenticated users who haven't completed onboarding to access via URL
-          setStep("preferences");
+          // Fetch LinkedIn status when user is authenticated
+          await fetchLinkedInStatus(currentUser.id);
+
+          // Determine which step to show
+          // If preferences have been saved (updated_at changed), show integrations step
+          // This ensures users always see the integrations step after preferences
+          // Otherwise, show preferences step
+          if (prefs && prefs.created_at !== prefs.updated_at) {
+            // User has already saved preferences (filled or skipped), show integrations step
+            // This ensures the integrations step is always presented
+            setStep("integrations");
+          } else {
+            // User hasn't saved preferences yet, show preferences step
+            setStep("preferences");
+          }
         } else if (!currentUser && !session) {
           // Allow authenticated users who haven't completed onboarding to access via URL
           // Only redirect unauthenticated users who aren't in a signup flow
@@ -179,6 +313,7 @@ export default function OnboardingPage() {
               if (refreshed) {
                 setUser(refreshed);
                 setStep("preferences");
+                await fetchLinkedInStatus(refreshed.id);
               }
             }
           }, 1500);
@@ -311,7 +446,8 @@ export default function OnboardingPage() {
         return;
       }
 
-      // Create empty preferences record to mark onboarding as complete
+      // Create empty preferences record
+      // Note: We update updated_at here, but onboarding is only complete after integrations step
       const { error } = await supabase.from("user_prefs").upsert({
         user_id: currentUser.id,
         topics: [],
@@ -319,6 +455,209 @@ export default function OnboardingPage() {
         user_corpus: null,
         updated_at: new Date().toISOString(),
       });
+
+      if (error) {
+        setError(`Database error: ${error.message}`);
+        setLoading(false);
+      } else {
+        // Move to integrations step instead of completing onboarding
+        setStep("integrations");
+        setLoading(false);
+      }
+    } catch (err) {
+      setError(
+        `An unexpected error occurred: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`
+      );
+      setLoading(false);
+    }
+  };
+
+  const handleLinkedInConnect = async () => {
+    try {
+      setError("");
+      // Add onboarding parameter to redirect back to onboarding after connection
+      const params = new URLSearchParams();
+      params.set("onboarding", "true");
+      if (inviteToken) {
+        params.set("invite_token", inviteToken);
+      }
+      const redirectUrl = `/api/linkedin/auth?${params.toString()}`;
+      window.location.href = redirectUrl;
+    } catch (err) {
+      console.error("Failed to initiate LinkedIn connection:", err);
+      setError("Failed to connect LinkedIn. Please try again.");
+    }
+  };
+
+  const handleLinkedInOrganizationsConnect = async () => {
+    try {
+      setError("");
+      // Add onboarding parameter to redirect back to onboarding after connection
+      const params = new URLSearchParams();
+      params.set("onboarding", "true");
+      if (inviteToken) {
+        params.set("invite_token", inviteToken);
+      }
+      const redirectUrl = `/api/linkedin/organizations/auth?${params.toString()}`;
+      window.location.href = redirectUrl;
+    } catch (err) {
+      console.error("Failed to initiate LinkedIn organizations connection:", err);
+      setError("Failed to connect LinkedIn organizations. Please try again.");
+    }
+  };
+
+  const handleLinkedInDisconnect = async () => {
+    if (!linkedinAccount) return;
+    setDeletingType("personal");
+    setDeleteModalOpen(true);
+  };
+
+  const handleLinkedInOrganizationsDisconnect = async () => {
+    setDeletingType("organizations");
+    setDeleteModalOpen(true);
+  };
+
+  const confirmLinkedInDisconnect = async () => {
+    if (!user) return;
+
+    await linkedinForm.submit(async () => {
+      // Revoke token with LinkedIn first
+      try {
+        const revokeResponse = await fetch("/api/linkedin/revoke", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ type: "personal" }),
+        });
+
+        if (!revokeResponse.ok) {
+          console.warn("Failed to revoke LinkedIn token, continuing with local deletion");
+        }
+      } catch (revokeError) {
+        console.warn("Error revoking LinkedIn token:", revokeError);
+      }
+
+      // Delete the personal token
+      const { error: tokenError } = await supabase
+        .from("linkedin_tokens")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("type", "personal");
+
+      if (tokenError) {
+        throw new Error("Failed to disconnect LinkedIn account. Please try again.");
+      }
+
+      // Also clean up linkedin_accounts if it exists
+      const { error: accountError } = await supabase
+        .from("linkedin_accounts")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("account_type", "personal");
+
+      if (accountError) {
+        console.warn("Failed to clean up linkedin_accounts:", accountError);
+      }
+
+      setLinkedinAccount(null);
+      // Refresh LinkedIn status
+      await fetchLinkedInStatus(user.id);
+    }, "LinkedIn profile disconnected successfully");
+
+    setDeletingType(null);
+    setDeleteModalOpen(false);
+  };
+
+  const confirmLinkedInOrganizationsDisconnect = async () => {
+    if (!user) return;
+
+    await linkedinForm.submit(async () => {
+      // Revoke token with LinkedIn first
+      try {
+        const revokeResponse = await fetch("/api/linkedin/revoke", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ type: "community" }),
+        });
+
+        if (!revokeResponse.ok) {
+          console.warn("Failed to revoke LinkedIn token, continuing with local deletion");
+        }
+      } catch (revokeError) {
+        console.warn("Error revoking LinkedIn token:", revokeError);
+      }
+
+      // Delete organizations first
+      const { error: orgError } = await supabase
+        .from("linkedin_organizations")
+        .delete()
+        .eq("user_id", user.id);
+
+      if (orgError) {
+        throw new Error("Failed to disconnect LinkedIn organizations. Please try again.");
+      }
+
+      // Delete the community token
+      const { error: tokenError } = await supabase
+        .from("linkedin_tokens")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("type", "community");
+
+      if (tokenError) {
+        throw new Error("Failed to delete community management token. Please try again.");
+      }
+
+      // Also clean up linkedin_accounts if it exists for organization type
+      const { error: accountError } = await supabase
+        .from("linkedin_accounts")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("account_type", "organization");
+
+      if (accountError) {
+        console.warn("Failed to clean up linkedin_accounts:", accountError);
+      }
+
+      setOrganizations([]);
+      setCommunityToken(null);
+      // Refresh LinkedIn status
+      await fetchLinkedInStatus(user.id);
+    }, "LinkedIn community management disconnected successfully");
+
+    setDeletingType(null);
+    setDeleteModalOpen(false);
+  };
+
+  const handleIntegrationsComplete = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const {
+        data: { user: currentUser },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !currentUser) {
+        setError("Please sign in to continue");
+        router.push("/auth/signin");
+        setLoading(false);
+        return;
+      }
+
+      // Mark onboarding as complete by updating user_prefs
+      const { error } = await supabase
+        .from("user_prefs")
+        .update({
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", currentUser.id);
 
       if (error) {
         setError(`Database error: ${error.message}`);
@@ -424,6 +763,8 @@ export default function OnboardingPage() {
         setKeywords(finalKeywords);
       }
 
+      // Update preferences
+      // Note: We update updated_at here, but onboarding is only complete after integrations step
       const { data, error } = await supabase
         .from("user_prefs")
         .upsert({
@@ -438,8 +779,9 @@ export default function OnboardingPage() {
       if (error) {
         setError(`Database error: ${error.message}`);
       } else {
-        // Redirect to invitation acceptance if token exists, otherwise home
-        router.push(getRedirectUrl());
+        // Move to integrations step instead of completing onboarding
+        setStep("integrations");
+        setLoading(false);
       }
     } catch (err) {
       setError(
@@ -447,7 +789,6 @@ export default function OnboardingPage() {
           err instanceof Error ? err.message : "Unknown error"
         }`
       );
-    } finally {
       setLoading(false);
     }
   };
@@ -478,33 +819,33 @@ export default function OnboardingPage() {
 
         {/* Stepper */}
         <div className="flex justify-center mb-8">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             {/* Step 1: Verification */}
             <div className="flex flex-col items-center">
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${
                   step === "verification"
                     ? "bg-blue-600 text-white"
-                    : step === "preferences"
+                    : step === "preferences" || step === "integrations"
                     ? "bg-green-600 text-white"
                     : "bg-slate-300 dark:bg-slate-600 text-white"
                 }`}
               >
-                {step === "preferences" ? (
-                  <Check className="w-6 h-6" />
+                {step === "preferences" || step === "integrations" ? (
+                  <Check className="w-5 h-5 sm:w-6 sm:h-6" />
                 ) : (
-                  <Mail className="w-6 h-6" />
+                  <Mail className="w-5 h-5 sm:w-6 sm:h-6" />
                 )}
               </div>
-              <p className="text-sm font-medium mt-2 text-slate-700 dark:text-slate-300">
+              <p className="text-xs sm:text-sm font-medium mt-2 text-slate-700 dark:text-slate-300">
                 Verify Email
               </p>
             </div>
 
-            <div className="flex-1 w-24 h-1 bg-slate-300 dark:bg-slate-600">
+            <div className="flex-1 w-12 sm:w-24 h-1 bg-slate-300 dark:bg-slate-600">
               <div
                 className={`h-full transition-all duration-500 ${
-                  step === "preferences" ? "bg-green-600" : ""
+                  step === "preferences" || step === "integrations" ? "bg-green-600" : ""
                 }`}
               />
             </div>
@@ -512,16 +853,46 @@ export default function OnboardingPage() {
             {/* Step 2: Preferences */}
             <div className="flex flex-col items-center">
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${
                   step === "preferences"
+                    ? "bg-blue-600 text-white"
+                    : step === "integrations"
+                    ? "bg-green-600 text-white"
+                    : "bg-slate-300 dark:bg-slate-600 text-white"
+                }`}
+              >
+                {step === "integrations" ? (
+                  <Check className="w-5 h-5 sm:w-6 sm:h-6" />
+                ) : (
+                  <Check className="w-5 h-5 sm:w-6 sm:h-6" />
+                )}
+              </div>
+              <p className="text-xs sm:text-sm font-medium mt-2 text-slate-700 dark:text-slate-300">
+                Preferences
+              </p>
+            </div>
+
+            <div className="flex-1 w-12 sm:w-24 h-1 bg-slate-300 dark:bg-slate-600">
+              <div
+                className={`h-full transition-all duration-500 ${
+                  step === "integrations" ? "bg-green-600" : ""
+                }`}
+              />
+            </div>
+
+            {/* Step 3: Integrations */}
+            <div className="flex flex-col items-center">
+              <div
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${
+                  step === "integrations"
                     ? "bg-blue-600 text-white"
                     : "bg-slate-300 dark:bg-slate-600 text-white"
                 }`}
               >
-                <Check className="w-6 h-6" />
+                <Linkedin className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <p className="text-sm font-medium mt-2 text-slate-700 dark:text-slate-300">
-                Your Preferences
+              <p className="text-xs sm:text-sm font-medium mt-2 text-slate-700 dark:text-slate-300">
+                Integrations
               </p>
             </div>
           </div>
@@ -602,7 +973,7 @@ export default function OnboardingPage() {
               </div>
             </div>
           </div>
-        ) : (
+        ) : step === "preferences" ? (
           <div className="bg-white dark:bg-slate-900 py-8 px-6 shadow-sm border border-slate-200 dark:border-slate-800 rounded-lg">
             <div className="space-y-6">
               <div>
@@ -809,7 +1180,7 @@ export default function OnboardingPage() {
                     className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
                     disabled={loading}
                   >
-                    {loading ? "Setting up your account..." : "Complete Setup"}
+                    {loading ? "Setting up your account..." : "Next"}
                   </Button>
                   <Button
                     type="button"
@@ -836,7 +1207,70 @@ export default function OnboardingPage() {
               </div>
             </div>
           </div>
-        )}
+        ) : step === "integrations" ? (
+          <div className="bg-white dark:bg-slate-900 py-8 px-6 shadow-sm border border-slate-200 dark:border-slate-800 rounded-lg">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">
+                  Connect LinkedIn
+                </h2>
+                <p className="mt-2 text-slate-600 dark:text-slate-400">
+                  Link your LinkedIn account to publish posts and fetch analytics
+                </p>
+              </div>
+
+              <LinkedInIntegrationBlocks
+                linkedinAccount={linkedinAccount}
+                communityToken={communityToken}
+                organizations={organizations}
+                onPersonalConnect={handleLinkedInConnect}
+                onCommunityConnect={handleLinkedInOrganizationsConnect}
+                onPersonalDisconnect={handleLinkedInDisconnect}
+                onCommunityDisconnect={handleLinkedInOrganizationsDisconnect}
+                isDisconnecting={linkedinForm.status === "submitting"}
+                showRevokeButtons={true}
+              />
+
+              {error && (
+                <div className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-950/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex flex-col gap-3">
+                <Button
+                  type="button"
+                  onClick={handleIntegrationsComplete}
+                  className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
+                  disabled={loading}
+                >
+                  {loading ? "Completing setup..." : "Complete Setup"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-11 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  onClick={handleIntegrationsComplete}
+                  disabled={loading}
+                >
+                  {loading ? "Skipping..." : "Skip for now"}
+                </Button>
+              </div>
+
+              <div className="pt-4 border-t border-slate-200 dark:border-slate-700">
+                <Button
+                  type="button"
+                  onClick={handleLogout}
+                  variant="ghost"
+                  className="w-full text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log out
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {step === "preferences" && (
           <div className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
@@ -846,7 +1280,53 @@ export default function OnboardingPage() {
             </p>
           </div>
         )}
+
+        {step === "integrations" && (
+          <div className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
+            <p>
+              You can connect your LinkedIn accounts later in settings if you prefer to skip this step.
+            </p>
+          </div>
+        )}
       </div>
+
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setDeletingType(null);
+        }}
+        onConfirm={
+          deletingType === "personal"
+            ? confirmLinkedInDisconnect
+            : deletingType === "organizations"
+            ? confirmLinkedInOrganizationsDisconnect
+            : () => {}
+        }
+        title={
+          deletingType === "personal"
+            ? "Disconnect LinkedIn Profile"
+            : deletingType === "organizations"
+            ? "Disconnect Community Management"
+            : "Confirm Action"
+        }
+        description={
+          deletingType === "personal"
+            ? "Are you sure you want to disconnect your LinkedIn profile? You'll need to reconnect to publish posts."
+            : deletingType === "organizations"
+            ? "Are you sure you want to disconnect your community management connection? You'll need to reconnect to fetch metrics and publish to organization pages."
+            : "Are you sure you want to proceed?"
+        }
+        confirmText={
+          deletingType === "personal"
+            ? "Disconnect Profile"
+            : deletingType === "organizations"
+            ? "Disconnect Community Management"
+            : "Confirm"
+        }
+        cancelText="Cancel"
+        isLoading={linkedinForm.status === "submitting"}
+      />
     </div>
   );
 }
