@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { formatCompactDateTime } from "@/lib/utils";
 import { Calendar, Clock, CheckCircle, Archive, Edit } from "lucide-react";
 
 interface PostStatusBadgeProps {
@@ -27,14 +28,7 @@ export function PostStatusBadge({
   hideDate = false,
 }: PostStatusBadgeProps) {
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZoneName: "short",
-    });
+    return formatCompactDateTime(dateString);
   };
 
   const getStatusConfig = () => {

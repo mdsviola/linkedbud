@@ -13,6 +13,7 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { toast } from "@/hooks/use-toast";
 import { TimeSlotSelector } from "@/components/ui/time-slot-selector";
+import { formatCompactDateTime } from "@/lib/utils";
 import { Calendar, Clock } from "lucide-react";
 
 interface SchedulePostModalProps {
@@ -147,15 +148,7 @@ export function SchedulePostModal({
   };
 
   const formatDisplayDate = (utcDateString: string) => {
-    const date = new Date(utcDateString);
-    return date.toLocaleString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZoneName: "short",
-    });
+    return formatCompactDateTime(utcDateString);
   };
 
   return (

@@ -34,7 +34,11 @@ import { ScheduledPostsCalendar } from "@/components/scheduled-posts-calendar";
 import { WarningMessage } from "@/components/ui/message";
 import { LabelWithCount } from "@/components/ui/label-with-count";
 import { isTokenExpired } from "@/lib/linkedin-token-utils";
-import { truncateContent, getOrganizationName } from "@/lib/utils";
+import {
+  truncateContent,
+  getOrganizationName,
+  formatDateTimeFull,
+} from "@/lib/utils";
 
 interface PostVariant {
   hook: string;
@@ -180,7 +184,10 @@ export function ScheduledPostsClient() {
         // For pagination (page > 1), use regular month range
         if (page === 1) {
           // Calculate the visible calendar date range
-          const { startDate, endDate } = getCalendarDateRange(fetchYear, fetchMonth);
+          const { startDate, endDate } = getCalendarDateRange(
+            fetchYear,
+            fetchMonth
+          );
           url += `&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&includePublished=true`;
         } else {
           // For pagination, use the month range
@@ -265,7 +272,6 @@ export function ScheduledPostsClient() {
       }
     }
   };
-
 
   const handleCustomGenerate = async (formData: CreatePostFormData) => {
     setIsGenerating(true);
@@ -359,7 +365,11 @@ export function ScheduledPostsClient() {
             Your posts scheduled for future publishing
           </PageDescription>
         </div>
-        <Button onClick={() => setShowCustomModal(true)} size="lg" className="w-full sm:w-auto">
+        <Button
+          onClick={() => setShowCustomModal(true)}
+          size="lg"
+          className="w-full sm:w-auto"
+        >
           Create Post
         </Button>
       </div>
@@ -426,16 +436,15 @@ export function ScheduledPostsClient() {
                 </div>
               )}
               {(() => {
-                const scheduledPosts = posts.filter(
-                  (post) => post.status === "SCHEDULED"
-                );
-                const publishedPosts = posts.filter(
-                  (post) => post.status === "PUBLISHED"
-                );
+                // Don't separate posts - render them in the order from API (already sorted by date)
+                // The API returns posts sorted by: published_at for published, scheduled_publish_date for scheduled (newest first)
 
                 const renderPost = (post: Post) => {
                   // Get organization name using utility function
-                  const organizationName = getOrganizationName(post, organizations);
+                  const organizationName = getOrganizationName(
+                    post,
+                    organizations
+                  );
 
                   // Determine organization ID
                   let orgId: string | null = null;
@@ -458,7 +467,9 @@ export function ScheduledPostsClient() {
                   const isPersonal =
                     post.publish_target === "personal" ||
                     (!orgId && !post.publish_target) ||
-                    post.linkedin_posts?.some((lp) => lp.organization_id === null);
+                    post.linkedin_posts?.some(
+                      (lp) => lp.organization_id === null
+                    );
 
                   // Get actual published date (from LinkedIn post if available)
                   const actualPublishedAt =
@@ -503,28 +514,14 @@ export function ScheduledPostsClient() {
                               {post.status === "PUBLISHED"
                                 ? `Published at ${
                                     actualPublishedAt
-                                      ? new Date(
-                                          actualPublishedAt
-                                        ).toLocaleDateString("en-US", {
-                                          year: "numeric",
-                                          month: "2-digit",
-                                          day: "2-digit",
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                        })
+                                      ? formatDateTimeFull(actualPublishedAt)
                                       : "Unknown date"
                                   }`
                                 : `Scheduled for ${
                                     post.scheduled_publish_date
-                                      ? new Date(
+                                      ? formatDateTimeFull(
                                           post.scheduled_publish_date
-                                        ).toLocaleDateString("en-US", {
-                                          year: "numeric",
-                                          month: "2-digit",
-                                          day: "2-digit",
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                        })
+                                        )
                                       : "Not scheduled"
                                   }`}
                             </p>
@@ -535,36 +532,48 @@ export function ScheduledPostsClient() {
                   );
                 };
 
+                // Count scheduled and published for display
+                const scheduledCount = posts.filter(
+                  (p) => p.status === "SCHEDULED"
+                ).length;
+                const publishedCount = posts.filter(
+                  (p) => p.status === "PUBLISHED"
+                ).length;
+
                 return (
                   <>
-                    {scheduledPosts.length > 0 && (
+                    {posts.length > 0 && (
                       <div className="space-y-4">
-                        <h2 className="flex items-center gap-2">
-                          <Calendar className="h-5 w-5 text-blue-600" />
-                          <LabelWithCount label="Scheduled" count={scheduledPosts.length} />
-                        </h2>
+                        <div className="flex items-center gap-4">
+                          {scheduledCount > 0 && (
+                            <h2 className="flex items-center gap-2">
+                              <Calendar className="h-5 w-5 text-blue-600" />
+                              <LabelWithCount
+                                label="Scheduled"
+                                count={scheduledCount}
+                              />
+                            </h2>
+                          )}
+                          {publishedCount > 0 && (
+                            <h2 className="flex items-center gap-2">
+                              <CheckCircle2 className="h-5 w-5 text-green-600" />
+                              <LabelWithCount
+                                label="Published"
+                                count={publishedCount}
+                              />
+                            </h2>
+                          )}
+                        </div>
                         <div className="flex flex-col gap-2">
-                          {scheduledPosts.map((post) => renderPost(post))}
+                          {posts.map((post) => renderPost(post))}
                         </div>
                       </div>
                     )}
-                    {publishedPosts.length > 0 && (
-                      <div className="space-y-4">
-                        <h2 className="flex items-center gap-2">
-                          <CheckCircle2 className="h-5 w-5 text-green-600" />
-                          <LabelWithCount label="Published" count={publishedPosts.length} />
-                        </h2>
-                        <div className="flex flex-col gap-2">
-                          {publishedPosts.map((post) => renderPost(post))}
-                        </div>
+                    {posts.length === 0 && (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">No posts found</p>
                       </div>
                     )}
-                    {scheduledPosts.length === 0 &&
-                      publishedPosts.length === 0 && (
-                        <div className="text-center py-8">
-                          <p className="text-gray-500">No posts found</p>
-                        </div>
-                      )}
                   </>
                 );
               })()}

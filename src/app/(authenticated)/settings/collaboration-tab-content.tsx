@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { formatDateOnly } from "@/lib/utils";
 import { Message } from "@/components/ui/message";
 import { Trash2, Mail, UserPlus, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -86,7 +87,9 @@ export function CollaborationTabContent() {
         // Check if price_id matches Growth tier
         if (subscription?.price_id) {
           // Fetch tier info from API
-          const tierRes = await fetch(`/api/portfolio/check-tier?price_id=${subscription.price_id}`);
+          const tierRes = await fetch(
+            `/api/portfolio/check-tier?price_id=${subscription.price_id}`
+          );
           if (tierRes.ok) {
             const tierData = await tierRes.json();
             hasGrowth = tierData.tier === "GROWTH";
@@ -205,7 +208,8 @@ export function CollaborationTabContent() {
     if (seatInfo && seatInfo.seatsRemaining === 0) {
       toast({
         title: "No seats available",
-        description: "You've used all available seats. Please purchase additional seats to invite more collaborators.",
+        description:
+          "You've used all available seats. Please purchase additional seats to invite more collaborators.",
         variant: "destructive",
       });
       return;
@@ -373,7 +377,8 @@ export function CollaborationTabContent() {
                     <p className="text-sm text-muted-foreground">Total Seats</p>
                     <p className="text-2xl font-bold">{seatInfo.totalSeats}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {seatInfo.baseSeats} base + {seatInfo.additionalSeats} additional
+                      {seatInfo.baseSeats} base + {seatInfo.additionalSeats}{" "}
+                      additional
                     </p>
                   </div>
                   <div className="p-4 border rounded-lg">
@@ -388,7 +393,8 @@ export function CollaborationTabContent() {
                 {seatInfo.seatsRemaining === 0 && (
                   <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
                     <p className="text-sm text-orange-800">
-                      You&apos;ve used all available seats. Purchase additional seats to invite more collaborators.
+                      You&apos;ve used all available seats. Purchase additional
+                      seats to invite more collaborators.
                     </p>
                   </div>
                 )}
@@ -398,7 +404,9 @@ export function CollaborationTabContent() {
                   disabled={purchasingSeat || !hasGrowthPlan}
                   className="w-full"
                 >
-                  {purchasingSeat ? "Processing..." : "Purchase Additional Seat"}
+                  {purchasingSeat
+                    ? "Processing..."
+                    : "Purchase Additional Seat"}
                 </Button>
                 {!hasGrowthPlan && (
                   <p className="text-sm text-muted-foreground text-center mt-2">
@@ -426,15 +434,21 @@ export function CollaborationTabContent() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && canUseFeature && seatInfo?.seatsRemaining !== 0) {
+                if (
+                  e.key === "Enter" &&
+                  canUseFeature &&
+                  seatInfo?.seatsRemaining !== 0
+                ) {
                   handleInvite();
                 }
               }}
-              disabled={!canUseFeature || (seatInfo?.seatsRemaining === 0)}
+              disabled={!canUseFeature || seatInfo?.seatsRemaining === 0}
             />
             <Button
               onClick={handleInvite}
-              disabled={!canUseFeature || inviting || (seatInfo?.seatsRemaining === 0)}
+              disabled={
+                !canUseFeature || inviting || seatInfo?.seatsRemaining === 0
+              }
             >
               <UserPlus className="mr-2 h-4 w-4" />
               {inviting ? "Sending..." : "Send Invitation"}
@@ -483,8 +497,7 @@ export function CollaborationTabContent() {
                     <div>
                       <p className="font-medium">{invitation.email}</p>
                       <p className="text-sm text-muted-foreground">
-                        Expires:{" "}
-                        {new Date(invitation.expires_at).toLocaleDateString()}
+                        Expires: {formatDateOnly(invitation.expires_at)}
                       </p>
                     </div>
                   </div>
@@ -569,4 +582,3 @@ export function CollaborationTabContent() {
     </div>
   );
 }
-

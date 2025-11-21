@@ -15,6 +15,7 @@ import {
   MessageSquare,
   ChevronDown,
 } from "lucide-react";
+import { formatDateTimeLong } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 
 interface FeedbackSubmission {
@@ -287,13 +288,7 @@ export function FeedbackDetailClient({ feedbackId }: { feedbackId: string }) {
               <div>
                 <span className="text-gray-500">Submitted:</span>
                 <span className="ml-2 text-gray-900">
-                  {new Date(feedback.created_at).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {formatDateTimeLong(feedback.created_at)}
                 </span>
               </div>
               <div className="md:col-span-2">

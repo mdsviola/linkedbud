@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { formatDateTime } from "@/lib/utils";
 import { Loader2, Search, Mail, Calendar, Hash } from "lucide-react";
 
 interface WaitlistEntry {
@@ -73,14 +74,7 @@ export function WaitlistClient() {
   };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    return formatDateTime(dateString);
   };
 
   const filteredEntries = entries.filter((entry) =>
@@ -150,8 +144,13 @@ export function WaitlistClient() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredEntries.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
-                        {searchTerm ? "No entries found matching your search" : "No waitlist entries yet"}
+                      <td
+                        colSpan={4}
+                        className="px-6 py-8 text-center text-gray-500"
+                      >
+                        {searchTerm
+                          ? "No entries found matching your search"
+                          : "No waitlist entries yet"}
                       </td>
                     </tr>
                   ) : (
@@ -168,7 +167,9 @@ export function WaitlistClient() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center gap-2">
                             <Mail className="h-4 w-4 text-gray-400" />
-                            <span className="text-sm text-gray-900">{entry.email}</span>
+                            <span className="text-sm text-gray-900">
+                              {entry.email}
+                            </span>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -214,4 +215,3 @@ export function WaitlistClient() {
     </>
   );
 }
-

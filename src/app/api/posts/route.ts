@@ -245,6 +245,31 @@ export async function GET(request: NextRequest) {
       // For accurate count, we'd need to refetch, but for pagination we'll use the filtered array length
       // In a real scenario, you might want to make separate count queries
       count = posts.length;
+
+      // Sort posts by the appropriate date field (newest first)
+      // For scheduled posts, use scheduled_publish_date
+      // For published posts, use published_at
+      posts = posts.sort((a: any, b: any) => {
+        const getSortDate = (post: any): number => {
+          // For published posts, prioritize published_at
+          if (post.status === "PUBLISHED" && post.published_at) {
+            const date = new Date(post.published_at);
+            return isNaN(date.getTime()) ? 0 : date.getTime();
+          }
+          // For scheduled posts, use scheduled_publish_date
+          if (post.scheduled_publish_date) {
+            const date = new Date(post.scheduled_publish_date);
+            return isNaN(date.getTime()) ? 0 : date.getTime();
+          }
+          return 0;
+        };
+
+        const dateA = getSortDate(a);
+        const dateB = getSortDate(b);
+
+        // Sort in descending order: newer dates (larger timestamps) come first
+        return dateB - dateA;
+      });
     }
 
     // Fetch organization names for organization posts

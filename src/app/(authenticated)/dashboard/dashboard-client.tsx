@@ -11,7 +11,11 @@ import { PageDescription } from "@/components/ui/page-description";
 import { BarChart3, FileText, Calendar, TrendingUp } from "lucide-react";
 import { AnalyticsWidget } from "@/components/analytics-widget";
 import { IdeasShowcase, Idea } from "@/components/ideas-showcase";
-import { truncateContent, getOrganizationName } from "@/lib/utils";
+import {
+  truncateContent,
+  getOrganizationName,
+  formatDateTime,
+} from "@/lib/utils";
 
 interface Post {
   id: number;
@@ -20,6 +24,7 @@ interface Post {
   status: "DRAFT" | "SCHEDULED" | "PUBLISHED" | "ARCHIVED";
   created_at: string;
   scheduled_publish_date: string | null;
+  published_at: string | null;
   publish_target: string | null;
   linkedin_posts?: {
     linkedin_post_id: string;
@@ -151,7 +156,9 @@ export function DashboardClient() {
     try {
       setInsightsLoading(true);
       // Fetch 7-day insights - the API will return summary if available or generate it synchronously
-      const response = await fetch("/api/analytics/insights?period=7d&context=all");
+      const response = await fetch(
+        "/api/analytics/insights?period=7d&context=all"
+      );
       const result = await response.json();
 
       if (response.ok) {
@@ -240,10 +247,7 @@ export function DashboardClient() {
         setUpcomingScheduledPosts(scheduledResult.posts || []);
         setOrganizations(scheduledResult.organizations || {});
       } else {
-        console.warn(
-          "Failed to fetch scheduled posts:",
-          scheduledResult.error
-        );
+        console.warn("Failed to fetch scheduled posts:", scheduledResult.error);
         setUpcomingScheduledPosts([]);
       }
     } catch (scheduledError) {
@@ -268,13 +272,7 @@ export function DashboardClient() {
   ).length;
 
   const formatScheduledDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return formatDateTime(dateString);
   };
 
   // Skeleton component for metric cards
@@ -303,7 +301,10 @@ export function DashboardClient() {
       <CardContent>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-20 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+            <div
+              key={i}
+              className="h-20 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"
+            ></div>
           ))}
         </div>
       </CardContent>
@@ -316,10 +317,16 @@ export function DashboardClient() {
         <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error loading posts</h3>
-              <p className="text-sm text-red-600 dark:text-red-300 mt-1">{error}</p>
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">
+                Error loading posts
+              </h3>
+              <p className="text-sm text-red-600 dark:text-red-300 mt-1">
+                {error}
+              </p>
             </div>
-            <Button onClick={fetchPosts} size="sm" variant="outline">Try Again</Button>
+            <Button onClick={fetchPosts} size="sm" variant="outline">
+              Try Again
+            </Button>
           </div>
         </div>
       )}
@@ -344,12 +351,16 @@ export function DashboardClient() {
             <Link href="/posts">
               <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Posts
+                  </CardTitle>
                   <FileText className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{totalPosts}</div>
-                  <p className="text-xs text-muted-foreground">All posts created</p>
+                  <p className="text-xs text-muted-foreground">
+                    All posts created
+                  </p>
                 </CardContent>
               </Card>
             </Link>
@@ -357,7 +368,9 @@ export function DashboardClient() {
             <Link href="/posts/published">
               <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Published</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Published
+                  </CardTitle>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
@@ -381,7 +394,9 @@ export function DashboardClient() {
                   <div className="text-2xl font-bold text-yellow-600">
                     {draftPosts}
                   </div>
-                  <p className="text-xs text-muted-foreground">Work in progress</p>
+                  <p className="text-xs text-muted-foreground">
+                    Work in progress
+                  </p>
                 </CardContent>
               </Card>
             </Link>
@@ -389,14 +404,18 @@ export function DashboardClient() {
             <Link href="/posts/scheduled">
               <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Scheduled
+                  </CardTitle>
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-blue-600">
                     {scheduledPosts}
                   </div>
-                  <p className="text-xs text-muted-foreground">Ready to publish</p>
+                  <p className="text-xs text-muted-foreground">
+                    Ready to publish
+                  </p>
                 </CardContent>
               </Card>
             </Link>
@@ -454,16 +473,21 @@ export function DashboardClient() {
                     <Link key={post.id} href={`/posts/${post.id}`}>
                       <div className="flex items-start justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-colors duration-200 cursor-pointer">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
+                          <p className="text-sm text-gray-900 line-clamp-2">
                             {post.content && post.content.trim().length > 0
-                              ? truncateContent(post.content, 60)
-                              : post.two_para_summary.length > 60
-                              ? `${post.two_para_summary.substring(0, 60)}...`
-                              : post.two_para_summary}
+                              ? truncateContent(post.content, 120)
+                              : post.two_para_summary &&
+                                post.two_para_summary.trim().length > 0
+                              ? truncateContent(post.two_para_summary, 120)
+                              : "No content"}
                           </p>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="text-xs text-gray-600 font-medium">
-                              {formatScheduledDate(post.scheduled_publish_date!)}
+                              {formatScheduledDate(
+                                post.status === "PUBLISHED" && post.published_at
+                                  ? post.published_at
+                                  : post.scheduled_publish_date!
+                              )}
                             </span>
                             <span className="text-xs text-gray-500">
                               • {getOrganizationName(post, organizations)}
@@ -516,7 +540,8 @@ export function DashboardClient() {
             ) : (
               <div className="text-center py-8">
                 <p className="text-muted-foreground text-sm">
-                  No insights available yet. Publish some posts to see analytics insights.
+                  No insights available yet. Publish some posts to see analytics
+                  insights.
                 </p>
                 {publishedPosts > 0 && (
                   <div className="mt-4">

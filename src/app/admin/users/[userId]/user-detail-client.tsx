@@ -24,6 +24,7 @@ import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal"
 import { Badge } from "@/components/ui/badge";
 import { BackButton } from "@/components/ui/back-button";
 import { getVariantName } from "@/lib/variant-mapping";
+import { formatDateOnly } from "@/lib/utils";
 import {
   getTierFromPriceId,
   getTierDisplayName,
@@ -131,9 +132,10 @@ export function UserDetailClient({ userId }: UserDetailClientProps) {
       setUpdatingSubscription(true);
 
       // Get price_id from tier selection
-      const priceId = subscriptionTier === "FREE"
-        ? null
-        : getPriceIdFromTier(subscriptionTier);
+      const priceId =
+        subscriptionTier === "FREE"
+          ? null
+          : getPriceIdFromTier(subscriptionTier);
 
       const response = await fetch(`/api/admin/users/${user.id}/subscription`, {
         method: "PUT",
@@ -159,7 +161,9 @@ export function UserDetailClient({ userId }: UserDetailClientProps) {
       setSubscriptionDialogOpen(false);
     } catch (error) {
       console.error("Error updating subscription:", error);
-      alert(error instanceof Error ? error.message : "Failed to update subscription");
+      alert(
+        error instanceof Error ? error.message : "Failed to update subscription"
+      );
     } finally {
       setUpdatingSubscription(false);
     }
@@ -208,11 +212,7 @@ export function UserDetailClient({ userId }: UserDetailClientProps) {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return formatDateOnly(dateString);
   };
 
   if (loading) {
@@ -536,7 +536,8 @@ export function UserDetailClient({ userId }: UserDetailClientProps) {
                   className="mt-1"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Required for active subscriptions to enable cancellation via LemonSqueezy
+                  Required for active subscriptions to enable cancellation via
+                  LemonSqueezy
                 </p>
               </div>
             )}

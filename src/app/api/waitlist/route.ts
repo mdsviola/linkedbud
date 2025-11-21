@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-server";
+import { formatDateTimeLong } from "@/lib/utils";
 import {
   sendWaitlistConfirmationEmail,
   sendWaitlistSupportNotificationEmail,
@@ -110,14 +111,7 @@ export async function POST(request: NextRequest) {
 
     // Format signup date
     const signupDate = data?.created_at
-      ? new Date(data.created_at).toLocaleString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          timeZoneName: "short",
-        })
+      ? formatDateTimeLong(data.created_at)
       : null;
 
     // Generate admin URL if available
@@ -160,7 +154,10 @@ export async function POST(request: NextRequest) {
         );
       }
     } catch (supportEmailError) {
-      console.error("Error sending support notification email:", supportEmailError);
+      console.error(
+        "Error sending support notification email:",
+        supportEmailError
+      );
       // Don't fail the request if email fails
     }
 

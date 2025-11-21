@@ -7,6 +7,7 @@ import {
   isTokenExpiringSoon,
   getDaysUntilExpiration,
 } from "@/lib/linkedin-token-utils";
+import { formatDateOnly } from "@/lib/utils";
 import { LinkedInOrganizationDB } from "@/lib/linkedin";
 
 interface LinkedInAccount {
@@ -119,8 +120,7 @@ export function LinkedInIntegrationBlocks({
                     : "LinkedIn Account Connected"}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Connected since{" "}
-                  {new Date(linkedinAccount.created_at).toLocaleDateString()}
+                  Connected since {formatDateOnly(linkedinAccount.created_at)}
                 </p>
               </div>
 
@@ -128,14 +128,14 @@ export function LinkedInIntegrationBlocks({
                 <div className="pt-3 border-t dark:border-slate-700">
                   <p className="text-xs text-gray-600 dark:text-gray-400">
                     <span className="font-medium">Expires:</span>{" "}
-                    {new Date(
-                      linkedinAccount.token_expires_at
-                    ).toLocaleDateString()}{" "}
+                    {formatDateOnly(linkedinAccount.token_expires_at)}{" "}
                     {isTokenExpired(linkedinAccount.token_expires_at) ? (
                       <span className="text-red-600 dark:text-red-400 font-medium">
                         (Expired)
                       </span>
-                    ) : isTokenExpiringSoon(linkedinAccount.token_expires_at) ? (
+                    ) : isTokenExpiringSoon(
+                        linkedinAccount.token_expires_at
+                      ) ? (
                       <span className="text-amber-600 dark:text-amber-400 font-medium">
                         (Expires in{" "}
                         {getDaysUntilExpiration(
@@ -185,19 +185,17 @@ export function LinkedInIntegrationBlocks({
                 Community Management Permissions
               </span>
             </div>
-            {showRevokeButtons &&
-              communityToken &&
-              onCommunityDisconnect && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onCommunityDisconnect}
-                  disabled={isDisconnecting}
-                  className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                >
-                  {isDisconnecting ? "Disconnecting..." : "Revoke"}
-                </Button>
-              )}
+            {showRevokeButtons && communityToken && onCommunityDisconnect && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCommunityDisconnect}
+                disabled={isDisconnecting}
+                className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+              >
+                {isDisconnecting ? "Disconnecting..." : "Revoke"}
+              </Button>
+            )}
           </div>
 
           {communityToken ? (
@@ -236,9 +234,7 @@ export function LinkedInIntegrationBlocks({
                 <div className="pt-3 border-t dark:border-slate-700">
                   <p className="text-xs text-gray-600 dark:text-gray-400">
                     <span className="font-medium">Expires:</span>{" "}
-                    {new Date(
-                      communityToken.token_expires_at
-                    ).toLocaleDateString()}{" "}
+                    {formatDateOnly(communityToken.token_expires_at)}{" "}
                     {isTokenExpired(communityToken.token_expires_at) ? (
                       <span className="text-red-600 dark:text-red-400 font-medium">
                         (Expired)
@@ -283,4 +279,3 @@ export function LinkedInIntegrationBlocks({
     </>
   );
 }
-

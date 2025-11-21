@@ -13,6 +13,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { formatShortDate } from "@/lib/utils";
 import { BarChart3 } from "lucide-react";
 
 interface TimeSeriesChartProps {
@@ -71,10 +72,7 @@ export function TimeSeriesChart({ data }: TimeSeriesChartProps) {
     return (
       <Card>
         <CardHeader>
-          <CardTitleWithIcon
-            icon={BarChart3}
-            title="Impressions Over Time"
-          />
+          <CardTitleWithIcon icon={BarChart3} title="Impressions Over Time" />
         </CardHeader>
         <CardContent>
           <div className="h-[300px] flex items-center justify-center">
@@ -89,11 +87,7 @@ export function TimeSeriesChart({ data }: TimeSeriesChartProps) {
 
   // Format dates for better display
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
+    return formatShortDate(dateString);
   };
 
   // Transform data to include formatted dates
@@ -105,10 +99,7 @@ export function TimeSeriesChart({ data }: TimeSeriesChartProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitleWithIcon
-          icon={BarChart3}
-          title="Impressions Over Time"
-        />
+        <CardTitleWithIcon icon={BarChart3} title="Impressions Over Time" />
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>

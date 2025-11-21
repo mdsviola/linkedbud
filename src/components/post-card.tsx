@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { PostStatusBadge } from "@/components/post-status-badge";
-import { truncateContent } from "@/lib/utils";
+import { truncateContent, formatDateOnly } from "@/lib/utils";
 
 interface PostCardLinkedInPost {
   linkedin_post_id: string;
@@ -49,12 +49,7 @@ export function PostCard({ post, status }: PostCardProps) {
                 {truncateContent(post.content)}
               </p>
               <p className="text-xs text-gray-500">
-                Created{" "}
-                {new Date(post.created_at).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                })}
+                Created {formatDateOnly(post.created_at, "numeric")}
               </p>
             </div>
           </div>

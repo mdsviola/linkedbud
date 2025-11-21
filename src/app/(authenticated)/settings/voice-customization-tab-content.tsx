@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { formatDateOnly } from "@/lib/utils";
 import { Plus, X, CheckCircle2, Trash2, Loader2, Sparkles } from "lucide-react";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal";
@@ -44,15 +45,22 @@ export function VoiceCustomizationTabContent({
     orgId?: string | null;
   } | null>(null);
   const [generatingPersonalVoice, setGeneratingPersonalVoice] = useState(false);
-  const [generatingOrgVoice, setGeneratingOrgVoice] = useState<Record<string, boolean>>({});
+  const [generatingOrgVoice, setGeneratingOrgVoice] = useState<
+    Record<string, boolean>
+  >({});
   const [personalVoiceResult, setPersonalVoiceResult] = useState<{
     voice_description: string;
     voice_data: any;
   } | null>(null);
-  const [orgVoiceResults, setOrgVoiceResults] = useState<Record<string, {
-    voice_description: string;
-    voice_data: any;
-  }>>({});
+  const [orgVoiceResults, setOrgVoiceResults] = useState<
+    Record<
+      string,
+      {
+        voice_description: string;
+        voice_data: any;
+      }
+    >
+  >({});
   const [personalError, setPersonalError] = useState("");
   const [orgError, setOrgError] = useState("");
   const [publishedPostsCount, setPublishedPostsCount] = useState<{
@@ -101,12 +109,14 @@ export function VoiceCustomizationTabContent({
     const fetchPublishedPostsCount = async () => {
       try {
         // Fetch personal published posts count
-        const personalResponse = await fetch("/api/posts?status=PUBLISHED&limit=10&type=personal");
+        const personalResponse = await fetch(
+          "/api/posts?status=PUBLISHED&limit=10&type=personal"
+        );
         if (personalResponse.ok) {
           const personalData = await personalResponse.json();
           const personalPosts = personalData.posts || [];
-          const personalCount = personalPosts.filter((p: any) =>
-            p.publish_target === "personal" || !p.publish_target
+          const personalCount = personalPosts.filter(
+            (p: any) => p.publish_target === "personal" || !p.publish_target
           ).length;
           setPublishedPostsCount((prev) => ({
             ...prev,
@@ -130,14 +140,19 @@ export function VoiceCustomizationTabContent({
                   if (p.publish_target === org.linkedin_org_id) return true;
                   // Also check linkedin_posts for organization_id
                   if (p.linkedin_posts && Array.isArray(p.linkedin_posts)) {
-                    return p.linkedin_posts.some((lp: any) => lp.organization_id === org.linkedin_org_id);
+                    return p.linkedin_posts.some(
+                      (lp: any) => lp.organization_id === org.linkedin_org_id
+                    );
                   }
                   return false;
                 });
                 orgCounts[org.linkedin_org_id] = orgPostsFiltered.length;
               }
             } catch (orgErr) {
-              console.error(`Error fetching posts for org ${org.linkedin_org_id}:`, orgErr);
+              console.error(
+                `Error fetching posts for org ${org.linkedin_org_id}:`,
+                orgErr
+              );
               orgCounts[org.linkedin_org_id] = 0;
             }
           }
@@ -231,7 +246,9 @@ export function VoiceCustomizationTabContent({
     const hasSubmittedPosts = postsArray.length > 0;
 
     if (!hasPublishedPosts && !hasSubmittedPosts) {
-      setPersonalError("Please provide at least 1 post to generate your voice profile");
+      setPersonalError(
+        "Please provide at least 1 post to generate your voice profile"
+      );
       return;
     }
 
@@ -254,7 +271,9 @@ export function VoiceCustomizationTabContent({
 
       if (!response.ok) {
         // Use user-friendly error message from API
-        throw new Error(data.error || "Failed to customize voice profile. Please try again.");
+        throw new Error(
+          data.error || "Failed to customize voice profile. Please try again."
+        );
       }
 
       // Store the voice profile data for display
@@ -281,9 +300,7 @@ export function VoiceCustomizationTabContent({
 
   const handleSubmitOrg = async (orgId: string) => {
     const posts = orgPosts[orgId] || [];
-    const postsArray = posts
-      .map((p) => p.trim())
-      .filter((p) => p.length > 0);
+    const postsArray = posts.map((p) => p.trim()).filter((p) => p.length > 0);
 
     // Clear any previous errors
     setOrgError("");
@@ -293,7 +310,9 @@ export function VoiceCustomizationTabContent({
     const hasSubmittedPosts = postsArray.length > 0;
 
     if (!hasPublishedPosts && !hasSubmittedPosts) {
-      setOrgError("Please provide at least 1 post to generate your voice profile");
+      setOrgError(
+        "Please provide at least 1 post to generate your voice profile"
+      );
       return;
     }
 
@@ -317,7 +336,9 @@ export function VoiceCustomizationTabContent({
 
       if (!response.ok) {
         // Use user-friendly error message from API
-        throw new Error(data.error || "Failed to customize voice profile. Please try again.");
+        throw new Error(
+          data.error || "Failed to customize voice profile. Please try again."
+        );
       }
 
       // Store the voice profile data for display
@@ -365,7 +386,9 @@ export function VoiceCustomizationTabContent({
 
       if (!response.ok) {
         // Use user-friendly error message from API
-        throw new Error(data.error || "Failed to delete voice profile. Please try again.");
+        throw new Error(
+          data.error || "Failed to delete voice profile. Please try again."
+        );
       }
 
       // Refresh voice profiles
@@ -425,117 +448,130 @@ export function VoiceCustomizationTabContent({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-                  {(personalVoice || personalVoiceResult) && (
-                    <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4 space-y-4">
-                      {personalVoice && (
-                        <p className="text-sm text-green-800 dark:text-green-200">
-                          <strong>Last updated:</strong>{" "}
-                          {new Date(personalVoice.updated_at).toLocaleDateString()}
-                        </p>
-                      )}
-                      {(() => {
-                        const displayVoice = personalVoiceResult || (personalVoice ? {
-                          voice_description: personalVoice.voice_description,
-                          voice_data: personalVoice.voice_data || {},
-                        } : null);
+          {(personalVoice || personalVoiceResult) && (
+            <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-4 space-y-4">
+              {personalVoice && (
+                <p className="text-sm text-green-800 dark:text-green-200">
+                  <strong>Last updated:</strong>{" "}
+                  {formatDateOnly(personalVoice.updated_at)}
+                </p>
+              )}
+              {(() => {
+                const displayVoice =
+                  personalVoiceResult ||
+                  (personalVoice
+                    ? {
+                        voice_description: personalVoice.voice_description,
+                        voice_data: personalVoice.voice_data || {},
+                      }
+                    : null);
 
-                        if (!displayVoice) return null;
+                if (!displayVoice) return null;
 
-                        return (
-                          <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                              <Sparkles className="h-5 w-5 text-green-600 dark:text-green-400" />
-                              <h4 className="text-sm font-semibold text-green-900 dark:text-green-100">
-                                Your Writing Voice
-                              </h4>
-                            </div>
-
-                            {/* Voice Description */}
-                            <div>
-                              <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-2">
-                                Voice Description:
-                              </p>
-                              <p className="text-sm text-green-900 dark:text-green-100 leading-relaxed whitespace-pre-wrap">
-                                {displayVoice.voice_description}
-                              </p>
-                            </div>
-
-                            {/* Voice Characteristics */}
-                            {displayVoice.voice_data && (
-                              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-green-200 dark:border-green-800">
-                                <div>
-                                  <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
-                                    Tone:
-                                  </p>
-                                  <p className="text-sm text-green-900 dark:text-green-100">
-                                    {displayVoice.voice_data.tone || "Not specified"}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
-                                    Formality:
-                                  </p>
-                                  <p className="text-sm text-green-900 dark:text-green-100 capitalize">
-                                    {displayVoice.voice_data.formality || "Not specified"}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
-                                    Sentence Length:
-                                  </p>
-                                  <p className="text-sm text-green-900 dark:text-green-100 capitalize">
-                                    {displayVoice.voice_data.sentence_length || "Not specified"}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
-                                    Vocabulary:
-                                  </p>
-                                  <p className="text-sm text-green-900 dark:text-green-100 capitalize">
-                                    {displayVoice.voice_data.vocabulary_complexity || "Not specified"}
-                                  </p>
-                                </div>
-                                {(displayVoice.voice_data.uses_emojis || displayVoice.voice_data.uses_questions || displayVoice.voice_data.uses_statistics) && (
-                                  <div className="col-span-2">
-                                    <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
-                                      Style Features:
-                                    </p>
-                                    <div className="flex flex-wrap gap-2">
-                                      {displayVoice.voice_data.uses_emojis && (
-                                        <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 rounded-full">
-                                          Uses Emojis
-                                        </span>
-                                      )}
-                                      {displayVoice.voice_data.uses_questions && (
-                                        <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 rounded-full">
-                                          Uses Questions
-                                        </span>
-                                      )}
-                                      {displayVoice.voice_data.uses_statistics && (
-                                        <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 rounded-full">
-                                          Uses Statistics
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                                {displayVoice.voice_data.engagement_tactics && displayVoice.voice_data.engagement_tactics.length > 0 && (
-                                  <div className="col-span-2">
-                                    <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
-                                      Engagement Tactics:
-                                    </p>
-                                    <p className="text-sm text-green-900 dark:text-green-100">
-                                      {displayVoice.voice_data.engagement_tactics.join(", ")}
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
+                return (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <h4 className="text-sm font-semibold text-green-900 dark:text-green-100">
+                        Your Writing Voice
+                      </h4>
                     </div>
-                  )}
+
+                    {/* Voice Description */}
+                    <div>
+                      <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-2">
+                        Voice Description:
+                      </p>
+                      <p className="text-sm text-green-900 dark:text-green-100 leading-relaxed whitespace-pre-wrap">
+                        {displayVoice.voice_description}
+                      </p>
+                    </div>
+
+                    {/* Voice Characteristics */}
+                    {displayVoice.voice_data && (
+                      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-green-200 dark:border-green-800">
+                        <div>
+                          <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
+                            Tone:
+                          </p>
+                          <p className="text-sm text-green-900 dark:text-green-100">
+                            {displayVoice.voice_data.tone || "Not specified"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
+                            Formality:
+                          </p>
+                          <p className="text-sm text-green-900 dark:text-green-100 capitalize">
+                            {displayVoice.voice_data.formality ||
+                              "Not specified"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
+                            Sentence Length:
+                          </p>
+                          <p className="text-sm text-green-900 dark:text-green-100 capitalize">
+                            {displayVoice.voice_data.sentence_length ||
+                              "Not specified"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
+                            Vocabulary:
+                          </p>
+                          <p className="text-sm text-green-900 dark:text-green-100 capitalize">
+                            {displayVoice.voice_data.vocabulary_complexity ||
+                              "Not specified"}
+                          </p>
+                        </div>
+                        {(displayVoice.voice_data.uses_emojis ||
+                          displayVoice.voice_data.uses_questions ||
+                          displayVoice.voice_data.uses_statistics) && (
+                          <div className="col-span-2">
+                            <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
+                              Style Features:
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {displayVoice.voice_data.uses_emojis && (
+                                <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 rounded-full">
+                                  Uses Emojis
+                                </span>
+                              )}
+                              {displayVoice.voice_data.uses_questions && (
+                                <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 rounded-full">
+                                  Uses Questions
+                                </span>
+                              )}
+                              {displayVoice.voice_data.uses_statistics && (
+                                <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 rounded-full">
+                                  Uses Statistics
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {displayVoice.voice_data.engagement_tactics &&
+                          displayVoice.voice_data.engagement_tactics.length >
+                            0 && (
+                            <div className="col-span-2">
+                              <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
+                                Engagement Tactics:
+                              </p>
+                              <p className="text-sm text-green-900 dark:text-green-100">
+                                {displayVoice.voice_data.engagement_tactics.join(
+                                  ", "
+                                )}
+                              </p>
+                            </div>
+                          )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label>
@@ -545,7 +581,9 @@ export function VoiceCustomizationTabContent({
             </Label>
             {publishedPostsCount.personal > 0 && (
               <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                ✓ Using {publishedPostsCount.personal} published {publishedPostsCount.personal === 1 ? 'post' : 'posts'} for voice extraction
+                ✓ Using {publishedPostsCount.personal} published{" "}
+                {publishedPostsCount.personal === 1 ? "post" : "posts"} for
+                voice extraction
               </p>
             )}
             <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -585,28 +623,33 @@ export function VoiceCustomizationTabContent({
             </Button>
           </div>
 
-          {(personalError || (personalForm.status === "error" && personalForm.message)) && (
+          {(personalError ||
+            (personalForm.status === "error" && personalForm.message)) && (
             <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-              <p className="text-sm text-red-800 dark:text-red-200">{personalError || personalForm.message}</p>
+              <p className="text-sm text-red-800 dark:text-red-200">
+                {personalError || personalForm.message}
+              </p>
             </div>
           )}
 
-                  <Button
-                    onClick={handleSubmitPersonal}
-                    disabled={personalForm.status === "submitting" || generatingPersonalVoice}
-                  >
-                    {(personalForm.status === "submitting" || generatingPersonalVoice) ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Customizing...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-4 w-4 mr-2" />
-                        Customize Personal Voice
-                      </>
-                    )}
-                  </Button>
+          <Button
+            onClick={handleSubmitPersonal}
+            disabled={
+              personalForm.status === "submitting" || generatingPersonalVoice
+            }
+          >
+            {personalForm.status === "submitting" || generatingPersonalVoice ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Customizing...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Customize Personal Voice
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
 
@@ -615,7 +658,10 @@ export function VoiceCustomizationTabContent({
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Organization Voices</h3>
           {organizations.map((org) => {
-            const orgVoice = getVoiceProfile("organization", org.linkedin_org_id);
+            const orgVoice = getVoiceProfile(
+              "organization",
+              org.linkedin_org_id
+            );
             const posts = orgPosts[org.linkedin_org_id] || [""];
 
             return (
@@ -623,9 +669,12 @@ export function VoiceCustomizationTabContent({
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>{org.org_name || `Organization ${org.linkedin_org_id}`}</CardTitle>
+                      <CardTitle>
+                        {org.org_name || `Organization ${org.linkedin_org_id}`}
+                      </CardTitle>
                       <CardDescription>
-                        Customize the voice for posts published to this organization
+                        Customize the voice for posts published to this
+                        organization
                       </CardDescription>
                     </div>
                     {orgVoice && (
@@ -658,14 +707,18 @@ export function VoiceCustomizationTabContent({
                       {orgVoice && (
                         <p className="text-sm text-green-800 dark:text-green-200">
                           <strong>Last updated:</strong>{" "}
-                          {new Date(orgVoice.updated_at).toLocaleDateString()}
+                          {formatDateOnly(orgVoice.updated_at)}
                         </p>
                       )}
                       {(() => {
-                        const displayVoice = orgVoiceResults[org.linkedin_org_id] || (orgVoice ? {
-                          voice_description: orgVoice.voice_description,
-                          voice_data: orgVoice.voice_data || {},
-                        } : null);
+                        const displayVoice =
+                          orgVoiceResults[org.linkedin_org_id] ||
+                          (orgVoice
+                            ? {
+                                voice_description: orgVoice.voice_description,
+                                voice_data: orgVoice.voice_data || {},
+                              }
+                            : null);
 
                         if (!displayVoice) return null;
 
@@ -696,7 +749,8 @@ export function VoiceCustomizationTabContent({
                                     Tone:
                                   </p>
                                   <p className="text-sm text-green-900 dark:text-green-100">
-                                    {displayVoice.voice_data.tone || "Not specified"}
+                                    {displayVoice.voice_data.tone ||
+                                      "Not specified"}
                                   </p>
                                 </div>
                                 <div>
@@ -704,7 +758,8 @@ export function VoiceCustomizationTabContent({
                                     Formality:
                                   </p>
                                   <p className="text-sm text-green-900 dark:text-green-100 capitalize">
-                                    {displayVoice.voice_data.formality || "Not specified"}
+                                    {displayVoice.voice_data.formality ||
+                                      "Not specified"}
                                   </p>
                                 </div>
                                 <div>
@@ -712,7 +767,8 @@ export function VoiceCustomizationTabContent({
                                     Sentence Length:
                                   </p>
                                   <p className="text-sm text-green-900 dark:text-green-100 capitalize">
-                                    {displayVoice.voice_data.sentence_length || "Not specified"}
+                                    {displayVoice.voice_data.sentence_length ||
+                                      "Not specified"}
                                   </p>
                                 </div>
                                 <div>
@@ -720,10 +776,13 @@ export function VoiceCustomizationTabContent({
                                     Vocabulary:
                                   </p>
                                   <p className="text-sm text-green-900 dark:text-green-100 capitalize">
-                                    {displayVoice.voice_data.vocabulary_complexity || "Not specified"}
+                                    {displayVoice.voice_data
+                                      .vocabulary_complexity || "Not specified"}
                                   </p>
                                 </div>
-                                {(displayVoice.voice_data.uses_emojis || displayVoice.voice_data.uses_questions || displayVoice.voice_data.uses_statistics) && (
+                                {(displayVoice.voice_data.uses_emojis ||
+                                  displayVoice.voice_data.uses_questions ||
+                                  displayVoice.voice_data.uses_statistics) && (
                                   <div className="col-span-2">
                                     <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
                                       Style Features:
@@ -734,12 +793,14 @@ export function VoiceCustomizationTabContent({
                                           Uses Emojis
                                         </span>
                                       )}
-                                      {displayVoice.voice_data.uses_questions && (
+                                      {displayVoice.voice_data
+                                        .uses_questions && (
                                         <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 rounded-full">
                                           Uses Questions
                                         </span>
                                       )}
-                                      {displayVoice.voice_data.uses_statistics && (
+                                      {displayVoice.voice_data
+                                        .uses_statistics && (
                                         <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 rounded-full">
                                           Uses Statistics
                                         </span>
@@ -747,16 +808,20 @@ export function VoiceCustomizationTabContent({
                                     </div>
                                   </div>
                                 )}
-                                {displayVoice.voice_data.engagement_tactics && displayVoice.voice_data.engagement_tactics.length > 0 && (
-                                  <div className="col-span-2">
-                                    <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
-                                      Engagement Tactics:
-                                    </p>
-                                    <p className="text-sm text-green-900 dark:text-green-100">
-                                      {displayVoice.voice_data.engagement_tactics.join(", ")}
-                                    </p>
-                                  </div>
-                                )}
+                                {displayVoice.voice_data.engagement_tactics &&
+                                  displayVoice.voice_data.engagement_tactics
+                                    .length > 0 && (
+                                    <div className="col-span-2">
+                                      <p className="text-xs font-medium text-green-800 dark:text-green-200 mb-1">
+                                        Engagement Tactics:
+                                      </p>
+                                      <p className="text-sm text-green-900 dark:text-green-100">
+                                        {displayVoice.voice_data.engagement_tactics.join(
+                                          ", "
+                                        )}
+                                      </p>
+                                    </div>
+                                  )}
                               </div>
                             )}
                           </div>
@@ -767,17 +832,28 @@ export function VoiceCustomizationTabContent({
 
                   <div className="space-y-2">
                     <Label>
-                      {publishedPostsCount.organizations[org.linkedin_org_id] > 0
+                      {publishedPostsCount.organizations[org.linkedin_org_id] >
+                      0
                         ? "Submit Additional LinkedIn Posts (Optional)"
                         : "Submit LinkedIn Posts"}
                     </Label>
-                    {publishedPostsCount.organizations[org.linkedin_org_id] > 0 && (
+                    {publishedPostsCount.organizations[org.linkedin_org_id] >
+                      0 && (
                       <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
-                        ✓ Using {publishedPostsCount.organizations[org.linkedin_org_id]} published {publishedPostsCount.organizations[org.linkedin_org_id] === 1 ? 'post' : 'posts'} for voice extraction
+                        ✓ Using{" "}
+                        {publishedPostsCount.organizations[org.linkedin_org_id]}{" "}
+                        published{" "}
+                        {publishedPostsCount.organizations[
+                          org.linkedin_org_id
+                        ] === 1
+                          ? "post"
+                          : "posts"}{" "}
+                        for voice extraction
                       </p>
                     )}
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                      {publishedPostsCount.organizations[org.linkedin_org_id] > 0
+                      {publishedPostsCount.organizations[org.linkedin_org_id] >
+                      0
                         ? "Add additional posts to enhance your voice profile (up to 10 posts total)"
                         : "Provide at least 1 post to extract your writing voice. Existing published posts will also be used if available."}
                     </p>
@@ -786,7 +862,12 @@ export function VoiceCustomizationTabContent({
                         <Textarea
                           value={post}
                           onChange={(e) =>
-                            updatePost("organization", index, e.target.value, org.linkedin_org_id)
+                            updatePost(
+                              "organization",
+                              index,
+                              e.target.value,
+                              org.linkedin_org_id
+                            )
                           }
                           placeholder={`Post ${index + 1}...`}
                           className="flex-1"
@@ -797,7 +878,11 @@ export function VoiceCustomizationTabContent({
                             variant="ghost"
                             size="sm"
                             onClick={() =>
-                              removePostField("organization", index, org.linkedin_org_id)
+                              removePostField(
+                                "organization",
+                                index,
+                                org.linkedin_org_id
+                              )
                             }
                           >
                             <X className="h-4 w-4" />
@@ -808,24 +893,33 @@ export function VoiceCustomizationTabContent({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => addPostField("organization", org.linkedin_org_id)}
+                      onClick={() =>
+                        addPostField("organization", org.linkedin_org_id)
+                      }
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Post
                     </Button>
                   </div>
 
-                  {(orgError || (orgForm.status === "error" && orgForm.message)) && (
+                  {(orgError ||
+                    (orgForm.status === "error" && orgForm.message)) && (
                     <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-                      <p className="text-sm text-red-800 dark:text-red-200">{orgError || orgForm.message}</p>
+                      <p className="text-sm text-red-800 dark:text-red-200">
+                        {orgError || orgForm.message}
+                      </p>
                     </div>
                   )}
 
                   <Button
                     onClick={() => handleSubmitOrg(org.linkedin_org_id)}
-                    disabled={orgForm.status === "submitting" || generatingOrgVoice[org.linkedin_org_id]}
+                    disabled={
+                      orgForm.status === "submitting" ||
+                      generatingOrgVoice[org.linkedin_org_id]
+                    }
                   >
-                    {(orgForm.status === "submitting" || generatingOrgVoice[org.linkedin_org_id]) ? (
+                    {orgForm.status === "submitting" ||
+                    generatingOrgVoice[org.linkedin_org_id] ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                         Customizing...
@@ -860,4 +954,3 @@ export function VoiceCustomizationTabContent({
     </div>
   );
 }
-

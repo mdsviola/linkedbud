@@ -20,6 +20,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageTitle } from "@/components/ui/page-title";
 import { PageDescription } from "@/components/ui/page-description";
 import { createClientClient } from "@/lib/supabase-client";
+import { formatDateOnly } from "@/lib/utils";
 import {
   TrendingUp,
   Loader2,
@@ -290,7 +291,7 @@ function ForYouSection({
                     </CardTitle>
                     <CardDescription className="mt-2">
                       {article.pubDate
-                        ? new Date(article.pubDate).toLocaleDateString()
+                        ? formatDateOnly(article.pubDate)
                         : "No date"}
                     </CardDescription>
                   </div>
@@ -523,7 +524,7 @@ function ArticlesList({
                           </CardTitle>
                           <CardDescription className="mt-2">
                             {article.pubDate
-                              ? new Date(article.pubDate).toLocaleDateString()
+                              ? formatDateOnly(article.pubDate)
                               : "No date"}
                           </CardDescription>
                         </div>
@@ -580,11 +581,10 @@ export function ArticlesClient({ user }: { user: User }) {
     topics: [],
     custom_rss_feeds: [],
   });
-  const [originalPreferences, setOriginalPreferences] =
-    useState<Preferences>({
-      topics: [],
-      custom_rss_feeds: [],
-    });
+  const [originalPreferences, setOriginalPreferences] = useState<Preferences>({
+    topics: [],
+    custom_rss_feeds: [],
+  });
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
@@ -593,9 +593,7 @@ export function ArticlesClient({ user }: { user: User }) {
     null
   );
   const [showGenerateModal, setShowGenerateModal] = useState(false);
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(
-    null
-  );
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [modalError, setModalError] = useState("");
   const [rssErrors, setRssErrors] = useState<string[]>([]);
   const [sourceLoadingStates, setSourceLoadingStates] = useState<
@@ -952,7 +950,8 @@ export function ArticlesClient({ user }: { user: User }) {
       <div className="mb-8">
         <PageTitle>Articles</PageTitle>
         <PageDescription>
-          Stay updated with industry articles and create posts from trending topics
+          Stay updated with industry articles and create posts from trending
+          topics
         </PageDescription>
       </div>
 
@@ -1028,4 +1027,3 @@ export function ArticlesClient({ user }: { user: User }) {
     </PageWrapper>
   );
 }
-

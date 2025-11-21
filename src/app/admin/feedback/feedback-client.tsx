@@ -17,6 +17,7 @@ import {
   Lightbulb,
   MoreHorizontal,
 } from "lucide-react";
+import { formatDateTime } from "@/lib/utils";
 import { useDebounce } from "@/hooks/useDebounce";
 
 interface FeedbackSubmission {
@@ -79,7 +80,9 @@ export function FeedbackClient() {
           params.append("search", debouncedSearchTerm);
         }
 
-        const response = await fetch(`/api/admin/feedback?${params.toString()}`);
+        const response = await fetch(
+          `/api/admin/feedback?${params.toString()}`
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch feedback");
@@ -334,15 +337,7 @@ export function FeedbackClient() {
                       </p>
                       <div className="flex items-center gap-1 text-xs text-gray-500">
                         <Calendar className="h-3 w-3" />
-                        <span>
-                          {new Date(item.created_at).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
+                        <span>{formatDateTime(item.created_at)}</span>
                         {item.screenshot_url && (
                           <>
                             <span className="mx-1">•</span>
@@ -376,7 +371,6 @@ export function FeedbackClient() {
           </Button>
         </div>
       )}
-
     </>
   );
 }

@@ -3,7 +3,15 @@
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Loader2, Sparkles, TrendingUp, MessageCircle, Lightbulb, BarChart3 } from "lucide-react";
+import { formatDateTime } from "@/lib/utils";
+import {
+  Loader2,
+  Sparkles,
+  TrendingUp,
+  MessageCircle,
+  Lightbulb,
+  BarChart3,
+} from "lucide-react";
 import type { AnalyticsInsight } from "@/lib/openai";
 
 interface AnalyticsInsightsProps {
@@ -64,7 +72,7 @@ export function AnalyticsInsights({
 
     try {
       let url = `/api/analytics/insights?period=${period}&context=${context}`;
-      
+
       if (period === "custom" && startDate && endDate) {
         url += `&startDate=${startDate}&endDate=${endDate}`;
       }
@@ -73,7 +81,9 @@ export function AnalyticsInsights({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error((result as { error?: string }).error || "Failed to fetch insights");
+        throw new Error(
+          (result as { error?: string }).error || "Failed to fetch insights"
+        );
       }
 
       const typedResult = result as AnalyticsInsightsResponse;
@@ -82,9 +92,7 @@ export function AnalyticsInsights({
       setGeneratedAt(typedResult.generatedAt);
       setCached(typedResult.cached);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch insights"
-      );
+      setError(err instanceof Error ? err.message : "Failed to fetch insights");
     } finally {
       setLoading(false);
     }
@@ -99,7 +107,8 @@ export function AnalyticsInsights({
             Generating AI insights...
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-400 px-4">
-            This may take several minutes. Please keep this page open while we analyze your posts and generate insights.
+            This may take several minutes. Please keep this page open while we
+            analyze your posts and generate insights.
           </p>
         </div>
       </div>
@@ -122,7 +131,8 @@ export function AnalyticsInsights({
       <div className="text-center py-12">
         <Sparkles className="h-8 w-8 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          No insights available yet. Publish more posts and collect metrics to generate insights.
+          No insights available yet. Publish more posts and collect metrics to
+          generate insights.
         </p>
       </div>
     );
@@ -137,7 +147,12 @@ export function AnalyticsInsights({
     return acc;
   }, {} as Record<string, AnalyticsInsight[]>);
 
-  const categoryOrder: Array<keyof typeof categoryIcons> = ['topics', 'engagement', 'themes', 'metrics'];
+  const categoryOrder: Array<keyof typeof categoryIcons> = [
+    "topics",
+    "engagement",
+    "themes",
+    "metrics",
+  ];
 
   return (
     <div className="space-y-6">
@@ -156,10 +171,13 @@ export function AnalyticsInsights({
                 <Icon className={`h-4 w-4 ${colorClass}`} />
               </div>
               <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 capitalize">
-                {category === 'topics' ? 'Top Performing Topics' :
-                 category === 'engagement' ? 'Engagement Patterns' :
-                 category === 'themes' ? 'Content Themes' :
-                 'Metric Insights'}
+                {category === "topics"
+                  ? "Top Performing Topics"
+                  : category === "engagement"
+                  ? "Engagement Patterns"
+                  : category === "themes"
+                  ? "Content Themes"
+                  : "Metric Insights"}
               </h4>
             </div>
             <div className="space-y-4 ml-11">
@@ -213,11 +231,10 @@ export function AnalyticsInsights({
         <div className="pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
           <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
             {cached ? "Cached insights" : "Fresh insights"} generated{" "}
-            {new Date(generatedAt).toLocaleString()}
+            {formatDateTime(generatedAt)}
           </p>
         </div>
       )}
     </div>
   );
 }
-

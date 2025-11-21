@@ -424,23 +424,102 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Aggregate current period metrics
-    const totalImpressions = currentMetrics.reduce(
-      (sum, m) => sum + (m.impressions || 0),
-      0
-    );
-    const totalLikes = currentMetrics.reduce(
-      (sum, m) => sum + (m.likes || 0),
-      0
-    );
-    const totalComments = currentMetrics.reduce(
-      (sum, m) => sum + (m.comments || 0),
-      0
-    );
-    const totalShares = currentMetrics.reduce(
-      (sum, m) => sum + (m.shares || 0),
-      0
-    );
+    // Calculate delta metrics for aggregation (metrics from the period only)
+    // Fetch all metrics for posts to calculate baseline and deltas
+    let allMetricsForAggregation: any[] = [];
+    if (filteredLinkedinPostIds.size > 0) {
+      // Fetch metrics from before period start to end of period for baseline calculation
+      // Include metrics from all portfolio members if user is in a portfolio
+      // Use admin client to bypass RLS (metrics are stored per user_id, but portfolio members need to see them)
+      const { data: allMetrics } = await supabaseAdmin
+        .from("linkedin_post_metrics")
+        .select("*")
+        .in("user_id", userIdsToQuery)
+        .in("linkedin_post_id", Array.from(filteredLinkedinPostIds))
+        .lte("fetched_at", endDate.toISOString())
+        .order("fetched_at", { ascending: true });
+
+      if (allMetrics) {
+        allMetricsForAggregation = allMetrics;
+      }
+    }
+
+    // Group metrics by linkedin_post_id for delta calculation
+    const metricsByPostIdForAggregation = new Map<string, any[]>();
+    allMetricsForAggregation.forEach((metric) => {
+      if (!metricsByPostIdForAggregation.has(metric.linkedin_post_id)) {
+        metricsByPostIdForAggregation.set(metric.linkedin_post_id, []);
+      }
+      metricsByPostIdForAggregation.get(metric.linkedin_post_id)!.push(metric);
+    });
+
+    // Calculate delta metrics for each post and aggregate
+    let totalImpressions = 0;
+    let totalLikes = 0;
+    let totalComments = 0;
+    let totalShares = 0;
+
+    for (const linkedinPostId of Array.from(filteredLinkedinPostIds)) {
+      const postMetrics = metricsByPostIdForAggregation.get(linkedinPostId) || [];
+
+      if (postMetrics.length === 0) continue;
+
+      // Find latest metric in period
+      const latestMetric = postMetrics
+        .filter((m: any) => {
+          const fetchedAt = new Date(m.fetched_at);
+          return fetchedAt >= startDate && fetchedAt <= endDate;
+        })
+        .sort((a: any, b: any) => new Date(b.fetched_at).getTime() - new Date(a.fetched_at).getTime())[0];
+
+      if (!latestMetric) continue; // No metrics in period, skip
+
+      // Determine baseline: use latest metric on or before startDate
+      // For "all time" period, use 0 as baseline
+      let baseline: any;
+      if (period === "all") {
+        baseline = {
+          impressions: 0,
+          likes: 0,
+          comments: 0,
+          shares: 0,
+        };
+      } else {
+        // Find baseline metric (latest on or before startDate)
+        let baselineMetric = postMetrics
+          .filter((m: any) => new Date(m.fetched_at) <= startDate)
+          .sort((a: any, b: any) => new Date(b.fetched_at).getTime() - new Date(a.fetched_at).getTime())[0];
+
+        // If no metric before startDate, use earliest in period as baseline
+        if (!baselineMetric) {
+          baselineMetric = postMetrics
+            .filter((m: any) => {
+              const fetchedAt = new Date(m.fetched_at);
+              return fetchedAt >= startDate && fetchedAt <= endDate;
+            })
+            .sort((a: any, b: any) => new Date(a.fetched_at).getTime() - new Date(b.fetched_at).getTime())[0];
+        }
+
+        baseline = baselineMetric || {
+          impressions: 0,
+          likes: 0,
+          comments: 0,
+          shares: 0,
+        };
+      }
+
+      // Calculate delta (metrics from the period only)
+      const deltaImpressions = Math.max(0, (latestMetric.impressions || 0) - (baseline.impressions || 0));
+      const deltaLikes = Math.max(0, (latestMetric.likes || 0) - (baseline.likes || 0));
+      const deltaComments = Math.max(0, (latestMetric.comments || 0) - (baseline.comments || 0));
+      const deltaShares = Math.max(0, (latestMetric.shares || 0) - (baseline.shares || 0));
+
+      totalImpressions += deltaImpressions;
+      totalLikes += deltaLikes;
+      totalComments += deltaComments;
+      totalShares += deltaShares;
+    }
+
     const totalEngagement = totalLikes + totalComments + totalShares;
     const avgEngagementRate =
       totalImpressions > 0 ? totalEngagement / totalImpressions : 0;

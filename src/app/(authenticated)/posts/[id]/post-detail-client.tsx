@@ -36,7 +36,12 @@ import {
   Heart,
   FileEdit,
 } from "lucide-react";
-import { copyToClipboard, getOrganizationName } from "@/lib/utils";
+import {
+  copyToClipboard,
+  getOrganizationName,
+  formatDateOnly,
+  formatDateTimeLong,
+} from "@/lib/utils";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { useToast } from "@/hooks/use-toast";
 import { confetti } from "@tsparticles/confetti";
@@ -1356,14 +1361,7 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
                     Created
                   </dt>
                   <dd className="text-sm text-gray-900">
-                    {new Date(currentPost.created_at).toLocaleDateString(
-                      "en-US",
-                      {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      }
-                    )}
+                    {formatDateOnly(currentPost.created_at, "long")}
                   </dd>
                 </div>
                 {currentPost.scheduled_publish_date && (
@@ -1372,15 +1370,7 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
                       Scheduled
                     </dt>
                     <dd className="text-sm text-gray-900">
-                      {new Date(
-                        currentPost.scheduled_publish_date
-                      ).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {formatDateTimeLong(currentPost.scheduled_publish_date)}
                     </dd>
                   </div>
                 )}
@@ -1390,14 +1380,7 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
                       Published
                     </dt>
                     <dd className="text-sm text-gray-900">
-                      {new Date(currentPost.published_at).toLocaleDateString(
-                        "en-US",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        }
-                      )}
+                      {formatDateOnly(currentPost.published_at, "long")}
                     </dd>
                   </div>
                 )}

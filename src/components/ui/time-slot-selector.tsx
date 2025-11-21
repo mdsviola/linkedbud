@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "@/lib/utils";
+import { cn, getLocaleHourCycle, getBrowserLocale } from "@/lib/utils";
 
 interface TimeSlotSelectorProps {
   value: string; // Format: "HH:MM"
@@ -16,8 +16,11 @@ export function TimeSlotSelector({
   disabled = false,
   className,
 }: TimeSlotSelectorProps) {
-  // Generate 30-minute time slots
+  // Generate 30-minute time slots with locale-aware format
   const timeSlots = React.useMemo(() => {
+    const use12Hour = getLocaleHourCycle();
+    const locale = getBrowserLocale(); // Use the same locale detection as other date/time functions
+
     const slots = [];
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
@@ -26,10 +29,10 @@ export function TimeSlotSelector({
           .padStart(2, "0")}`;
         const displayTime = new Date(
           `2000-01-01T${timeString}`
-        ).toLocaleTimeString([], {
+        ).toLocaleTimeString(locale, {
           hour: "2-digit",
           minute: "2-digit",
-          hour12: true,
+          hour12: use12Hour,
         });
         slots.push({
           value: timeString,

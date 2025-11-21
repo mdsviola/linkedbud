@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { LinkedInPostMetrics } from "@/lib/linkedin";
 import { formatMetrics, calculateMetricsTrend } from "@/lib/linkedin-metrics";
 import { PostMetricsChartModal } from "@/components/post-metrics-chart-modal";
+import { formatDateTimeFull } from "@/lib/utils";
 import { BarChart3, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 interface PostMetricsDisplayProps {
@@ -181,9 +182,10 @@ export function PostMetricsDisplay({
             />
             <div className="flex items-center gap-2">
               <span className="text-xs text-gray-500">
-                Updated: {metrics.latest && 'fetched_at' in metrics.latest 
-                  ? new Date((metrics.latest as any).fetched_at).toLocaleString()
-                  : 'Recently'}
+                Updated:{" "}
+                {metrics.latest && "fetched_at" in metrics.latest
+                  ? formatDateTimeFull((metrics.latest as any).fetched_at)
+                  : "Recently"}
               </span>
               {hasHistory && (
                 <Badge variant="secondary" className="text-xs">

@@ -14,7 +14,12 @@ import { Trophy, Eye, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 
-type SortColumn = "impressions" | "likes" | "comments" | "shares" | "engagementRate";
+type SortColumn =
+  | "impressions"
+  | "likes"
+  | "comments"
+  | "shares"
+  | "engagementRate";
 type SortDirection = "asc" | "desc";
 
 interface TopPostsTableProps {
@@ -50,13 +55,10 @@ const formatNumber = (num: number): string => {
   return num.toString();
 };
 
+import { formatDateOnly } from "@/lib/utils";
+
 const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return formatDateOnly(dateString);
 };
 
 export function TopPostsTable({
@@ -79,13 +81,13 @@ export function TopPostsTable({
   // Only use defaultTitle if title is undefined (not explicitly provided)
   // If title is empty string, don't show title
   const displayTitle = title !== undefined ? title : defaultTitle;
-  
+
   // Use Eye icon for Impressions, Trophy for Top Posts
   const titleIcon = displayTitle === "Impressions" ? Eye : Trophy;
 
   const handleSort = (column: SortColumn) => {
     if (!onSortChange) return;
-    
+
     if (sortColumn === column) {
       // Toggle direction if clicking the same column
       onSortChange(column, sortDirection === "asc" ? "desc" : "asc");
@@ -105,7 +107,11 @@ export function TopPostsTable({
     const isActive = sortColumn === column;
     return (
       <TableHead
-        className={`text-right ${onSortChange ? "cursor-pointer hover:bg-gray-100 transition-colors select-none" : ""}`}
+        className={`text-right ${
+          onSortChange
+            ? "cursor-pointer hover:bg-gray-100 transition-colors select-none"
+            : ""
+        }`}
         onClick={(e) => {
           e.stopPropagation();
           handleSort(column);
@@ -161,8 +167,8 @@ export function TopPostsTable({
           </TableHeader>
           <TableBody>
             {posts.map((post) => (
-              <TableRow 
-                key={post.postId} 
+              <TableRow
+                key={post.postId}
                 className="hover:bg-gray-50 cursor-pointer transition-colors"
                 onClick={() => router.push(`/posts/${post.postId}`)}
               >
@@ -172,7 +178,10 @@ export function TopPostsTable({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={post.organizationId ? "secondary" : "default"} className="text-xs">
+                  <Badge
+                    variant={post.organizationId ? "secondary" : "default"}
+                    className="text-xs"
+                  >
                     {post.organizationName || "Personal"}
                   </Badge>
                 </TableCell>
@@ -208,7 +217,9 @@ export function TopPostsTable({
         {displayTitle && (
           <div className="flex items-center gap-2 mb-4">
             <IconComponent className="h-5 w-5 text-blue-600" />
-            <h3 className="text-2xl font-semibold leading-none tracking-tight">{displayTitle}</h3>
+            <h3 className="text-2xl font-semibold leading-none tracking-tight">
+              {displayTitle}
+            </h3>
           </div>
         )}
         {tableContent}
@@ -219,10 +230,7 @@ export function TopPostsTable({
   return (
     <Card>
       <CardHeader>
-        <CardTitleWithIcon
-          icon={titleIcon}
-          title={displayTitle}
-        />
+        <CardTitleWithIcon icon={titleIcon} title={displayTitle} />
       </CardHeader>
       <CardContent>{tableContent}</CardContent>
     </Card>

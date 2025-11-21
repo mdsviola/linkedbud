@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { LinkedInPostMetrics } from "@/lib/linkedin";
 import { formatMetrics } from "@/lib/linkedin-metrics";
+import { formatDateTime } from "@/lib/utils";
 import {
   LineChart,
   Line,
@@ -108,16 +109,13 @@ export function PostMetricsChartModal({
               engagement_rate?: number;
             }
           ) => ({
-            date: new Date(metric.fetched_at || Date.now()).toLocaleString(
-              "en-US",
-              {
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-                timeZone: "UTC",
-              }
-            ),
+            date: formatDateTime(metric.fetched_at || new Date(), {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: "UTC",
+            }),
             rawDate: metric.fetched_at || new Date().toISOString(), // Keep raw date for filtering
             impressions: metric.impressions,
             likes: metric.likes,

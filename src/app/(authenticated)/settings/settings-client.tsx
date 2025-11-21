@@ -17,6 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { createClientClient } from "@/lib/supabase-client";
+import { formatDateOnly } from "@/lib/utils";
 import { Crown, Mail, User, Linkedin, Users, Sparkles } from "lucide-react";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal";
@@ -681,9 +682,9 @@ export function SettingsClient({ user }: SettingsClientProps) {
                                 Next Billing:
                               </span>
                               <p className="font-medium text-green-900">
-                                {new Date(
+                                {formatDateOnly(
                                   subscription.current_period_end
-                                ).toLocaleDateString()}
+                                )}
                               </p>
                             </div>
                             <div>
