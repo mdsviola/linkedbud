@@ -32,6 +32,27 @@ export interface SummarizationInput {
   includeSourceArticle?: boolean;
   maxLength?: number;
   language?: string;
+  voiceProfile?: {
+    voice_data: any;
+    voice_description: string;
+  };
+}
+
+export interface VoiceProfile {
+  voice_data: {
+    tone: string;
+    sentence_length: string; // "short", "medium", "long", "mixed"
+    vocabulary_complexity: string; // "simple", "moderate", "complex"
+    formality: string; // "casual", "semi-formal", "formal"
+    uses_emojis: boolean;
+    uses_questions: boolean;
+    uses_statistics: boolean;
+    storytelling_style?: string;
+    engagement_tactics?: string[];
+    common_phrases?: string[];
+    writing_patterns?: string[];
+  };
+  voice_description: string;
 }
 
 export interface SummarizationOutput {
@@ -236,6 +257,7 @@ function buildSummarizationPrompt(input: SummarizationInput): string {
     includeSourceArticle = true,
     maxLength = 1200,
     language = "English",
+    voiceProfile,
   } = input;
 
   const hashtagInstruction = includeHashtags
@@ -266,6 +288,30 @@ function buildSummarizationPrompt(input: SummarizationInput): string {
       ? `\n- Output Language: All content must be written in ${language}. Ensure proper grammar, spelling, and cultural appropriateness for ${language} speakers.`
       : "";
 
+  // Build voice profile instructions if provided
+  let voiceProfileSection = "";
+  if (voiceProfile) {
+    const voiceData = voiceProfile.voice_data;
+    const voiceDesc = voiceProfile.voice_description;
+
+    voiceProfileSection = `\n\nCUSTOM VOICE PROFILE:
+The following voice profile must be matched EXACTLY in the generated content:
+
+VOICE DESCRIPTION:
+${voiceDesc}
+
+VOICE CHARACTERISTICS:
+- Tone: ${voiceData.tone || "Not specified"}
+- Sentence Length: ${voiceData.sentence_length || "Not specified"}
+- Vocabulary Complexity: ${voiceData.vocabulary_complexity || "Not specified"}
+- Formality Level: ${voiceData.formality || "Not specified"}
+- Uses Emojis: ${voiceData.uses_emojis ? "Yes" : "No"}
+- Uses Questions: ${voiceData.uses_questions ? "Yes" : "No"}
+- Uses Statistics: ${voiceData.uses_statistics ? "Yes" : "No"}${voiceData.storytelling_style ? `\n- Storytelling Style: ${voiceData.storytelling_style}` : ""}${voiceData.engagement_tactics && voiceData.engagement_tactics.length > 0 ? `\n- Engagement Tactics: ${voiceData.engagement_tactics.join(", ")}` : ""}${voiceData.common_phrases && voiceData.common_phrases.length > 0 ? `\n- Common Phrases: ${voiceData.common_phrases.join(", ")}` : ""}${voiceData.writing_patterns && voiceData.writing_patterns.length > 0 ? `\n- Writing Patterns: ${voiceData.writing_patterns.join(", ")}` : ""}
+
+IMPORTANT: The generated content MUST match this voice profile exactly. Follow the same tone, sentence structure, vocabulary level, formality, and engagement patterns described above.`;
+  }
+
   return `
 You are a professional LinkedIn content creator specializing in the ${industryKeywords.join(
     ", "
@@ -274,10 +320,10 @@ You are a professional LinkedIn content creator specializing in the ${industryKe
 CONTENT REQUIREMENTS:
 - Post Type: ${postType}
 - Target Audience: ${targetAudience}
-- Writing Tone: ${userTone}
+- Writing Tone: ${userTone}${voiceProfile ? " (matching the custom voice profile below)" : ""}
 - Maximum character length per post: ${maxLength}${languageInstruction}
 - ${hashtagInstruction}
-- ${sourceArticleInstruction}
+- ${sourceArticleInstruction}${voiceProfileSection}
 
 CONTENT SOURCE:
 ${articleSnippets.map((snippet, i) => `${i + 1}. ${snippet}`).join("\n")}${
@@ -287,11 +333,11 @@ ${articleSnippets.map((snippet, i) => `${i + 1}. ${snippet}`).join("\n")}${
   }${keyPointsSection}${customInstructions}
 
 TASK:
-Create engaging LinkedIn content that resonates with ${targetAudience} using a ${userTone} tone. The content should be formatted as ${postType} and stay within ${maxLength} characters.${
+Create engaging LinkedIn content that resonates with ${targetAudience} using a ${userTone} tone${voiceProfile ? " while matching the custom voice profile above" : ""}. The content should be formatted as ${postType} and stay within ${maxLength} characters.${
     language && language !== "English"
       ? ` All content must be written entirely in ${language} with proper grammar, spelling, and cultural context.`
       : ""
-  }
+  }${voiceProfile ? "\n\nCRITICAL: The writing style, tone, sentence structure, vocabulary, and engagement patterns MUST match the custom voice profile described above. This is the user's authentic writing voice and must be replicated exactly." : ""}
 
 Please provide:
 
@@ -774,5 +820,152 @@ Return ONLY the summary text, no additional formatting or explanation.`;
     return topInsight
       ? `${topInsight.title}. ${topInsight.content.substring(0, 100)}${topInsight.content.length > 100 ? "..." : ""}`
       : "Review your analytics to discover what content resonates with your audience.";
+  }
+}
+
+/**
+ * Extract voice profile from an array of posts using AI
+ * @param posts - Array of post content strings to analyze
+ * @returns Voice profile with structured data and description
+ */
+export async function extractVoiceProfile(
+  posts: string[]
+): Promise<VoiceProfile> {
+  if (!posts || posts.length === 0) {
+    throw new Error("At least one post is required to extract voice profile");
+  }
+
+  // Require minimum of 2 posts for reliable voice extraction
+  if (posts.length < 2) {
+    throw new Error("At least 2 posts are required for voice profile extraction");
+  }
+
+  const postsText = posts
+    .map((post, index) => `Post ${index + 1}:\n${post}`)
+    .join("\n\n---\n\n");
+
+  const prompt = `You are an expert writing style analyst. Analyze the following LinkedIn posts and extract the author's unique writing voice and style characteristics.
+
+POSTS TO ANALYZE:
+${postsText}
+
+TASK:
+Analyze these posts and extract comprehensive voice characteristics. Provide both:
+1. Structured voice data (JSON format)
+2. A natural language description of the writing voice
+
+STRUCTURED VOICE DATA should include:
+- tone: The overall tone (e.g., "Professional", "Conversational", "Authoritative", "Friendly", "Analytical", "Inspirational", "Casual", "Expert")
+- sentence_length: "short", "medium", "long", or "mixed"
+- vocabulary_complexity: "simple", "moderate", or "complex"
+- formality: "casual", "semi-formal", or "formal"
+- uses_emojis: boolean (true if emojis are commonly used)
+- uses_questions: boolean (true if questions are commonly used)
+- uses_statistics: boolean (true if statistics/data are commonly used)
+- storytelling_style: Optional - Describe how stories/narratives are used (e.g., "personal anecdotes", "case studies", "data-driven narratives", "none")
+- engagement_tactics: Optional array - Common engagement tactics (e.g., "direct questions", "calls to action", "personal stories", "data insights", "thought-provoking statements")
+- common_phrases: Optional array - Recurring phrases or patterns in the writing
+- writing_patterns: Optional array - Observable patterns (e.g., "starts with hook", "uses numbered lists", "includes personal reflection")
+
+VOICE DESCRIPTION should be a comprehensive 2-3 paragraph natural language description that captures:
+- The author's unique writing voice and personality
+- How they communicate ideas and engage with readers
+- Their distinctive style elements that should be replicated in AI-generated content
+- Specific examples from the posts that illustrate their voice
+
+Return ONLY valid JSON in this format:
+{
+  "voice_data": {
+    "tone": "...",
+    "sentence_length": "...",
+    "vocabulary_complexity": "...",
+    "formality": "...",
+    "uses_emojis": true/false,
+    "uses_questions": true/false,
+    "uses_statistics": true/false,
+    "storytelling_style": "...",
+    "engagement_tactics": ["..."],
+    "common_phrases": ["..."],
+    "writing_patterns": ["..."]
+  },
+  "voice_description": "Comprehensive 2-3 paragraph description of the writing voice..."
+}`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an expert writing style analyst. Analyze posts and extract comprehensive voice characteristics in both structured and natural language formats. Always return valid JSON.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.3, // Lower temperature for more consistent analysis
+      max_tokens: 2000,
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error("No content generated for voice profile");
+    }
+
+    // Parse the JSON response
+    let cleanedContent = content.trim();
+
+    // Remove markdown code blocks if present
+    if (cleanedContent.startsWith("```json")) {
+      cleanedContent = cleanedContent
+        .replace(/```json\s*/, "")
+        .replace(/```\s*$/, "");
+    } else if (cleanedContent.startsWith("```")) {
+      cleanedContent = cleanedContent
+        .replace(/```\s*/, "")
+        .replace(/```\s*$/, "");
+    }
+
+    // Extract JSON object
+    const jsonMatch = cleanedContent.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error("No JSON found in voice profile response");
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+
+    // Validate response structure
+    if (!parsed.voice_data || !parsed.voice_description) {
+      throw new Error("Invalid voice profile structure");
+    }
+
+    // Ensure required fields are present
+    const voiceData = {
+      tone: parsed.voice_data.tone || "Professional",
+      sentence_length: parsed.voice_data.sentence_length || "medium",
+      vocabulary_complexity: parsed.voice_data.vocabulary_complexity || "moderate",
+      formality: parsed.voice_data.formality || "semi-formal",
+      uses_emojis: parsed.voice_data.uses_emojis ?? false,
+      uses_questions: parsed.voice_data.uses_questions ?? false,
+      uses_statistics: parsed.voice_data.uses_statistics ?? false,
+      storytelling_style: parsed.voice_data.storytelling_style || undefined,
+      engagement_tactics: parsed.voice_data.engagement_tactics || [],
+      common_phrases: parsed.voice_data.common_phrases || [],
+      writing_patterns: parsed.voice_data.writing_patterns || [],
+    };
+
+    return {
+      voice_data: voiceData,
+      voice_description: parsed.voice_description.trim(),
+    };
+  } catch (error) {
+    console.error("Error extracting voice profile:", error);
+    throw new Error(
+      error instanceof Error
+        ? `Failed to extract voice profile: ${error.message}`
+        : "Failed to extract voice profile"
+    );
   }
 }

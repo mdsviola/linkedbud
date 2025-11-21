@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 import { LinkedInAPI, getLinkedInToken } from "@/lib/linkedin";
 import { downloadFileFromStorage, extractFilePathFromUrl } from "@/lib/storage";
+import { enhanceVoiceProfile } from "@/lib/voice-utils";
+
+// Helper function to enhance voice profile asynchronously
+async function enhanceVoiceProfileAsync(
+  userId: string,
+  profileType: "personal" | "organization",
+  postId: number,
+  postContent: string,
+  organizationId?: string | null
+): Promise<void> {
+  await enhanceVoiceProfile(
+    userId,
+    profileType,
+    postId,
+    postContent,
+    organizationId
+  );
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -311,6 +329,23 @@ export async function POST(request: NextRequest) {
       "PUBLISHED",
       organizationId
     );
+
+    // Trigger async voice profile enhancement (non-blocking)
+    // Determine profile type from publish target
+    const profileType = isPersonal ? "personal" : "organization";
+    const orgIdForVoice = isPersonal ? null : organizationId;
+
+    // Don't wait for voice enhancement - fire and forget
+    enhanceVoiceProfileAsync(
+      user.id,
+      profileType,
+      postId,
+      content,
+      orgIdForVoice
+    ).catch((err) => {
+      // Silently fail - voice enhancement shouldn't block publishing
+      console.error("Error enhancing voice profile after publish:", err);
+    });
 
     // Note: Metrics will be fetched by the cron job (fetch-linkedin-metrics)
     // No need to fetch immediately as LinkedIn metrics aren't available right after publishing

@@ -342,20 +342,30 @@ export function CreatePostModal({
     Array<{ linkedin_org_id: string; org_name: string | null }>
   >([]);
 
+  // State for voice profiles (fetched internally)
+  const [voiceProfiles, setVoiceProfiles] = useState<
+    Array<{
+      profile_type: "personal" | "organization";
+      organization_id: string | null;
+      id: number;
+    }>
+  >([]);
+
   // State for selected publish target (can be changed by user in the modal)
   const [selectedPublishTarget, setSelectedPublishTarget] =
     useState(publishTarget);
 
-  // Fetch organizations when modal opens
+  // Fetch organizations and voice profiles when modal opens
   useEffect(() => {
     if (isOpen) {
-      const fetchOrganizations = async () => {
+      const fetchData = async () => {
         try {
-          const response = await fetch("/api/linkedin/organizations");
-          const result = await response.json();
-          if (response.ok) {
+          // Fetch organizations
+          const orgResponse = await fetch("/api/linkedin/organizations");
+          const orgResult = await orgResponse.json();
+          if (orgResponse.ok) {
             setOrganizations(
-              (result.organizations || []).map(
+              (orgResult.organizations || []).map(
                 (org: {
                   linkedin_org_id: string;
                   org_name: string | null;
@@ -366,16 +376,27 @@ export function CreatePostModal({
               )
             );
           } else {
-            console.error("Failed to fetch organizations:", result.error);
+            console.error("Failed to fetch organizations:", orgResult.error);
             setOrganizations([]);
           }
+
+          // Fetch voice profiles
+          const voiceResponse = await fetch("/api/voice/profiles");
+          const voiceResult = await voiceResponse.json();
+          if (voiceResponse.ok) {
+            setVoiceProfiles(voiceResult.voice_profiles || []);
+          } else {
+            console.error("Failed to fetch voice profiles:", voiceResult.error);
+            setVoiceProfiles([]);
+          }
         } catch (err) {
-          console.error("Error fetching organizations:", err);
+          console.error("Error fetching data:", err);
           setOrganizations([]);
+          setVoiceProfiles([]);
         }
       };
 
-      fetchOrganizations();
+      fetchData();
       setSelectedPublishTarget(publishTarget);
     }
   }, [isOpen, publishTarget]);
@@ -2239,12 +2260,62 @@ export function CreatePostModal({
                             handleInputChange("tone", e.target.value)
                           }
                           className="h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                          title={
+                            formData.tone.startsWith("Custom -") &&
+                            !voiceProfiles.some((vp) => {
+                              if (formData.tone === "Custom - Personal") {
+                                return vp.profile_type === "personal" && !vp.organization_id;
+                              }
+                              // Extract org ID from tone string (e.g., "Custom - Org 1")
+                              const orgIndex = formData.tone.match(/Org (\d+)/)?.[1];
+                              if (orgIndex) {
+                                const orgId = organizations[parseInt(orgIndex) - 1]?.linkedin_org_id;
+                                return vp.profile_type === "organization" && vp.organization_id === orgId;
+                              }
+                              return false;
+                            })
+                              ? "Voice profile not available yet. Publish some posts or customize in Settings."
+                              : undefined
+                          }
                         >
                           {TONE_OPTIONS.map((tone) => (
                             <option key={tone} value={tone}>
                               {tone}
                             </option>
                           ))}
+                          {/* Custom - Personal option */}
+                          {(() => {
+                            const hasPersonalVoice = voiceProfiles.some(
+                              (vp) => vp.profile_type === "personal" && !vp.organization_id
+                            );
+                            return (
+                              <option
+                                value="Custom - Personal"
+                                disabled={!hasPersonalVoice}
+                              >
+                                Custom - Personal{!hasPersonalVoice ? " (Not Available)" : ""}
+                              </option>
+                            );
+                          })()}
+                          {/* Custom - Org options */}
+                          {organizations.map((org, index) => {
+                            const hasOrgVoice = voiceProfiles.some(
+                              (vp) =>
+                                vp.profile_type === "organization" &&
+                                vp.organization_id === org.linkedin_org_id
+                            );
+                            const orgDisplayName = org.org_name || `Org ${index + 1}`;
+                            return (
+                              <option
+                                key={org.linkedin_org_id}
+                                value={`Custom - ${orgDisplayName}`}
+                                disabled={!hasOrgVoice}
+                              >
+                                Custom - {orgDisplayName}
+                                {!hasOrgVoice ? " (Not Available)" : ""}
+                              </option>
+                            );
+                          })}
                         </select>
                       </div>
                       <div className="space-y-2">

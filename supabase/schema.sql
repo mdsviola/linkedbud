@@ -38,7 +38,27 @@ CREATE TABLE public.user_prefs (
   updated_at timestamptz DEFAULT now()
 );
 
+-- Voice profiles table for storing AI-extracted writing voice characteristics
+CREATE TABLE public.voice_profiles (
+  id bigserial PRIMARY KEY,
+  user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  profile_type text NOT NULL CHECK (profile_type IN ('personal', 'organization')),
+  organization_id text, -- LinkedIn org ID for organization profiles, NULL for personal
+  voice_data jsonb, -- Structured voice characteristics (tone, sentence structure, vocabulary patterns, etc.)
+  voice_description text, -- Natural language description for AI context
+  source_posts text[] DEFAULT '{}', -- Array of post IDs used to generate/update this profile
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
+  UNIQUE(user_id, profile_type, organization_id)
+);
 
+-- Add comments to document the voice_profiles columns
+COMMENT ON TABLE public.voice_profiles IS 'Stores AI-extracted writing voice profiles for users and organizations';
+COMMENT ON COLUMN public.voice_profiles.profile_type IS 'Type of profile: personal or organization';
+COMMENT ON COLUMN public.voice_profiles.organization_id IS 'LinkedIn organization ID for organization profiles, NULL for personal';
+COMMENT ON COLUMN public.voice_profiles.voice_data IS 'Structured JSON with voice characteristics (tone, sentence length, vocabulary, formality, etc.)';
+COMMENT ON COLUMN public.voice_profiles.voice_description IS 'Natural language description of writing voice for AI context';
+COMMENT ON COLUMN public.voice_profiles.source_posts IS 'Array of post IDs used to generate or update this voice profile';
 
 -- AI-generated content posts
 CREATE TABLE public.posts (
@@ -289,6 +309,7 @@ ALTER TABLE public.waitlist ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.portfolios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.portfolio_collaborators ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.portfolio_invitations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.voice_profiles ENABLE ROW LEVEL SECURITY;
 
 -- Admin function for policy checks
 CREATE OR REPLACE FUNCTION public.is_admin()
@@ -425,6 +446,24 @@ CREATE POLICY "Anyone can insert into waitlist" ON public.waitlist
 CREATE POLICY "Admins can view all waitlist entries" ON public.waitlist
   FOR SELECT USING (public.is_admin());
 
+-- Voice profiles policies
+CREATE POLICY "Users can view own voice profiles" ON public.voice_profiles
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own voice profiles" ON public.voice_profiles
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own voice profiles" ON public.voice_profiles
+  FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own voice profiles" ON public.voice_profiles
+  FOR DELETE
+  USING (auth.uid() = user_id);
+
 -- Admin policies
 -- Note: Admin policies for subscriptions and usage_counters are consolidated with user policies above
 CREATE POLICY "Admins can view all profiles" ON public.profiles
@@ -545,6 +584,11 @@ CREATE INDEX idx_portfolio_invitations_email ON public.portfolio_invitations(ema
 CREATE INDEX idx_profiles_portfolio_id ON public.profiles(portfolio_id);
 CREATE INDEX idx_posts_portfolio_id ON public.posts(portfolio_id);
 CREATE INDEX idx_posts_portfolio_user ON public.posts(portfolio_id, user_id);
+
+-- Voice profiles indexes
+CREATE INDEX idx_voice_profiles_user_id ON public.voice_profiles(user_id);
+CREATE INDEX idx_voice_profiles_organization_id ON public.voice_profiles(organization_id);
+CREATE INDEX idx_voice_profiles_profile_type ON public.voice_profiles(profile_type);
 
 -- Feedback submissions table
 CREATE TABLE public.feedback_submissions (

@@ -17,21 +17,24 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { createClientClient } from "@/lib/supabase-client";
-import {
-  Crown,
-  Mail,
-  User,
-  Linkedin,
-  Users,
-} from "lucide-react";
+import { Crown, Mail, User, Linkedin, Users, Sparkles } from "lucide-react";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal";
 import { LinkedInOrganizationDB } from "@/lib/linkedin";
 import { CommaSeparatedInput } from "@/components/ui/comma-separated-input";
-import { getTierPricing, formatPrice, getPricingConfig } from "@/lib/pricing-config";
-import { getTierFromPriceId, getTierDisplayName, type PricingTier } from "@/lib/tier-utils";
+import {
+  getTierPricing,
+  formatPrice,
+  getPricingConfig,
+} from "@/lib/pricing-config";
+import {
+  getTierFromPriceId,
+  getTierDisplayName,
+  type PricingTier,
+} from "@/lib/tier-utils";
 import { CollaborationTabContent } from "./collaboration-tab-content";
 import { LinkedInIntegrationBlocks } from "@/components/linkedin-integration-blocks";
+import { VoiceCustomizationTabContent } from "./voice-customization-tab-content";
 
 interface User {
   id: string;
@@ -72,12 +75,15 @@ interface SettingsClientProps {
 export function SettingsClient({ user }: SettingsClientProps) {
   const router = useRouter();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [subscriptionTier, setSubscriptionTier] = useState<PricingTier | null>(null);
+  const [subscriptionTier, setSubscriptionTier] = useState<PricingTier | null>(
+    null
+  );
   const [tierLoading, setTierLoading] = useState(false);
   const [linkedinAccount, setLinkedinAccount] =
     useState<LinkedInAccount | null>(null);
-  const [communityToken, setCommunityToken] =
-    useState<LinkedInAccount | null>(null);
+  const [communityToken, setCommunityToken] = useState<LinkedInAccount | null>(
+    null
+  );
   const [organizations, setOrganizations] = useState<LinkedInOrganizationDB[]>(
     []
   );
@@ -161,7 +167,10 @@ export function SettingsClient({ user }: SettingsClientProps) {
 
     const handleHashChange = () => {
       const hash = window.location.hash.slice(1); // Remove the # symbol
-      if (hash && ["account", "integrations", "billing", "collaboration"].includes(hash)) {
+      if (
+        hash &&
+        ["account", "integrations", "billing", "collaboration"].includes(hash)
+      ) {
         setActiveTab(hash);
       }
     };
@@ -169,7 +178,10 @@ export function SettingsClient({ user }: SettingsClientProps) {
     const handleLocationChange = () => {
       // Check for hash first
       const hash = window.location.hash.slice(1);
-      if (hash && ["account", "integrations", "billing", "collaboration"].includes(hash)) {
+      if (
+        hash &&
+        ["account", "integrations", "billing", "collaboration"].includes(hash)
+      ) {
         setActiveTab(hash);
       } else {
         // Check for query parameters that might indicate integrations tab
@@ -254,7 +266,11 @@ export function SettingsClient({ user }: SettingsClientProps) {
         setTierLoading(false);
       } else {
         // Handle other errors
-        console.error("Failed to fetch subscription:", response.status, response.statusText);
+        console.error(
+          "Failed to fetch subscription:",
+          response.status,
+          response.statusText
+        );
         setSubscription(null);
         setSubscriptionTier("FREE");
         setTierLoading(false);
@@ -279,15 +295,16 @@ export function SettingsClient({ user }: SettingsClientProps) {
       }
 
       // Fetch LinkedIn community token status
-      const { data: communityTokenData, error: communityTokenError } = await supabase
-        .from("linkedin_tokens")
-        .select(
-          "id, linkedin_user_id, profile_data, is_active, created_at, token_expires_at"
-        )
-        .eq("user_id", user.id)
-        .eq("type", "community")
-        .eq("is_active", true)
-        .maybeSingle();
+      const { data: communityTokenData, error: communityTokenError } =
+        await supabase
+          .from("linkedin_tokens")
+          .select(
+            "id, linkedin_user_id, profile_data, is_active, created_at, token_expires_at"
+          )
+          .eq("user_id", user.id)
+          .eq("type", "community")
+          .eq("is_active", true)
+          .maybeSingle();
 
       const hasCommunityToken = !communityTokenError && communityTokenData;
 
@@ -376,7 +393,9 @@ export function SettingsClient({ user }: SettingsClientProps) {
 
         if (!revokeResponse.ok) {
           // Log but don't fail - continue with local deletion
-          console.warn("Failed to revoke LinkedIn token, continuing with local deletion");
+          console.warn(
+            "Failed to revoke LinkedIn token, continuing with local deletion"
+          );
         }
       } catch (revokeError) {
         // Log but don't fail - continue with local deletion
@@ -451,7 +470,9 @@ export function SettingsClient({ user }: SettingsClientProps) {
 
         if (!revokeResponse.ok) {
           // Log but don't fail - continue with local deletion
-          console.warn("Failed to revoke LinkedIn token, continuing with local deletion");
+          console.warn(
+            "Failed to revoke LinkedIn token, continuing with local deletion"
+          );
         }
       } catch (revokeError) {
         // Log but don't fail - continue with local deletion
@@ -532,6 +553,10 @@ export function SettingsClient({ user }: SettingsClientProps) {
             <Users className="h-4 w-4 mr-2" />
             Collaboration
           </TabsTrigger>
+          <TabsTrigger value="voice">
+            <Sparkles className="h-4 w-4 mr-2" />
+            Voice Customization
+          </TabsTrigger>
           <TabsTrigger value="billing">
             <Crown className="h-4 w-4 mr-2" />
             Billing
@@ -598,6 +623,10 @@ export function SettingsClient({ user }: SettingsClientProps) {
           <CollaborationTabContent />
         </TabsContent>
 
+        <TabsContent value="voice" className="space-y-6">
+          <VoiceCustomizationTabContent organizations={organizations} />
+        </TabsContent>
+
         <TabsContent value="billing" className="space-y-6">
           <Card>
             <CardHeader>
@@ -610,7 +639,10 @@ export function SettingsClient({ user }: SettingsClientProps) {
               {subscription ? (
                 (() => {
                   // Use tier from API if available, otherwise fallback
-                  const tier = subscriptionTier || getTierFromPriceId(subscription.price_id) || "PRO";
+                  const tier =
+                    subscriptionTier ||
+                    getTierFromPriceId(subscription.price_id) ||
+                    "PRO";
                   const tierPricing = getTierPricing(tier);
                   const tierDisplayName = getTierDisplayName(tier);
 
@@ -620,18 +652,26 @@ export function SettingsClient({ user }: SettingsClientProps) {
                         <div className="flex items-center gap-2 mb-4">
                           <Crown className="h-6 w-6 text-green-600" />
                           <span className="text-lg font-semibold text-green-900">
-                            {tierLoading ? "Loading..." : `${tierDisplayName} Plan Active`}
+                            {tierLoading
+                              ? "Loading..."
+                              : `${tierDisplayName} Plan Active`}
                           </span>
                         </div>
 
                         {!tierLoading && (
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <span className="text-sm text-green-700">Plan:</span>
-                              <p className="font-medium text-green-900">{tierDisplayName} Plan</p>
+                              <span className="text-sm text-green-700">
+                                Plan:
+                              </span>
+                              <p className="font-medium text-green-900">
+                                {tierDisplayName} Plan
+                              </p>
                             </div>
                             <div>
-                              <span className="text-sm text-green-700">Status:</span>
+                              <span className="text-sm text-green-700">
+                                Status:
+                              </span>
                               <p className="font-medium text-green-900 capitalize">
                                 {subscription.status}
                               </p>
@@ -647,10 +687,15 @@ export function SettingsClient({ user }: SettingsClientProps) {
                               </p>
                             </div>
                             <div>
-                              <span className="text-sm text-green-700">Price:</span>
+                              <span className="text-sm text-green-700">
+                                Price:
+                              </span>
                               <p className="font-medium text-green-900">
                                 {typeof tierPricing.monthlyPrice === "number"
-                                  ? `${formatPrice(tierPricing.monthlyPrice, getPricingConfig().currency)}/month`
+                                  ? `${formatPrice(
+                                      tierPricing.monthlyPrice,
+                                      getPricingConfig().currency
+                                    )}/month`
                                   : "Custom"}
                               </p>
                             </div>

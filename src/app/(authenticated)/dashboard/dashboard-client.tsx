@@ -67,7 +67,8 @@ export function DashboardClient() {
   );
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsError, setAnalyticsError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [scheduledPostsLoading, setScheduledPostsLoading] = useState(true);
   const [error, setError] = useState("");
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [ideasLoading, setIdeasLoading] = useState(false);
@@ -95,6 +96,7 @@ export function DashboardClient() {
 
   useEffect(() => {
     fetchPosts();
+    fetchScheduledPosts();
     // Check cooldown status
     checkCooldown();
     // Fetch ideas from database (API will return cached ideas if available)
@@ -208,32 +210,13 @@ export function DashboardClient() {
 
   const fetchPosts = async () => {
     try {
+      setPostsLoading(true);
       // Fetch all posts for metrics
       const postsResponse = await fetch("/api/posts");
       const postsResult = await postsResponse.json();
 
       if (!postsResponse.ok) {
         throw new Error(postsResult.error || "Failed to fetch posts");
-      }
-
-      // Fetch scheduled posts for 7-day widget
-      try {
-        const scheduledResponse = await fetch("/api/dashboard/scheduled-posts");
-        const scheduledResult = await scheduledResponse.json();
-
-        if (scheduledResponse.ok) {
-          setUpcomingScheduledPosts(scheduledResult.posts || []);
-          setOrganizations(scheduledResult.organizations || {});
-        } else {
-          console.warn(
-            "Failed to fetch scheduled posts:",
-            scheduledResult.error
-          );
-          setUpcomingScheduledPosts([]);
-        }
-      } catch (scheduledError) {
-        console.warn("Error fetching scheduled posts:", scheduledError);
-        setUpcomingScheduledPosts([]);
       }
 
       setPosts(postsResult.posts || []);
@@ -243,7 +226,31 @@ export function DashboardClient() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
-      setLoading(false);
+      setPostsLoading(false);
+    }
+  };
+
+  const fetchScheduledPosts = async () => {
+    try {
+      setScheduledPostsLoading(true);
+      const scheduledResponse = await fetch("/api/dashboard/scheduled-posts");
+      const scheduledResult = await scheduledResponse.json();
+
+      if (scheduledResponse.ok) {
+        setUpcomingScheduledPosts(scheduledResult.posts || []);
+        setOrganizations(scheduledResult.organizations || {});
+      } else {
+        console.warn(
+          "Failed to fetch scheduled posts:",
+          scheduledResult.error
+        );
+        setUpcomingScheduledPosts([]);
+      }
+    } catch (scheduledError) {
+      console.warn("Error fetching scheduled posts:", scheduledError);
+      setUpcomingScheduledPosts([]);
+    } finally {
+      setScheduledPostsLoading(false);
     }
   };
 
@@ -270,36 +277,52 @@ export function DashboardClient() {
     });
   };
 
+  // Skeleton component for metric cards
+  const MetricCardSkeleton = () => (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 animate-pulse"></div>
+        <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+      </CardHeader>
+      <CardContent>
+        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-16 mb-2 animate-pulse"></div>
+        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-32 animate-pulse"></div>
+      </CardContent>
+    </Card>
+  );
 
-  if (loading) {
-    return (
-      <PageWrapper>
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
-          <div className="grid gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-48 bg-gray-200 rounded"></div>
-            ))}
-          </div>
+  // Skeleton component for publishing schedule
+  const PublishingScheduleSkeleton = () => (
+    <Card>
+      <CardHeader>
+        <div className="space-y-2">
+          <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-40 animate-pulse"></div>
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64 animate-pulse"></div>
         </div>
-      </PageWrapper>
-    );
-  }
-
-  if (error) {
-    return (
-      <PageWrapper>
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={fetchPosts}>Try Again</Button>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-20 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
+          ))}
         </div>
-      </PageWrapper>
-    );
-  }
+      </CardContent>
+    </Card>
+  );
 
   return (
     <PageWrapper>
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-red-800 dark:text-red-200">Error loading posts</h3>
+              <p className="text-sm text-red-600 dark:text-red-300 mt-1">{error}</p>
+            </div>
+            <Button onClick={fetchPosts} size="sm" variant="outline">Try Again</Button>
+          </div>
+        </div>
+      )}
       <div className="mb-8">
         <PageTitle>Dashboard</PageTitle>
         <PageDescription>
@@ -309,65 +332,76 @@ export function DashboardClient() {
 
       {/* Metrics Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Link href="/posts">
-          <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalPosts}</div>
-              <p className="text-xs text-muted-foreground">All posts created</p>
-            </CardContent>
-          </Card>
-        </Link>
+        {postsLoading ? (
+          <>
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+            <MetricCardSkeleton />
+          </>
+        ) : (
+          <>
+            <Link href="/posts">
+              <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Posts</CardTitle>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{totalPosts}</div>
+                  <p className="text-xs text-muted-foreground">All posts created</p>
+                </CardContent>
+              </Card>
+            </Link>
 
-        <Link href="/posts/published">
-          <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Published</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
-                {publishedPosts}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Successfully published
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
+            <Link href="/posts/published">
+              <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Published</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">
+                    {publishedPosts}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Successfully published
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
 
-        <Link href="/posts/draft">
-          <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Drafts</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
-                {draftPosts}
-              </div>
-              <p className="text-xs text-muted-foreground">Work in progress</p>
-            </CardContent>
-          </Card>
-        </Link>
+            <Link href="/posts/draft">
+              <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Drafts</CardTitle>
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-yellow-600">
+                    {draftPosts}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Work in progress</p>
+                </CardContent>
+              </Card>
+            </Link>
 
-        <Link href="/posts/scheduled">
-          <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {scheduledPosts}
-              </div>
-              <p className="text-xs text-muted-foreground">Ready to publish</p>
-            </CardContent>
-          </Card>
-        </Link>
+            <Link href="/posts/scheduled">
+              <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {scheduledPosts}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Ready to publish</p>
+                </CardContent>
+              </Card>
+            </Link>
+          </>
+        )}
       </div>
 
       {/* Ideas Showcase */}
@@ -386,63 +420,67 @@ export function DashboardClient() {
 
       {/* Publishing Schedule */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitleWithIcon
-              icon={Calendar}
-              title="Publishing schedule"
-              description="Upcoming scheduled posts for the next 7 days"
-            />
-          </CardHeader>
-          <CardContent>
-            {upcomingScheduledPosts.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">
-                  No posts scheduled for the next 7 days
-                </p>
-                {posts.filter((p) => p.status === "SCHEDULED").length > 0 && (
-                  <div className="mt-4">
-                    <Link
-                      href="/posts/scheduled"
-                      className="text-blue-600 hover:text-blue-800 underline text-sm"
-                    >
-                      View all scheduled posts →
-                    </Link>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col space-y-2">
-                {upcomingScheduledPosts.map((post) => (
-                  <Link key={post.id} href={`/posts/${post.id}`}>
-                    <div className="flex items-start justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-colors duration-200 cursor-pointer">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {post.content && post.content.trim().length > 0
-                            ? truncateContent(post.content, 60)
-                            : post.two_para_summary.length > 60
-                            ? `${post.two_para_summary.substring(0, 60)}...`
-                            : post.two_para_summary}
-                        </p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className="text-xs text-gray-600 font-medium">
-                            {formatScheduledDate(post.scheduled_publish_date!)}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            • {getOrganizationName(post, organizations)}
-                          </span>
+        {scheduledPostsLoading ? (
+          <PublishingScheduleSkeleton />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitleWithIcon
+                icon={Calendar}
+                title="Publishing schedule"
+                description="Upcoming scheduled posts for the next 7 days"
+              />
+            </CardHeader>
+            <CardContent>
+              {upcomingScheduledPosts.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    No posts scheduled for the next 7 days
+                  </p>
+                  {posts.filter((p) => p.status === "SCHEDULED").length > 0 && (
+                    <div className="mt-4">
+                      <Link
+                        href="/posts/scheduled"
+                        className="text-blue-600 hover:text-blue-800 underline text-sm"
+                      >
+                        View all scheduled posts →
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col space-y-2">
+                  {upcomingScheduledPosts.map((post) => (
+                    <Link key={post.id} href={`/posts/${post.id}`}>
+                      <div className="flex items-start justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-gray-300 transition-colors duration-200 cursor-pointer">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {post.content && post.content.trim().length > 0
+                              ? truncateContent(post.content, 60)
+                              : post.two_para_summary.length > 60
+                              ? `${post.two_para_summary.substring(0, 60)}...`
+                              : post.two_para_summary}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs text-gray-600 font-medium">
+                              {formatScheduledDate(post.scheduled_publish_date!)}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              • {getOrganizationName(post, organizations)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="ml-2 flex-shrink-0">
+                          <Calendar className="h-4 w-4 text-gray-500" />
                         </div>
                       </div>
-                      <div className="ml-2 flex-shrink-0">
-                        <Calendar className="h-4 w-4 text-gray-500" />
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* 7-Day Insights Summary */}
         <Card>
@@ -457,8 +495,8 @@ export function DashboardClient() {
             {insightsLoading ? (
               <div className="text-center py-8">
                 <div className="animate-pulse space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
-                  <div className="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mx-auto"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mx-auto"></div>
                 </div>
               </div>
             ) : insightsSummary ? (

@@ -7,6 +7,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { LinkedInClient } from "../_shared/linkedin/client.ts";
 import { getLinkedInToken } from "../_shared/token-utils.ts";
 import { sendPostPublishedNotificationEmail } from "../_shared/email/index.ts";
+import OpenAI from "https://esm.sh/openai@4";
 
 interface CronJobLog {
   id?: number;
@@ -580,6 +581,28 @@ async function processPosts(
           stack: emailError instanceof Error ? emailError.stack : undefined,
         });
         // Don't fail the post publication if email fails
+      });
+
+      // Trigger async voice profile enhancement (non-blocking)
+      // Don't wait - fire and forget
+      enhanceVoiceProfileAsync(
+        supabase,
+        post.user_id,
+        post.publish_target === "personal" ? "personal" : "organization",
+        post.id,
+        content,
+        organizationId || null,
+        log
+      ).catch((voiceError) => {
+        log("error", "Failed to enhance voice profile", {
+          post_id: post.id,
+          user_id: post.user_id,
+          error:
+            voiceError instanceof Error
+              ? voiceError.message
+              : String(voiceError),
+        });
+        // Don't fail the post publication if voice enhancement fails
       });
     } catch (error) {
       const errorMessage =

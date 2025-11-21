@@ -7,6 +7,7 @@ import {
   handleSubscriptionLimitError,
 } from "@/lib/auth";
 import { scrapeArticleContent } from "@/lib/scrapingbee";
+import { getVoiceProfile } from "@/lib/voice-utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -112,15 +113,93 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract tone from user corpus
+    // Extract tone from user corpus (legacy)
     const userTone = prefs.user_corpus?.tone_descriptor || "expert";
+
+    // Check if tone is a custom voice option
+    let voiceProfile: { voice_data: any; voice_description: string } | undefined;
+    let effectiveTone = tone;
+
+    if (tone.startsWith("Custom -")) {
+      // Extract profile type and organization ID from tone selection
+      let profileType: "personal" | "organization" = "personal";
+      let organizationId: string | null = null;
+
+      if (tone === "Custom - Personal") {
+        profileType = "personal";
+        organizationId = null;
+      } else {
+        // Extract organization name from tone (e.g., "Custom - Org 1" or "Custom - Company Name")
+        // We need to match with user's organizations to get the org ID
+        profileType = "organization";
+
+        // Fetch user's organizations to match the name
+        const { data: orgs } = await supabase
+          .from("linkedin_organizations")
+          .select("linkedin_org_id, org_name")
+          .eq("user_id", user.id);
+
+        if (orgs && orgs.length > 0) {
+          // Try to match org name from tone string
+          const orgNameFromTone = tone.replace("Custom - ", "").trim();
+          const matchedOrg = orgs.find(
+            (org) =>
+              org.org_name === orgNameFromTone ||
+              org.linkedin_org_id === orgNameFromTone
+          );
+
+          if (matchedOrg) {
+            organizationId = matchedOrg.linkedin_org_id;
+          } else {
+            // Fallback: try to extract org index (e.g., "Org 1")
+            const orgIndexMatch = orgNameFromTone.match(/Org (\d+)/);
+            if (orgIndexMatch) {
+              const index = parseInt(orgIndexMatch[1]) - 1;
+              if (index >= 0 && index < orgs.length) {
+                organizationId = orgs[index].linkedin_org_id;
+              }
+            }
+          }
+        }
+      }
+
+      // Fetch voice profile
+      let profileQuery = supabase
+        .from("voice_profiles")
+        .select("voice_data, voice_description")
+        .eq("user_id", user.id)
+        .eq("profile_type", profileType);
+
+      if (organizationId) {
+        profileQuery = profileQuery.eq("organization_id", organizationId);
+      } else {
+        profileQuery = profileQuery.is("organization_id", null);
+      }
+
+      const { data: profile } = await profileQuery.single();
+
+      if (profile) {
+        voiceProfile = {
+          voice_data: profile.voice_data,
+          voice_description: profile.voice_description,
+        };
+        // Use a descriptive tone name for the prompt
+        effectiveTone = voiceProfile.voice_data?.tone || tone;
+      } else {
+        // Voice profile not found, fall back to default tone
+        console.warn(
+          `Voice profile not found for ${profileType}${organizationId ? `, org ${organizationId}` : ""}`
+        );
+        effectiveTone = "Professional"; // Fallback
+      }
+    }
 
     // Generate drafts using OpenAI
     let result;
     try {
       result = await summarizeAndGenerateDrafts({
         industryKeywords: prefs.topics || [],
-        userTone: tone, // Use the tone from the form instead of user corpus
+        userTone: effectiveTone,
         articleSnippets,
         sourceInfo,
         postType,
@@ -132,6 +211,7 @@ export async function POST(request: NextRequest) {
         includeSourceArticle,
         maxLength,
         language,
+        voiceProfile, // Include voice profile if available
       });
     } catch (error) {
       console.error("Error generating drafts:", error);

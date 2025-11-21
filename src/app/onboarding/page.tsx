@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { createClientClient } from "@/lib/supabase-client";
-import { Plus, X, Check, Mail, CheckCircle2, LogOut, Linkedin } from "lucide-react";
+import { Plus, X, Check, Mail, CheckCircle2, LogOut, Linkedin, Sparkles, Loader2 } from "lucide-react";
 import { RssFeedSelector } from "@/components/rss-feed-selector";
 import { LinkedInIntegrationBlocks } from "@/components/linkedin-integration-blocks";
 import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal";
@@ -50,6 +50,13 @@ export default function OnboardingPage() {
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
+  const [generatingVoice, setGeneratingVoice] = useState(false);
+  const [voiceGenerated, setVoiceGenerated] = useState(false);
+  const [voiceError, setVoiceError] = useState("");
+  const [voiceProfile, setVoiceProfile] = useState<{
+    voice_description: string;
+    voice_data: any;
+  } | null>(null);
   const [linkedinAccount, setLinkedinAccount] = useState<LinkedInAccount | null>(null);
   const [communityToken, setCommunityToken] = useState<LinkedInAccount | null>(null);
   const [organizations, setOrganizations] = useState<LinkedInOrganizationDB[]>([]);
@@ -779,6 +786,24 @@ export default function OnboardingPage() {
       if (error) {
         setError(`Database error: ${error.message}`);
       } else {
+        // Trigger async voice extraction for personal profile if posts were provided
+        if (postsArray.length >= 1) {
+          // Don't block onboarding completion - fire and forget
+          fetch("/api/voice/extract", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              posts: postsArray,
+              profile_type: "personal",
+            }),
+          }).catch((err) => {
+            // Silently fail - voice extraction shouldn't block onboarding
+            console.error("Error extracting voice profile from onboarding:", err);
+          });
+        }
+
         // Move to integrations step instead of completing onboarding
         setStep("integrations");
         setLoading(false);
@@ -1141,8 +1166,218 @@ export default function OnboardingPage() {
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
                     This helps us understand your writing style and tone.
                     We&apos;ll use this to personalize your generated drafts.
-                    You can skip this if you prefer.
+                    You can provide at least 1 post or skip this if you prefer.
                   </p>
+
+                  {/* Generate Voice Profile Button */}
+                  {(() => {
+                    const postsArray = linkedinPosts
+                      .map((p) => p.trim())
+                      .filter((p) => p.length > 0);
+                    const hasEnoughPosts = postsArray.length >= 1;
+
+                    return (
+                      <div className="mt-4 space-y-2">
+                        {voiceError && (
+                          <div className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-950/20 p-3 rounded-lg border border-red-200 dark:border-red-800">
+                            {voiceError}
+                          </div>
+                        )}
+                        {voiceGenerated && voiceProfile && (
+                          <div className="space-y-3">
+                            <div className="text-green-600 dark:text-green-400 text-sm bg-green-50 dark:bg-green-950/20 p-3 rounded-lg border border-green-200 dark:border-green-800 flex items-center gap-2">
+                              <CheckCircle2 className="h-4 w-4" />
+                              Personal voice profile generated successfully!
+                            </div>
+
+                            {/* Display Voice Profile */}
+                            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-4">
+                              <div className="flex items-center gap-2">
+                                <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                <h4 className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                                  Your Writing Voice
+                                </h4>
+                              </div>
+
+                              {/* Voice Description */}
+                              <div>
+                                <p className="text-xs font-medium text-blue-800 dark:text-blue-200 mb-2">
+                                  Voice Description:
+                                </p>
+                                <p className="text-sm text-blue-900 dark:text-blue-100 leading-relaxed whitespace-pre-wrap">
+                                  {voiceProfile.voice_description}
+                                </p>
+                              </div>
+
+                              {/* Voice Characteristics */}
+                              {voiceProfile.voice_data && (
+                                <div className="grid grid-cols-2 gap-3 pt-3 border-t border-blue-200 dark:border-blue-800">
+                                  <div>
+                                    <p className="text-xs font-medium text-blue-800 dark:text-blue-200 mb-1">
+                                      Tone:
+                                    </p>
+                                    <p className="text-sm text-blue-900 dark:text-blue-100">
+                                      {voiceProfile.voice_data.tone || "Not specified"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs font-medium text-blue-800 dark:text-blue-200 mb-1">
+                                      Formality:
+                                    </p>
+                                    <p className="text-sm text-blue-900 dark:text-blue-100 capitalize">
+                                      {voiceProfile.voice_data.formality || "Not specified"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs font-medium text-blue-800 dark:text-blue-200 mb-1">
+                                      Sentence Length:
+                                    </p>
+                                    <p className="text-sm text-blue-900 dark:text-blue-100 capitalize">
+                                      {voiceProfile.voice_data.sentence_length || "Not specified"}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs font-medium text-blue-800 dark:text-blue-200 mb-1">
+                                      Vocabulary:
+                                    </p>
+                                    <p className="text-sm text-blue-900 dark:text-blue-100 capitalize">
+                                      {voiceProfile.voice_data.vocabulary_complexity || "Not specified"}
+                                    </p>
+                                  </div>
+                                  {voiceProfile.voice_data.uses_emojis && (
+                                    <div className="col-span-2">
+                                      <p className="text-xs font-medium text-blue-800 dark:text-blue-200 mb-1">
+                                        Style Features:
+                                      </p>
+                                      <div className="flex flex-wrap gap-2">
+                                        {voiceProfile.voice_data.uses_emojis && (
+                                          <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 rounded-full">
+                                            Uses Emojis
+                                          </span>
+                                        )}
+                                        {voiceProfile.voice_data.uses_questions && (
+                                          <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 rounded-full">
+                                            Uses Questions
+                                          </span>
+                                        )}
+                                        {voiceProfile.voice_data.uses_statistics && (
+                                          <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 rounded-full">
+                                            Uses Statistics
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {voiceProfile.voice_data.engagement_tactics && voiceProfile.voice_data.engagement_tactics.length > 0 && (
+                                    <div className="col-span-2">
+                                      <p className="text-xs font-medium text-blue-800 dark:text-blue-200 mb-1">
+                                        Engagement Tactics:
+                                      </p>
+                                      <p className="text-sm text-blue-900 dark:text-blue-100">
+                                        {voiceProfile.voice_data.engagement_tactics.join(", ")}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              <p className="text-xs text-blue-700 dark:text-blue-300 pt-2 border-t border-blue-200 dark:border-blue-800">
+                                This voice profile will be used to personalize your generated LinkedIn posts.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            const postsArray = linkedinPosts
+                              .map((p) => p.trim())
+                              .filter((p) => p.length > 0);
+
+                            if (postsArray.length < 1) {
+                              setVoiceError("Please provide at least 1 post to generate your voice profile.");
+                              return;
+                            }
+
+                            setGeneratingVoice(true);
+                            setVoiceError("");
+                            setVoiceGenerated(false);
+
+                            try {
+                              const response = await fetch("/api/voice/extract", {
+                                method: "POST",
+                                headers: {
+                                  "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                  posts: postsArray,
+                                  profile_type: "personal",
+                                }),
+                              });
+
+                              const data = await response.json();
+
+                              if (!response.ok) {
+                                throw new Error(data.error || "Failed to generate voice profile");
+                              }
+
+                              // Store the voice profile data from the API response
+                              if (data.voice_profile && data.voice_profile.voice_description) {
+                                setVoiceProfile({
+                                  voice_description: data.voice_profile.voice_description,
+                                  voice_data: data.voice_profile.voice_data || {},
+                                });
+                                setVoiceGenerated(true);
+                                setVoiceError("");
+                              } else {
+                                throw new Error("Invalid voice profile response");
+                              }
+                            } catch (err) {
+                              console.error("Error generating voice profile:", err);
+                              setVoiceError(
+                                err instanceof Error
+                                  ? err.message
+                                  : "Failed to generate voice profile. Please try again."
+                              );
+                              setVoiceGenerated(false);
+                            } finally {
+                              setGeneratingVoice(false);
+                            }
+                          }}
+                          disabled={generatingVoice || !hasEnoughPosts || voiceGenerated}
+                          className={`mt-2 ${
+                            hasEnoughPosts && !voiceGenerated
+                              ? "text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              : ""
+                          }`}
+                        >
+                          {generatingVoice ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Generating Voice...
+                            </>
+                          ) : voiceGenerated ? (
+                            <>
+                              <CheckCircle2 className="h-4 w-4 mr-2" />
+                              Voice Profile Generated
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="h-4 w-4 mr-2" />
+                              Generate Custom Personal Voice
+                            </>
+                          )}
+                        </Button>
+                        {!hasEnoughPosts && linkedinPosts.some((p) => p.trim().length > 0) && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Add at least 1 post to generate your custom voice profile.
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div>
