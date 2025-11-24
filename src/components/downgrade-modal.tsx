@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { AlertTriangle } from "lucide-react";
+import { formatDateOnly } from "@/lib/utils";
 
 export type MessageType = "error" | "success" | "warning" | "info" | "default";
 
@@ -22,6 +23,7 @@ interface DowngradeModalProps {
   isLoading?: boolean;
   message?: string;
   messageType?: MessageType;
+  currentPeriodEnd?: string | null;
 }
 
 export function DowngradeModal({
@@ -31,6 +33,7 @@ export function DowngradeModal({
   isLoading = false,
   message,
   messageType = "default",
+  currentPeriodEnd,
 }: DowngradeModalProps) {
   // Show toast when message changes
   useEffect(() => {
@@ -91,24 +94,29 @@ export function DowngradeModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="bg-orange-50 p-4 rounded-lg">
-          <h3 className="font-semibold text-orange-900 mb-2">
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mt-4">
+          <h3 className="font-semibold text-orange-900 mb-3">
             What happens when you cancel?
           </h3>
-          <ul className="space-y-1 text-sm text-orange-800">
-            <li>• You&apos;ll keep Starter access until your current period ends</li>
+          <ul className="space-y-2 text-sm text-orange-800">
+            <li>
+              • You&apos;ll keep access to your current plan until{" "}
+              {currentPeriodEnd
+                ? formatDateOnly(currentPeriodEnd)
+                : "the end of your current billing period"}
+            </li>
             <li>• You&apos;ll be moved to the free plan after that</li>
             <li>• You can resubscribe anytime</li>
             <li>• No refunds for unused time</li>
           </ul>
         </div>
 
-        <DialogFooter className="flex gap-2">
+        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 sm:gap-3 mt-6">
           <Button
             variant="outline"
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1"
+            className="w-full sm:w-auto"
           >
             {isSuccess ? "Close" : "Keep Subscription"}
           </Button>
@@ -116,7 +124,7 @@ export function DowngradeModal({
             <Button
               onClick={onConfirm}
               disabled={isLoading}
-              className="flex-1 bg-orange-600 hover:bg-orange-700"
+              className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700"
             >
               {isLoading ? "Cancelling..." : "Yes, Cancel"}
             </Button>

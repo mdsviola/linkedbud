@@ -52,15 +52,26 @@ export async function GET(request: NextRequest) {
     const seatsUsed = 1 + acceptedCollaborators; // Owner (1) + collaborators
 
     // Count additional seat subscriptions for the portfolio owner
+    // Include both active and cancelled subscriptions (cancelled ones are valid until current_period_end)
     // Use admin client to bypass RLS
     const { data: additionalSeatSubscriptions } = await supabaseAdmin
       .from("subscriptions")
-      .select("id")
+      .select("id, status, current_period_end")
       .eq("user_id", portfolio.owner_id)
       .eq("price_id", GROWTH_SEAT_PRICE_ID)
-      .eq("status", "active");
+      .in("status", ["active", "canceled"]);
 
-    const additionalSeats = additionalSeatSubscriptions?.length || 0;
+    // Filter to only include valid subscriptions (active or cancelled but not expired)
+    // Handle both "canceled" (US spelling) and "cancelled" (UK spelling)
+    const validSeatSubscriptions = additionalSeatSubscriptions?.filter((sub) => {
+      if (sub.status === "active") return true;
+      if ((sub.status === "canceled" || sub.status === "cancelled") && sub.current_period_end) {
+        return new Date(sub.current_period_end) > new Date();
+      }
+      return false;
+    }) || [];
+
+    const additionalSeats = validSeatSubscriptions.length;
     const totalSeats = BASE_SEATS + additionalSeats;
     const seatsRemaining = Math.max(0, totalSeats - seatsUsed);
 

@@ -105,9 +105,10 @@ export async function PUT(
     }
 
     // Validate status
+    // Use "cancelled" (with two L's) to match LemonSqueezy's spelling
     const validStatuses = [
       "active",
-      "canceled",
+      "cancelled",
       "past_due",
       "trialing",
       "paused",

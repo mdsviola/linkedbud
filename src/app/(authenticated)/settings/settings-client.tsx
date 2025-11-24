@@ -646,52 +646,74 @@ export function SettingsClient({ user }: SettingsClientProps) {
                     "PRO";
                   const tierPricing = getTierPricing(tier);
                   const tierDisplayName = getTierDisplayName(tier);
+                  const isCanceled = subscription.status === "canceled" || subscription.status === "cancelled";
+
+                  // Use orange/amber colors for cancelled subscriptions, green for active
+                  const bgColor = isCanceled ? "bg-amber-50" : "bg-green-50";
+                  const borderColor = isCanceled ? "border-amber-200" : "border-green-200";
+                  const iconColor = isCanceled ? "text-amber-600" : "text-green-600";
+                  const textColor = isCanceled ? "text-amber-900" : "text-green-900";
+                  const labelColor = isCanceled ? "text-amber-700" : "text-green-700";
 
                   return (
                     <>
-                      <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+                      <div className={`${bgColor} p-6 rounded-lg border ${borderColor}`}>
                         <div className="flex items-center gap-2 mb-4">
-                          <Crown className="h-6 w-6 text-green-600" />
-                          <span className="text-lg font-semibold text-green-900">
+                          <Crown className={`h-6 w-6 ${iconColor}`} />
+                          <span className={`text-lg font-semibold ${textColor}`}>
                             {tierLoading
                               ? "Loading..."
-                              : `${tierDisplayName} Plan Active`}
+                              : `${tierDisplayName} Plan${!isCanceled ? " Active" : ""}`}
                           </span>
                         </div>
 
                         {!tierLoading && (
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <span className="text-sm text-green-700">
+                              <span className={`text-sm ${labelColor}`}>
                                 Plan:
                               </span>
-                              <p className="font-medium text-green-900">
+                              <p className={`font-medium ${textColor}`}>
                                 {tierDisplayName} Plan
                               </p>
                             </div>
                             <div>
-                              <span className="text-sm text-green-700">
+                              <span className={`text-sm ${labelColor}`}>
                                 Status:
                               </span>
-                              <p className="font-medium text-green-900 capitalize">
+                              <p className={`font-medium ${textColor} capitalize`}>
                                 {subscription.status}
                               </p>
                             </div>
+                            {!isCanceled && (
+                              <div>
+                                <span className={`text-sm ${labelColor}`}>
+                                  Next Billing:
+                                </span>
+                                <p className={`font-medium ${textColor}`}>
+                                  {formatDateOnly(
+                                    subscription.current_period_end
+                                  )}
+                                </p>
+                              </div>
+                            )}
+                            {isCanceled && subscription.current_period_end && (
+                              <div>
+                                <span className={`text-sm ${labelColor}`}>
+                                  Access Until:
+                                </span>
+                                <p className={`font-medium ${textColor}`}>
+                                  {formatDateOnly(
+                                    subscription.current_period_end
+                                  )}
+                                </p>
+                              </div>
+                            )}
                             <div>
-                              <span className="text-sm text-green-700">
-                                Next Billing:
-                              </span>
-                              <p className="font-medium text-green-900">
-                                {formatDateOnly(
-                                  subscription.current_period_end
-                                )}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-sm text-green-700">
+                              <span className={`text-sm ${labelColor}`}>
                                 Price:
                               </span>
-                              <p className="font-medium text-green-900">
+                              <p className={`font-medium ${textColor}`}>
                                 {typeof tierPricing.monthlyPrice === "number"
                                   ? `${formatPrice(
                                       tierPricing.monthlyPrice,

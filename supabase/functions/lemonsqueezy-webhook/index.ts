@@ -347,10 +347,11 @@ async function cancelSubscription(
     }
 
     // Update database status
+    // Use "cancelled" (with two L's) to match LemonSqueezy's spelling
     const { error: updateError } = await supabase
       .from("subscriptions")
       .update({
-        status: "canceled",
+        status: "cancelled",
         updated_at: new Date().toISOString(),
       })
       .eq("external_subscription_id", subscriptionId);
@@ -559,10 +560,11 @@ async function handleSubscriptionUpdate(supabase: any, data: any, meta: any) {
 async function handleSubscriptionCancellation(supabase: any, data: any) {
   const subscriptionId = data.id;
 
+  // Use "cancelled" (with two L's) to match LemonSqueezy's spelling
   const { error } = await supabase
     .from("subscriptions")
     .update({
-      status: "canceled",
+      status: "cancelled",
       updated_at: new Date().toISOString(),
     })
     .eq("external_subscription_id", subscriptionId);

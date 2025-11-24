@@ -126,9 +126,14 @@ export function AuthenticatedLayoutClient({
     fetchUserData();
   }, [router]);
 
-  // Check if user is on free plan (no active subscription)
+  // Check if user is on free plan (no valid subscription)
+  // A subscription is valid if it's active OR if it's cancelled but hasn't reached current_period_end
   // Only consider free plan after loading is complete to prevent flicker
-  const isFreePlan = !isLoading && (!subscription || subscription.status !== "active");
+  const isSubscriptionValid = subscription && (
+    subscription.status === "active" ||
+    ((subscription.status === "canceled" || subscription.status === "cancelled") && subscription.current_period_end && new Date(subscription.current_period_end) > new Date())
+  );
+  const isFreePlan = !isLoading && !isSubscriptionValid;
   const shouldShowUpgrade = isFreePlan;
 
   const navigation = [

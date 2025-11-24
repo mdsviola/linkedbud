@@ -19,11 +19,54 @@ import { Check } from "lucide-react";
 import { getPricingConfig, getStarterPricing } from "@/lib/pricing-config";
 import { PRICING_PLANS } from "@/marketing/data/pricing";
 import { getTierFromPriceId, getTierDisplayName } from "@/lib/tier-utils";
+import { formatDateOnly } from "@/lib/utils";
 
 const getLimitText = (limit: number, label: string) => {
   if (limit === -1) return `Unlimited* ${label}`;
   if (limit === 0) return `No ${label}`;
   return `${limit} ${label}`;
+};
+
+// Helper function to check if a subscription is still valid (not expired)
+// A subscription is valid if it's active OR if it's cancelled but hasn't reached current_period_end
+const isSubscriptionValid = (subscription: Subscription | null): boolean => {
+  if (!subscription) {
+    return false;
+  }
+
+  // Active subscriptions are always valid
+  if (subscription.status === "active") {
+    return true;
+  }
+
+  // Cancelled subscriptions are valid until current_period_end
+  // Handle both "canceled" (US spelling) and "cancelled" (UK spelling)
+  if (
+    subscription.status === "canceled" ||
+    subscription.status === "cancelled"
+  ) {
+    if (!subscription.current_period_end) {
+      // If cancelled but no current_period_end, consider it invalid
+      return false;
+    }
+
+    try {
+      const periodEnd = new Date(subscription.current_period_end);
+      const now = new Date();
+
+      // Check if the date is valid
+      if (isNaN(periodEnd.getTime())) {
+        return false;
+      }
+
+      return periodEnd > now;
+    } catch (error) {
+      // If date parsing fails, consider it invalid
+      return false;
+    }
+  }
+
+  return false;
 };
 
 // Get icon(s) for each subscription tier
@@ -119,12 +162,22 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
             external_subscription_id: subData.external_subscription_id,
             price_id: subData.price_id,
           });
+          // If no price_id, we don't need to fetch tier, set loading to false immediately
+          if (!subData.price_id) {
+            setUserPlanName("Free");
+            setPlanNameLoading(false);
+          }
+          // If price_id exists, planNameLoading stays true until useEffect fetches tier
         } else {
           setSubscription(null);
+          setUserPlanName("Free");
+          setPlanNameLoading(false);
         }
       } else if (response.status === 404) {
         // No active subscription found - this is normal for free users
         setSubscription(null);
+        setUserPlanName("Free");
+        setPlanNameLoading(false);
       } else {
         // Handle other errors
         console.error(
@@ -133,9 +186,14 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
           response.statusText
         );
         setSubscription(null);
+        setUserPlanName("Free");
+        setPlanNameLoading(false);
       }
     } catch (err) {
       console.error("Failed to load subscription:", err);
+      setSubscription(null);
+      setUserPlanName("Free");
+      setPlanNameLoading(false);
     } finally {
       setLoading(false);
     }
@@ -144,6 +202,14 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
   const handleDowngradeClick = () => {
     if (!subscription) {
       console.error("No subscription found");
+      return;
+    }
+
+    // If subscription is already cancelled, don't show the modal
+    if (
+      subscription.status === "canceled" ||
+      subscription.status === "cancelled"
+    ) {
       return;
     }
 
@@ -179,6 +245,16 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.error("API Error:", errorData);
+
+        // If subscription is already cancelled, show the message from API
+        if (errorData.message) {
+          setDowngradeMessage(errorData.message);
+          setDowngradeMessageType("default");
+          setShowDowngradeModal(true);
+          setIsDowngrading(false);
+          return;
+        }
+
         throw new Error(
           `Failed to cancel subscription: ${
             errorData.error || response.statusText
@@ -222,22 +298,16 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
   // Fetch tier from server-side API (uses server env vars)
   useEffect(() => {
     const fetchUserTier = async () => {
-      if (!subscription) {
-        // No subscription = Free plan, no need to load
-        setUserPlanName("Free");
-        setPlanNameLoading(false);
-        return;
-      }
-
-      if (!subscription.price_id) {
-        // Subscription exists but no price_id = Free plan
+      // Set loading state immediately based on whether we need to fetch
+      if (!subscription || !subscription.price_id) {
+        // No subscription or no price_id = Free plan, no need to load
         setUserPlanName("Free");
         setPlanNameLoading(false);
         return;
       }
 
       // We have a subscription with price_id, need to fetch tier
-      setPlanNameLoading(true);
+      // Keep planNameLoading as true (it starts as true) until fetch completes
 
       try {
         const response = await fetch(
@@ -267,23 +337,30 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
     fetchUserTier();
   }, [subscription]);
 
-  const isSubscribed = !!subscription;
-
-  if (loading) {
+  // Show skeleton loader while subscription or plan name is loading
+  // Only render content when BOTH are ready to prevent flicker
+  if (loading || planNameLoading) {
     return (
       <PageWrapper maxWidth="4xl" padding="xl">
         <div className="text-center mb-12">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-4"></div>
-          <div className="h-6 bg-gray-200 rounded w-1/2 mx-auto"></div>
+          <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-4 animate-pulse"></div>
+          <div className="h-6 bg-gray-200 rounded w-1/2 mx-auto animate-pulse"></div>
         </div>
-        <div className="grid md:grid-cols-2 gap-8">
-          {[1, 2].map((i) => (
-            <div key={i} className="h-96 bg-gray-200 rounded"></div>
+        <div className="grid gap-8 md:grid-cols-2">
+          {PRICING_PLANS.map((plan, index) => (
+            <div
+              key={plan.name || index}
+              className="h-96 bg-gray-200 rounded animate-pulse"
+            ></div>
           ))}
         </div>
       </PageWrapper>
     );
   }
+
+  // Calculate subscription state only after loading is complete
+  const isSubscribed = !!subscription;
+  const isSubscriptionStillValid = isSubscriptionValid(subscription);
 
   return (
     <PageWrapper maxWidth="4xl" padding="xl">
@@ -292,7 +369,7 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
           Manage Your Subscription
         </h1>
         <p className="text-xl text-gray-600">
-          {isSubscribed
+          {isSubscriptionStillValid
             ? "Manage your subscription and billing"
             : "Start free, upgrade when you're ready for unlimited* drafts"}
         </p>
@@ -303,28 +380,75 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
         {PRICING_PLANS.map((plan) => {
           // Compare plan names (case-insensitive for safety)
           // Only compare if we're not loading the plan name
+          // If user has no valid subscription, they're on the Free plan
           const isUserPlan = planNameLoading
             ? false // Don't show "You're on this plan" while loading
-            : (!isSubscribed && plan.name.toLowerCase() === "free") ||
-              (isSubscribed &&
-                plan.name.toLowerCase() === userPlanName.toLowerCase());
+            : !isSubscriptionStillValid && plan.name.toLowerCase() === "free"
+            ? true // No valid subscription = Free plan
+            : isSubscriptionStillValid &&
+              plan.name.toLowerCase() === userPlanName.toLowerCase();
           const Icon = getTierIcon(plan.name);
+          const isCanceled =
+            subscription?.status === "canceled" ||
+            subscription?.status === "cancelled";
+          const isStillValid = isSubscriptionValid(subscription);
+          const accessUntilDate = subscription?.current_period_end
+            ? formatDateOnly(subscription.current_period_end)
+            : null;
 
           // Determine custom button content
+          // Note: We don't need to check planNameLoading here because the skeleton
+          // loader handles all loading states
           let customButtonContent: React.ReactNode = null;
-          if (planNameLoading && isSubscribed) {
+          if (isUserPlan) {
+            // User is on this plan
+            if (plan.name.toLowerCase() === "free") {
+              // User is on Free plan (no valid subscription)
+              customButtonContent = (
+                <div className="w-full text-center py-2 px-4 bg-blue-100 rounded-md text-blue-600 font-medium h-10 flex items-center justify-center">
+                  You&apos;re on this plan
+                </div>
+              );
+            } else if (isCanceled && isStillValid) {
+              // Show "On this plan until [date]" and allow resubscription (only if not expired)
+              customButtonContent = (
+                <div className="space-y-3">
+                  <div className="w-full text-center py-2 px-4 bg-amber-50 rounded-md text-amber-700 text-sm h-10 flex items-center justify-center">
+                    {accessUntilDate
+                      ? `On this plan until ${accessUntilDate}`
+                      : "On this plan (cancelled)"}
+                  </div>
+                  <UpgradeButton className="w-full" planName={plan.name}>
+                    Resubscribe
+                  </UpgradeButton>
+                </div>
+              );
+            } else if (!isCanceled) {
+              // Active subscription
+              customButtonContent = (
+                <div className="w-full text-center py-2 px-4 bg-blue-100 rounded-md text-blue-600 font-medium h-10 flex items-center justify-center">
+                  You&apos;re on this plan
+                </div>
+              );
+            }
+          } else if (
+            plan.name.toLowerCase() === "free" &&
+            isSubscriptionStillValid &&
+            isCanceled
+          ) {
+            // User has cancelled subscription that's still valid, show disabled button on free plan
             customButtonContent = (
-              <div className="w-full text-center py-2 px-4 bg-gray-100 rounded-md h-10 flex items-center justify-center animate-pulse">
-                <div className="h-4 w-32 bg-gray-300 rounded"></div>
-              </div>
+              <Button className="w-full" variant="outline" disabled>
+                On the {userPlanName} plan until{" "}
+                {accessUntilDate || "period end"}
+              </Button>
             );
-          } else if (isUserPlan) {
-            customButtonContent = (
-              <div className="w-full text-center py-2 px-4 bg-blue-100 rounded-md text-blue-600 font-medium h-10 flex items-center justify-center">
-                You&apos;re on this plan
-              </div>
-            );
-          } else if (plan.name.toLowerCase() === "free" && isSubscribed) {
+          } else if (
+            plan.name.toLowerCase() === "free" &&
+            isSubscriptionStillValid &&
+            !isCanceled
+          ) {
+            // User has active subscription, show downgrade button on free plan
             customButtonContent = (
               <Button
                 onClick={handleDowngradeClick}
@@ -335,6 +459,7 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
               </Button>
             );
           } else {
+            // Not user's plan, show subscribe button
             customButtonContent = (
               <UpgradeButton className="w-full" planName={plan.name}>
                 Subscribe
@@ -366,7 +491,8 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
 
       {/* Footnote */}
       <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
-        * Under a reasonable use policy. Usage may be capped if the system is exploited or abused.
+        * Under a reasonable use policy. Usage may be capped if the system is
+        exploited or abused.
       </p>
 
       {/* FAQ Section */}
@@ -381,12 +507,12 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
               How does the free tier work?
             </h3>
             <p className="text-gray-600 text-sm">
-              The Free tier includes 3 Rewrite with AI function calls per month,
-              10 Polish with AI actions per month, 1 ideas bubble board
-              generation per month (up to 15 AI generated ideas), and 1 AI
-              analytics report per month (30d timeframe only). You can publish
-              up to 2 posts per month. Perfect for testing linkedbud with real
-              LinkedIn posting.
+              The Free tier includes all features from the platform (apart from
+              collaboration) with very limited use. It&apos;s perfect for
+              hobbyists who want to try what it would be like to have a strong
+              LinkedIn presence. You&apos;ll have access to AI-powered content
+              creation, scheduling, analytics, and all the tools you need to
+              build your professional brand, just with usage limits.
             </p>
           </div>
 
@@ -426,7 +552,10 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
 
       {/* Footer */}
       <div className="mt-16 text-center text-gray-600">
-        <p>Questions? Contact us at support@linkedbud.com</p>
+        <p>
+          Questions? Contact us at support@linkedbud.com or use the feedback
+          widget on the right 👉
+        </p>
       </div>
 
       {/* Downgrade Confirmation Modal */}
@@ -437,6 +566,7 @@ export function SubscriptionClient({ user, limits }: SubscriptionClientProps) {
         isLoading={isDowngrading}
         message={downgradeMessage}
         messageType={downgradeMessageType}
+        currentPeriodEnd={subscription?.current_period_end || null}
       />
     </PageWrapper>
   );

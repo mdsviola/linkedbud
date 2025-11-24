@@ -297,15 +297,23 @@ export async function acceptInvitation(
 
   // Create growth_member subscription for collaborator
   // Get the portfolio owner's main membership subscription
+  // Include both active and cancelled subscriptions (cancelled ones are valid until current_period_end)
   const { data: ownerSubscription } = await supabase
     .from("subscriptions")
-    .select("price_id, external_customer_id, external_subscription_id")
+    .select("price_id, external_customer_id, external_subscription_id, status, current_period_end")
     .eq("user_id", invitation.invited_by)
-    .eq("status", "active")
+    .in("status", ["active", "canceled"])
     .eq("membership_type", "membership")
     .single();
 
-  if (ownerSubscription) {
+  // Check if subscription is still valid (active or cancelled but not expired)
+  // Handle both "canceled" (US spelling) and "cancelled" (UK spelling)
+  const isSubscriptionValid = ownerSubscription && (
+    ownerSubscription.status === "active" ||
+    ((ownerSubscription.status === "canceled" || ownerSubscription.status === "cancelled") && ownerSubscription.current_period_end && new Date(ownerSubscription.current_period_end) > new Date())
+  );
+
+  if (isSubscriptionValid && ownerSubscription) {
     // Create a growth_member subscription entry
     const { error: subscriptionError } = await supabase
       .from("subscriptions")

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient, supabaseAdmin } from "@/lib/supabase-server";
 import { getTierFromPriceId } from "@/lib/tier-utils";
+import { formatDateOnly } from "@/lib/utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -44,19 +45,45 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the subscription belongs to the user and get price_id to check tier
+    // Check for both active and cancelled subscriptions to provide better error messages
     const { data: subscription, error: subError } = await supabase
       .from("subscriptions")
-      .select("external_subscription_id, status, provider, price_id")
+      .select("external_subscription_id, status, provider, price_id, current_period_end")
       .eq("user_id", user.id)
       .eq("external_subscription_id", subscriptionId)
-      .eq("status", "active")
       .single();
 
     if (subError || !subscription) {
       console.error("Subscription not found:", subError);
       return NextResponse.json(
-        { error: "Unable to process cancellation request" },
-        { status: 500 }
+        { error: "Subscription not found" },
+        { status: 404 }
+      );
+    }
+
+    // If subscription is already cancelled, return a helpful message
+    // Handle both "canceled" (US spelling) and "cancelled" (UK spelling)
+    if (subscription.status === "canceled" || subscription.status === "cancelled") {
+      const periodEnd = subscription.current_period_end
+        ? formatDateOnly(subscription.current_period_end)
+        : "the end of your billing period";
+      return NextResponse.json(
+        {
+          error: "This subscription is already cancelled",
+          message: `Your subscription has already been cancelled. You'll continue to have access until ${periodEnd}.`,
+        },
+        { status: 400 }
+      );
+    }
+
+    // Only allow cancelling active subscriptions
+    if (subscription.status !== "active") {
+      return NextResponse.json(
+        {
+          error: "Subscription cannot be cancelled",
+          message: `This subscription is ${subscription.status} and cannot be cancelled.`,
+        },
+        { status: 400 }
       );
     }
 
@@ -122,10 +149,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Update subscription status in our database only after successful LemonSqueezy cancellation
+    // Use "cancelled" (with two L's) to match LemonSqueezy's spelling
     const { data: updateData, error: updateError } = await supabase
       .from("subscriptions")
       .update({
-        status: "canceled",
+        status: "cancelled",
         updated_at: new Date().toISOString(),
       })
       .eq("external_subscription_id", subscriptionId)
@@ -181,10 +209,11 @@ export async function POST(request: NextRequest) {
 
               if (extraSeatResponse.ok) {
                 // Update status in database
+                // Use "cancelled" (with two L's) to match LemonSqueezy's spelling
                 await supabaseAdmin
                   .from("subscriptions")
                   .update({
-                    status: "canceled",
+                    status: "cancelled",
                     updated_at: new Date().toISOString(),
                   })
                   .eq("external_subscription_id", extraSeat.external_subscription_id);

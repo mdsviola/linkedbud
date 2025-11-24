@@ -188,45 +188,111 @@ export async function isUserOnboarded(userId: string): Promise<boolean> {
   return !!(prefs && prefs.created_at !== prefs.updated_at);
 }
 
+// Helper function to check if a subscription is still valid
+// A subscription is valid if it's active OR if it's cancelled but hasn't reached current_period_end
+function isSubscriptionValid(subscription: any): boolean {
+  if (!subscription) {
+    return false;
+  }
+
+  // Active subscriptions are always valid
+  if (subscription.status === "active") {
+    return true;
+  }
+
+  // Cancelled subscriptions are valid until current_period_end
+  // Handle both "canceled" (US spelling) and "cancelled" (UK spelling)
+  if (subscription.status === "canceled" || subscription.status === "cancelled") {
+    if (!subscription.current_period_end) {
+      // If cancelled but no current_period_end, consider it invalid
+      return false;
+    }
+
+    try {
+      const periodEnd = new Date(subscription.current_period_end);
+      const now = new Date();
+
+      // Check if the date is valid
+      if (isNaN(periodEnd.getTime())) {
+        return false;
+      }
+
+      return periodEnd > now;
+    } catch (error) {
+      // If date parsing fails, consider it invalid
+      return false;
+    }
+  }
+
+  return false;
+}
+
 export async function getUserSubscription(userId: string) {
   const supabase = createReadOnlyServerClient();
 
-  // Get the main membership subscription (not addons or growth_member)
-  // This prioritizes the main paid subscription over extra seats
-  const { data: mainSubscription, error: mainError } = await supabase
+  // Get all main membership subscriptions (not addons or growth_member)
+  // Include both active and cancelled subscriptions (cancelled ones are valid until current_period_end)
+  // Explicitly select updated_at to ensure it's available for sorting
+  const { data: mainSubscriptions, error: mainError } = await supabase
     .from("subscriptions")
     .select("*")
     .eq("user_id", userId)
-    .eq("status", "active")
     .eq("membership_type", "membership")
-    .maybeSingle();
+    .in("status", ["active", "canceled", "cancelled"])
+    .order("updated_at", { ascending: false, nullsFirst: false });
 
-  if (!mainError && mainSubscription) {
-    return mainSubscription;
+  if (!mainError && mainSubscriptions && mainSubscriptions.length > 0) {
+    // Sort by updated_at (most recent first) - this ensures we get the latest subscription
+    // regardless of status (active or cancelled)
+    mainSubscriptions.sort((a, b) => {
+      const aDate = new Date(a.updated_at || a.created_at || 0).getTime();
+      const bDate = new Date(b.updated_at || b.created_at || 0).getTime();
+      return bDate - aDate; // Most recent first
+    });
+
+    // Always return the most recently updated subscription (first in sorted array)
+    const mostRecent = mainSubscriptions[0];
+    if (mostRecent) {
+      return mostRecent;
+    }
   }
 
-  // Fallback: get any active subscription that's not an addon
+  // Fallback: get any subscription that's not an addon
   // This handles edge cases where membership_type might be NULL (legacy data)
+  // Include both active and cancelled subscriptions
   const GROWTH_SEAT_PRICE_ID = process.env.LEMONSQUEEZY_VARIANT_ID_GROWTH_SEAT;
 
   let fallbackQuery = supabase
     .from("subscriptions")
     .select("*")
     .eq("user_id", userId)
-    .eq("status", "active")
-    .or("membership_type.is.null,membership_type.neq.addon");
+    .in("status", ["active", "canceled", "cancelled"])
+    .or("membership_type.is.null,membership_type.neq.addon")
+    .order("updated_at", { ascending: false, nullsFirst: false });
 
   if (GROWTH_SEAT_PRICE_ID) {
     fallbackQuery = fallbackQuery.neq("price_id", GROWTH_SEAT_PRICE_ID);
   }
 
-  const { data: subscription, error } = await fallbackQuery.maybeSingle();
+  const { data: subscriptions, error } = await fallbackQuery;
 
-  if (!error && subscription) {
-    return subscription;
+  if (!error && subscriptions && subscriptions.length > 0) {
+    // Sort by updated_at (most recent first) - this ensures we get the latest subscription
+    // regardless of status (active or cancelled)
+    subscriptions.sort((a, b) => {
+      const aDate = new Date(a.updated_at || a.created_at || 0).getTime();
+      const bDate = new Date(b.updated_at || b.created_at || 0).getTime();
+      return bDate - aDate; // Most recent first
+    });
+
+    // Always return the most recently updated subscription (first in sorted array)
+    const mostRecent = subscriptions[0];
+    if (mostRecent) {
+      return mostRecent;
+    }
   }
 
-  // No active membership subscription found
+  // No valid membership subscription found
   return null;
 }
 

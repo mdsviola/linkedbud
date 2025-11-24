@@ -199,7 +199,8 @@ export function UserDetailClient({ userId }: UserDetailClientProps) {
       case "active":
         return "bg-green-100 text-green-800";
       case "canceled":
-        return "bg-red-100 text-red-800";
+      case "cancelled":
+        return "bg-amber-100 text-amber-800";
       case "past_due":
         return "bg-yellow-100 text-yellow-800";
       case "trialing":
@@ -501,7 +502,7 @@ export function UserDetailClient({ userId }: UserDetailClientProps) {
                 >
                   <option value="">Select status</option>
                   <option value="active">Active</option>
-                  <option value="canceled">Canceled</option>
+                  <option value="cancelled">Cancelled</option>
                   <option value="past_due">Past Due</option>
                   <option value="trialing">Trialing</option>
                   <option value="paused">Paused</option>
