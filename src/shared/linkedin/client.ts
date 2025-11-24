@@ -1,7 +1,7 @@
 /**
  * Unified LinkedIn API Client
  * Works in both Node.js (Next.js) and Deno (Edge Functions) environments
- * 
+ *
  * This client handles all LinkedIn API operations including:
  * - Profile information
  * - Post publishing (text, images, documents, videos)
@@ -150,16 +150,17 @@ export class LinkedInClient {
     if (!registerResponse.ok) {
       const errorData = await registerResponse.json().catch(() => ({}));
       throw new Error(
-        `LinkedIn API error: ${registerResponse.status} ${registerResponse.statusText}. ${
-          errorData.message || "Failed to register image upload"
-        }`
+        `LinkedIn API error: ${registerResponse.status} ${
+          registerResponse.statusText
+        }. ${errorData.message || "Failed to register image upload"}`
       );
     }
 
     const registerData = await registerResponse.json();
-    const uploadUrl = registerData.value.uploadMechanism[
-      "com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"
-    ].uploadUrl;
+    const uploadUrl =
+      registerData.value.uploadMechanism[
+        "com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"
+      ].uploadUrl;
     const assetUrn = registerData.value.asset;
 
     // Determine content type from filename
@@ -256,16 +257,17 @@ export class LinkedInClient {
     if (!registerResponse.ok) {
       const errorData = await registerResponse.json().catch(() => ({}));
       throw new Error(
-        `LinkedIn API error: ${registerResponse.status} ${registerResponse.statusText}. ${
-          errorData.message || "Failed to register document upload"
-        }`
+        `LinkedIn API error: ${registerResponse.status} ${
+          registerResponse.statusText
+        }. ${errorData.message || "Failed to register document upload"}`
       );
     }
 
     const registerData = await registerResponse.json();
-    const uploadUrl = registerData.value.uploadMechanism[
-      "com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"
-    ].uploadUrl;
+    const uploadUrl =
+      registerData.value.uploadMechanism[
+        "com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"
+      ].uploadUrl;
     const assetUrn = registerData.value.asset;
 
     // Step 2: Upload the file to the provided URL
@@ -364,9 +366,10 @@ export class LinkedInClient {
     }
 
     const registerData = await registerResponse.json();
-    const uploadUrl = registerData.value.uploadMechanism[
-      "com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"
-    ].uploadUrl;
+    const uploadUrl =
+      registerData.value.uploadMechanism[
+        "com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"
+      ].uploadUrl;
     const assetUrn = registerData.value.asset;
 
     // Step 2: Upload the video file
@@ -536,9 +539,8 @@ export class LinkedInClient {
                   orgData.name ||
                   `Organization ${orgId}`,
                 vanityName: orgData.vanityName,
-                logoUrl: orgData.logoV2?.original ||
-                  orgData.logoUrl ||
-                  undefined,
+                logoUrl:
+                  orgData.logoV2?.original || orgData.logoUrl || undefined,
               };
             }
             return null;
@@ -562,9 +564,7 @@ export class LinkedInClient {
    * Get post performance metrics for personal page posts
    * Uses memberCreatorPostAnalytics endpoint
    */
-  async getPostMetricsPersonal(
-    postId: string
-  ): Promise<LinkedInPostMetrics> {
+  async getPostMetricsPersonal(postId: string): Promise<LinkedInPostMetrics> {
     try {
       const queryTypes = [
         "IMPRESSION",
@@ -737,4 +737,3 @@ export class LinkedInClient {
     }
   }
 }
-

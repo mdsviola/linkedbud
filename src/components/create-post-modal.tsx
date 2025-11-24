@@ -1649,83 +1649,83 @@ export function CreatePostModal({
           {/* Header */}
           <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 pr-12 dark:border-slate-800 dark:bg-slate-900 flex-shrink-0 sticky top-0 z-10">
             <div className="flex items-center gap-3">
-                {/* Profile Picture */}
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
-                  {formData.userInitials || "U"}
+              {/* Profile Picture */}
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
+                {formData.userInitials || "U"}
+              </div>
+              <div
+                className="flex flex-col relative"
+                ref={publishTargetDropdownRef}
+              >
+                <div
+                  className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() =>
+                    setShowPublishTargetDropdown(!showPublishTargetDropdown)
+                  }
+                >
+                  <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    {selectedOrgName}
+                  </span>
+                  <ChevronDown className="h-4 w-4 text-slate-600 dark:text-slate-400" />
                 </div>
                 <div
-                  className="flex flex-col relative"
-                  ref={publishTargetDropdownRef}
+                  className="text-xs text-slate-500 dark:text-slate-400 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() =>
+                    setShowPublishTargetDropdown(!showPublishTargetDropdown)
+                  }
                 >
-                  <div
-                    className="flex items-center gap-1 cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() =>
-                      setShowPublishTargetDropdown(!showPublishTargetDropdown)
-                    }
-                  >
-                    <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      {selectedOrgName}
-                    </span>
-                    <ChevronDown className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-                  </div>
-                  <div
-                    className="text-xs text-slate-500 dark:text-slate-400 cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() =>
-                      setShowPublishTargetDropdown(!showPublishTargetDropdown)
-                    }
-                  >
-                    Post to anyone
-                  </div>
-
-                  {/* Dropdown Menu */}
-                  {showPublishTargetDropdown && (
-                    <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-50 dark:bg-slate-800 dark:border-slate-700">
-                      <div className="py-1">
-                        {/* Personal Profile Option */}
-                        <button
-                          onClick={() => {
-                            setSelectedPublishTarget("personal");
-                            setShowPublishTargetDropdown(false);
-                          }}
-                          className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-2 ${
-                            selectedPublishTarget === "personal"
-                              ? "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400"
-                              : "text-gray-700 dark:text-slate-300"
-                          }`}
-                        >
-                          <User className="h-4 w-4" />
-                          Personal
-                        </button>
-
-                        {/* Organization Options */}
-                        {organizations.length > 0 && (
-                          <>
-                            <div className="border-t border-gray-100 dark:border-slate-700 my-1"></div>
-                            {organizations.map((org) => (
-                              <button
-                                key={org.linkedin_org_id}
-                                onClick={() => {
-                                  setSelectedPublishTarget(org.linkedin_org_id);
-                                  setShowPublishTargetDropdown(false);
-                                }}
-                                className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-2 ${
-                                  selectedPublishTarget === org.linkedin_org_id
-                                    ? "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400"
-                                    : "text-gray-700 dark:text-slate-300"
-                                }`}
-                              >
-                                <Building2 className="h-4 w-4" />
-                                {org.org_name ||
-                                  `Organization ${org.linkedin_org_id}`}
-                              </button>
-                            ))}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  Post to anyone
                 </div>
+
+                {/* Dropdown Menu */}
+                {showPublishTargetDropdown && (
+                  <div className="absolute top-full left-0 mt-1 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-50 dark:bg-slate-800 dark:border-slate-700">
+                    <div className="py-1">
+                      {/* Personal Profile Option */}
+                      <button
+                        onClick={() => {
+                          setSelectedPublishTarget("personal");
+                          setShowPublishTargetDropdown(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-2 ${
+                          selectedPublishTarget === "personal"
+                            ? "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400"
+                            : "text-gray-700 dark:text-slate-300"
+                        }`}
+                      >
+                        <User className="h-4 w-4" />
+                        Personal
+                      </button>
+
+                      {/* Organization Options */}
+                      {organizations.length > 0 && (
+                        <>
+                          <div className="border-t border-gray-100 dark:border-slate-700 my-1"></div>
+                          {organizations.map((org) => (
+                            <button
+                              key={org.linkedin_org_id}
+                              onClick={() => {
+                                setSelectedPublishTarget(org.linkedin_org_id);
+                                setShowPublishTargetDropdown(false);
+                              }}
+                              className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center gap-2 ${
+                                selectedPublishTarget === org.linkedin_org_id
+                                  ? "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400"
+                                  : "text-gray-700 dark:text-slate-300"
+                              }`}
+                            >
+                              <Building2 className="h-4 w-4" />
+                              {org.org_name ||
+                                `Organization ${org.linkedin_org_id}`}
+                            </button>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
+            </div>
           </div>
 
           {/* Scrollable content area (editor) */}
@@ -1735,262 +1735,260 @@ export function CreatePostModal({
               ref={editableAreaRef}
               className="flex flex-col px-4 py-4 flex-1 min-h-[260px] sm:min-h-[400px]"
             >
-                {/* Article Reference Section */}
-                {isLoadingArticle &&
+              {/* Article Reference Section */}
+              {isLoadingArticle &&
+              formData.articleUrl &&
+              !formData.articleContent ? (
+                <div className="mb-3 flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950">
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                    Loading article...
+                  </span>
+                </div>
+              ) : articleError &&
                 formData.articleUrl &&
                 !formData.articleContent ? (
-                  <div className="mb-3 flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950">
-                    <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
-                    <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                      Loading article...
-                    </span>
-                  </div>
-                ) : articleError &&
-                  formData.articleUrl &&
-                  !formData.articleContent ? (
-                  <div className="mb-3 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 dark:border-red-800 dark:bg-red-950">
-                    <span className="text-sm font-medium text-red-900 dark:text-red-100">
-                      Failed to load article. Please try again or enter a
-                      different URL.
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setArticleError("");
-                        handleUrlChange("");
-                      }}
-                      className="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                <div className="mb-3 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 dark:border-red-800 dark:bg-red-950">
+                  <span className="text-sm font-medium text-red-900 dark:text-red-100">
+                    Failed to load article. Please try again or enter a
+                    different URL.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setArticleError("");
+                      handleUrlChange("");
+                    }}
+                    className="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              ) : !formData.articleUrl ? (
+                <div className="relative mb-3 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowArticleInput(!showArticleInput)}
+                    className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                    Load article to write about
+                  </button>
+                  {/* Article Input Popover */}
+                  {showArticleInput && (
+                    <div
+                      className="absolute top-full left-0 mt-2 z-[100] w-80 rounded-lg border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-800 dark:bg-slate-900"
+                      ref={articleInputRef}
                     >
-                      Dismiss
-                    </button>
-                  </div>
-                ) : !formData.articleUrl ? (
-                  <div className="relative mb-3 flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowArticleInput(!showArticleInput)}
-                      className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
-                    >
-                      <LinkIcon className="h-4 w-4" />
-                      Load article to write about
-                    </button>
-                    {/* Article Input Popover */}
-                    {showArticleInput && (
-                      <div
-                        className="absolute top-full left-0 mt-2 z-[100] w-80 rounded-lg border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-800 dark:bg-slate-900"
-                        ref={articleInputRef}
-                      >
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <LinkIcon className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-                            <Label
-                              htmlFor="articleUrl-input"
-                              className="text-sm font-medium text-slate-700 dark:text-slate-300"
-                            >
-                              Article URL
-                            </Label>
-                          </div>
-                          <div className="flex gap-2">
-                            <Input
-                              id="articleUrl-input"
-                              type="url"
-                              placeholder="https://example.com/article"
-                              value={articleUrl}
-                              onChange={(e) => handleUrlChange(e.target.value)}
-                              className="flex-1 border-slate-300 text-sm dark:border-slate-700"
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  handleLoadArticle();
-                                }
-                              }}
-                            />
-                            <Button
-                              type="button"
-                              onClick={handleLoadArticle}
-                              disabled={isLoadingArticle || !articleUrl.trim()}
-                              size="sm"
-                              className="bg-blue-600 text-white hover:bg-blue-700"
-                            >
-                              {isLoadingArticle ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                "Load"
-                              )}
-                            </Button>
-                          </div>
-
-                          {/* Article loading feedback */}
-                          {articleError && (
-                            <div className="text-xs text-red-600 dark:text-red-400">
-                              {articleError}
-                            </div>
-                          )}
-
-                          {articleSuccess && formData.articleTitle && (
-                            <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                              <Check className="h-3 w-3" />
-                              <span className="truncate">
-                                Loaded: {formData.articleTitle}
-                              </span>
-                            </div>
-                          )}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <LinkIcon className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                          <Label
+                            htmlFor="articleUrl-input"
+                            className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                          >
+                            Article URL
+                          </Label>
                         </div>
+                        <div className="flex gap-2">
+                          <Input
+                            id="articleUrl-input"
+                            type="url"
+                            placeholder="https://example.com/article"
+                            value={articleUrl}
+                            onChange={(e) => handleUrlChange(e.target.value)}
+                            className="flex-1 border-slate-300 text-sm dark:border-slate-700"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleLoadArticle();
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            onClick={handleLoadArticle}
+                            disabled={isLoadingArticle || !articleUrl.trim()}
+                            size="sm"
+                            className="bg-blue-600 text-white hover:bg-blue-700"
+                          >
+                            {isLoadingArticle ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              "Load"
+                            )}
+                          </Button>
+                        </div>
+
+                        {/* Article loading feedback */}
+                        {articleError && (
+                          <div className="text-xs text-red-600 dark:text-red-400">
+                            {articleError}
+                          </div>
+                        )}
+
+                        {articleSuccess && formData.articleTitle && (
+                          <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                            <Check className="h-3 w-3" />
+                            <span className="truncate">
+                              Loaded: {formData.articleTitle}
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="mb-3 flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950">
+                  <div className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                      Article loaded: {formData.articleTitle || "Article"}
+                    </span>
                   </div>
-                ) : (
-                  <div className="mb-3 flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950">
-                    <div className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                        Article loaded: {formData.articleTitle || "Article"}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleUrlChange("");
+                      setShowArticleInput(false);
+                    }}
+                    className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+              <div className="relative flex flex-col flex-1 min-h-0">
+                {!hasText &&
+                  !formData.imagePreview &&
+                  !formData.documentFile &&
+                  !formData.documentPreview &&
+                  !formData.videoFile &&
+                  !formData.videoPreview && (
+                    <div className="absolute inset-0 flex items-start pt-0 pointer-events-none">
+                      <span className="text-[15px] text-slate-400 leading-[1.5]">
+                        What do you want to talk about?
                       </span>
                     </div>
+                  )}
+                <textarea
+                  ref={textareaRef}
+                  value={postText}
+                  onChange={handleTextareaChange}
+                  placeholder=""
+                  className="relative w-full text-[15px] leading-[1.5] text-slate-900 dark:text-slate-100 bg-transparent border-none outline-none resize-none focus:outline-none pt-0"
+                  style={
+                    {
+                      fontFamily: "inherit",
+                      overflowY: "auto",
+                      minHeight: "200px",
+                      fieldSizing: "content",
+                    } as React.CSSProperties
+                  }
+                />
+              </div>
+
+              {/* Image Preview */}
+              {formData.imagePreview && (
+                <div className="relative mt-4">
+                  <div
+                    className="relative inline-block max-w-full"
+                    style={{ height: "400px", width: "100%" }}
+                  >
+                    <NextImage
+                      src={formData.imagePreview}
+                      alt="Post image preview"
+                      fill
+                      className="rounded-lg object-contain"
+                      unoptimized
+                    />
                     <button
                       type="button"
-                      onClick={() => {
-                        handleUrlChange("");
-                        setShowArticleInput(false);
-                      }}
-                      className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                      aria-label="Remove image"
                     >
-                      Remove
+                      <X className="h-4 w-4" />
                     </button>
                   </div>
-                )}
-                <div className="relative flex flex-col flex-1 min-h-0">
-                  {!hasText &&
-                    !formData.imagePreview &&
-                    !formData.documentFile &&
-                    !formData.documentPreview &&
-                    !formData.videoFile &&
-                    !formData.videoPreview && (
-                      <div className="absolute inset-0 flex items-start pt-0 pointer-events-none">
-                        <span className="text-[15px] text-slate-400 leading-[1.5]">
-                          What do you want to talk about?
-                        </span>
-                      </div>
-                    )}
-                  <textarea
-                    ref={textareaRef}
-                    value={postText}
-                    onChange={handleTextareaChange}
-                    placeholder=""
-                    className="relative w-full text-[15px] leading-[1.5] text-slate-900 dark:text-slate-100 bg-transparent border-none outline-none resize-none focus:outline-none pt-0"
-                    style={
-                      {
-                        fontFamily: "inherit",
-                        overflowY: "auto",
-                        minHeight: "200px",
-                        fieldSizing: "content",
-                      } as React.CSSProperties
-                    }
-                  />
                 </div>
+              )}
 
-                {/* Image Preview */}
-                {formData.imagePreview && (
-                  <div className="relative mt-4">
-                    <div
-                      className="relative inline-block max-w-full"
-                      style={{ height: "400px", width: "100%" }}
+              {/* Video Preview */}
+              {(formData.videoFile || formData.videoPreview) && (
+                <div className="relative mt-4">
+                  <div className="relative inline-block max-w-full">
+                    <video
+                      src={
+                        formData.videoPreview ||
+                        (formData.videoFile
+                          ? URL.createObjectURL(formData.videoFile)
+                          : undefined)
+                      }
+                      controls
+                      className="max-w-full max-h-[400px] rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveVideo}
+                      className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
+                      aria-label="Remove video"
                     >
-                      <NextImage
-                        src={formData.imagePreview}
-                        alt="Post image preview"
-                        fill
-                        className="rounded-lg object-contain"
-                        unoptimized
-                      />
-                      <button
-                        type="button"
-                        onClick={handleRemoveImage}
-                        className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
-                        aria-label="Remove image"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Video Preview */}
-                {(formData.videoFile || formData.videoPreview) && (
-                  <div className="relative mt-4">
-                    <div className="relative inline-block max-w-full">
-                      <video
-                        src={
-                          formData.videoPreview ||
-                          (formData.videoFile
-                            ? URL.createObjectURL(formData.videoFile)
-                            : undefined)
-                        }
-                        controls
-                        className="max-w-full max-h-[400px] rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleRemoveVideo}
-                        className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 hover:bg-black/80 text-white transition-colors"
-                        aria-label="Remove video"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Document Preview */}
-                {(formData.documentFile || formData.documentPreview) && (
-                  <div className="relative mt-4">
-                    <div className="relative inline-block max-w-full rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-8 w-8 text-slate-600 dark:text-slate-400" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
-                            {formData.documentFile
-                              ? formData.documentFile.name
-                              : (() => {
-                                  // Extract filename from URL (remove query params first)
-                                  if (!formData.documentPreview)
-                                    return "Document";
-                                  const withoutParams =
-                                    formData.documentPreview.split("?")[0];
-                                  const parts = withoutParams.split("/");
-                                  const filename = parts[parts.length - 1];
-                                  try {
-                                    return decodeURIComponent(filename);
-                                  } catch {
-                                    return filename || "Document";
-                                  }
-                                })()}
+              {/* Document Preview */}
+              {(formData.documentFile || formData.documentPreview) && (
+                <div className="relative mt-4">
+                  <div className="relative inline-block max-w-full rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800">
+                    <div className="flex items-center gap-3">
+                      <FileText className="h-8 w-8 text-slate-600 dark:text-slate-400" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+                          {formData.documentFile
+                            ? formData.documentFile.name
+                            : (() => {
+                                // Extract filename from URL (remove query params first)
+                                if (!formData.documentPreview)
+                                  return "Document";
+                                const withoutParams =
+                                  formData.documentPreview.split("?")[0];
+                                const parts = withoutParams.split("/");
+                                const filename = parts[parts.length - 1];
+                                try {
+                                  return decodeURIComponent(filename);
+                                } catch {
+                                  return filename || "Document";
+                                }
+                              })()}
+                        </p>
+                        {formData.documentFile && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {(formData.documentFile.size / 1024).toFixed(1)} KB
                           </p>
-                          {formData.documentFile && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400">
-                              {(formData.documentFile.size / 1024).toFixed(1)}{" "}
-                              KB
-                            </p>
-                          )}
-                          {formData.documentPreview &&
-                            !formData.documentFile && (
-                              <p className="text-xs text-slate-500 dark:text-slate-400">
-                                Existing document
-                              </p>
-                            )}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={handleRemoveDocument}
-                          className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-400 transition-colors"
-                          aria-label="Remove document"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
+                        )}
+                        {formData.documentPreview && !formData.documentFile && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            Existing document
+                          </p>
+                        )}
                       </div>
+                      <button
+                        type="button"
+                        onClick={handleRemoveDocument}
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-400 transition-colors"
+                        aria-label="Remove document"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div
@@ -1998,218 +1996,231 @@ export function CreatePostModal({
               showSettings ? "pointer-events-auto" : "pointer-events-none"
             }`}
           >
-              <div
-                className={`absolute inset-0 bg-slate-900/40 transition-opacity duration-300 ${
-                  showSettings ? "opacity-100" : "opacity-0"
-                }`}
-                onClick={() => setShowSettings(false)}
-              />
-              <div
-                className={`absolute left-0 right-0 top-0 bottom-0 bg-white dark:bg-slate-900 transform transition-transform duration-300 ${
-                  showSettings
-                    ? "translate-y-0 shadow-2xl"
-                    : "-translate-y-full shadow-none"
-                }`}
-              >
-                <div className="absolute left-0 right-0 top-0 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-4 bg-white dark:bg-slate-900">
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      Rewrite with AI settings
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Adjust rewrite preferences
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setShowSettings(false)}
-                    className="rounded-full p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    aria-label="Close settings"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+            <div
+              className={`absolute inset-0 bg-slate-900/40 transition-opacity duration-300 ${
+                showSettings ? "opacity-100" : "opacity-0"
+              }`}
+              onClick={() => setShowSettings(false)}
+            />
+            <div
+              className={`absolute left-0 right-0 top-0 bottom-0 bg-white dark:bg-slate-900 transform transition-transform duration-300 ${
+                showSettings
+                  ? "translate-y-0 shadow-2xl"
+                  : "-translate-y-full shadow-none"
+              }`}
+            >
+              <div className="absolute left-0 right-0 top-0 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-4 bg-white dark:bg-slate-900">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                    Rewrite with AI settings
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Adjust rewrite preferences
+                  </p>
                 </div>
-                <div className="flex flex-col h-full">
-                  <div
-                    ref={settingsPanelRef}
-                    className="flex-1 overflow-y-auto px-4 py-6 space-y-6 pt-[100px] pb-20"
-                  >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="tone"
-                          className="text-sm font-medium text-slate-700 dark:text-slate-300"
-                        >
-                          Writing Tone
-                        </Label>
-                        <select
-                          id="tone"
-                          value={formData.tone}
-                          onChange={(e) =>
-                            handleInputChange("tone", e.target.value)
-                          }
-                          className="h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
-                          title={
-                            formData.tone.startsWith("Custom -") &&
-                            !voiceProfiles.some((vp) => {
-                              if (formData.tone === "Custom - Personal") {
-                                return vp.profile_type === "personal" && !vp.organization_id;
-                              }
-                              // Extract org ID from tone string (e.g., "Custom - Org 1")
-                              const orgIndex = formData.tone.match(/Org (\d+)/)?.[1];
-                              if (orgIndex) {
-                                const orgId = organizations[parseInt(orgIndex) - 1]?.linkedin_org_id;
-                                return vp.profile_type === "organization" && vp.organization_id === orgId;
-                              }
-                              return false;
-                            })
-                              ? "Voice profile not available yet. Publish some posts or customize in Settings."
-                              : undefined
-                          }
-                        >
-                          {TONE_OPTIONS.map((tone) => (
-                            <option key={tone} value={tone}>
-                              {tone}
-                            </option>
-                          ))}
-                          {/* Custom - Personal option */}
-                          {(() => {
-                            const hasPersonalVoice = voiceProfiles.some(
-                              (vp) => vp.profile_type === "personal" && !vp.organization_id
-                            );
-                            return (
-                              <option
-                                value="Custom - Personal"
-                                disabled={!hasPersonalVoice}
-                              >
-                                Custom - Personal{!hasPersonalVoice ? " (Not Available)" : ""}
-                              </option>
-                            );
-                          })()}
-                          {/* Custom - Org options */}
-                          {organizations.map((org, index) => {
-                            const hasOrgVoice = voiceProfiles.some(
-                              (vp) =>
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="rounded-full p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  aria-label="Close settings"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex flex-col h-full">
+                <div
+                  ref={settingsPanelRef}
+                  className="flex-1 overflow-y-auto px-4 py-6 space-y-6 pt-[100px] pb-20"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="tone"
+                        className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                      >
+                        Writing Tone
+                      </Label>
+                      <select
+                        id="tone"
+                        value={formData.tone}
+                        onChange={(e) =>
+                          handleInputChange("tone", e.target.value)
+                        }
+                        className="h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                        title={
+                          formData.tone.startsWith("Custom -") &&
+                          !voiceProfiles.some((vp) => {
+                            if (formData.tone === "Custom - Personal") {
+                              return (
+                                vp.profile_type === "personal" &&
+                                !vp.organization_id
+                              );
+                            }
+                            // Extract org ID from tone string (e.g., "Custom - Org 1")
+                            const orgIndex =
+                              formData.tone.match(/Org (\d+)/)?.[1];
+                            if (orgIndex) {
+                              const orgId =
+                                organizations[parseInt(orgIndex) - 1]
+                                  ?.linkedin_org_id;
+                              return (
                                 vp.profile_type === "organization" &&
-                                vp.organization_id === org.linkedin_org_id
-                            );
-                            const orgDisplayName = org.org_name || `Org ${index + 1}`;
-                            return (
-                              <option
-                                key={org.linkedin_org_id}
-                                value={`Custom - ${orgDisplayName}`}
-                                disabled={!hasOrgVoice}
-                              >
-                                Custom - {orgDisplayName}
-                                {!hasOrgVoice ? " (Not Available)" : ""}
-                              </option>
-                            );
-                          })}
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="postType"
-                          className="text-sm font-medium text-slate-700 dark:text-slate-300"
-                        >
-                          Post Type
-                        </Label>
-                        <select
-                          id="postType"
-                          value={formData.postType}
-                          onChange={(e) =>
-                            handleInputChange("postType", e.target.value)
-                          }
-                          className="h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
-                        >
-                          {POST_TYPE_OPTIONS.map((type) => (
-                            <option key={type} value={type}>
-                              {type}
+                                vp.organization_id === orgId
+                              );
+                            }
+                            return false;
+                          })
+                            ? "Voice profile not available yet. Publish some posts or customize in Settings."
+                            : undefined
+                        }
+                      >
+                        {TONE_OPTIONS.map((tone) => (
+                          <option key={tone} value={tone}>
+                            {tone}
+                          </option>
+                        ))}
+                        {/* Custom - Personal option */}
+                        {(() => {
+                          const hasPersonalVoice = voiceProfiles.some(
+                            (vp) =>
+                              vp.profile_type === "personal" &&
+                              !vp.organization_id
+                          );
+                          return (
+                            <option
+                              value="Custom - Personal"
+                              disabled={!hasPersonalVoice}
+                            >
+                              Custom - Personal
+                              {!hasPersonalVoice ? " (Not Available)" : ""}
                             </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="targetAudience"
-                          className="text-sm font-medium text-slate-700 dark:text-slate-300"
-                        >
-                          Target Audience
-                        </Label>
-                        <select
-                          id="targetAudience"
-                          value={formData.targetAudience}
-                          onChange={(e) =>
-                            handleInputChange("targetAudience", e.target.value)
-                          }
-                          className="h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
-                        >
-                          {AUDIENCE_OPTIONS.map((audience) => (
-                            <option key={audience} value={audience}>
-                              {audience}
+                          );
+                        })()}
+                        {/* Custom - Org options */}
+                        {organizations.map((org, index) => {
+                          const hasOrgVoice = voiceProfiles.some(
+                            (vp) =>
+                              vp.profile_type === "organization" &&
+                              vp.organization_id === org.linkedin_org_id
+                          );
+                          const orgDisplayName =
+                            org.org_name || `Org ${index + 1}`;
+                          return (
+                            <option
+                              key={org.linkedin_org_id}
+                              value={`Custom - ${orgDisplayName}`}
+                              disabled={!hasOrgVoice}
+                            >
+                              Custom - {orgDisplayName}
+                              {!hasOrgVoice ? " (Not Available)" : ""}
                             </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="maxLength"
-                          className="text-sm font-medium text-slate-700 dark:text-slate-300"
-                        >
-                          Max Character Length
-                        </Label>
-                        <Input
-                          id="maxLength"
-                          type="number"
-                          value={formData.maxLength}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "maxLength",
-                              parseInt(e.target.value) || 3000
-                            )
-                          }
-                          min="500"
-                          max="3000"
-                          step="100"
-                          className="h-11 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label
-                          htmlFor="language"
-                          className="text-sm font-medium text-slate-700 dark:text-slate-300"
-                        >
-                          Output Language
-                        </Label>
-                        <select
-                          id="language"
-                          value={formData.language || "English"}
-                          onChange={(e) =>
-                            handleInputChange("language", e.target.value)
-                          }
-                          className="h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
-                        >
-                          {LANGUAGE_OPTIONS.map((lang) => (
-                            <option key={lang.value} value={lang.value}>
-                              {lang.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                          );
+                        })}
+                      </select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Content Options
+                      <Label
+                        htmlFor="postType"
+                        className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                      >
+                        Post Type
                       </Label>
-                      <div className="flex flex-col gap-3">
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            id="includeHashtags"
-                            checked={formData.includeHashtags}
+                      <select
+                        id="postType"
+                        value={formData.postType}
+                        onChange={(e) =>
+                          handleInputChange("postType", e.target.value)
+                        }
+                        className="h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                      >
+                        {POST_TYPE_OPTIONS.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="targetAudience"
+                        className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                      >
+                        Target Audience
+                      </Label>
+                      <select
+                        id="targetAudience"
+                        value={formData.targetAudience}
+                        onChange={(e) =>
+                          handleInputChange("targetAudience", e.target.value)
+                        }
+                        className="h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                      >
+                        {AUDIENCE_OPTIONS.map((audience) => (
+                          <option key={audience} value={audience}>
+                            {audience}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="maxLength"
+                        className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                      >
+                        Max Character Length
+                      </Label>
+                      <Input
+                        id="maxLength"
+                        type="number"
+                        value={formData.maxLength}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "maxLength",
+                            parseInt(e.target.value) || 3000
+                          )
+                        }
+                        min="500"
+                        max="3000"
+                        step="100"
+                        className="h-11 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="language"
+                        className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                      >
+                        Output Language
+                      </Label>
+                      <select
+                        id="language"
+                        value={formData.language || "English"}
+                        onChange={(e) =>
+                          handleInputChange("language", e.target.value)
+                        }
+                        className="h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                      >
+                        {LANGUAGE_OPTIONS.map((lang) => (
+                          <option key={lang.value} value={lang.value}>
+                            {lang.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Content Options
+                    </Label>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="includeHashtags"
+                          checked={formData.includeHashtags}
                           onChange={(e) =>
                             handleInputChange(
                               "includeHashtags",
@@ -2251,10 +2262,7 @@ export function CreatePostModal({
                           id="includeEmojis"
                           checked={formData.includeEmojis}
                           onChange={(e) =>
-                            handleInputChange(
-                              "includeEmojis",
-                              e.target.checked
-                            )
+                            handleInputChange("includeEmojis", e.target.checked)
                           }
                           className="h-4 w-4 rounded border border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                         />
@@ -2265,327 +2273,322 @@ export function CreatePostModal({
                           Include emojis
                         </Label>
                       </div>
-                      </div>
                     </div>
                   </div>
-                  <div className="absolute left-0 right-0 bottom-0 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 flex items-center justify-end gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowSettings(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={async () => {
-                        setShowSettings(false);
-                        await handleRewrite();
-                      }}
-                      disabled={isRewriting || !hasText}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      {isRewriting ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Rewriting...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-4 w-4 mr-2" />
-                          Rewrite with AI
-                        </>
-                      )}
-                    </Button>
-                  </div>
+                </div>
+                <div className="absolute left-0 right-0 bottom-0 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 flex items-center justify-end gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowSettings(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={async () => {
+                      setShowSettings(false);
+                      await handleRewrite();
+                    }}
+                    disabled={isRewriting || !hasText}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {isRewriting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Rewriting...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Rewrite with AI
+                      </>
+                    )}
+                  </Button>
                 </div>
               </div>
+            </div>
           </div>
 
           {/* Footer */}
           <div className="border-t border-slate-200 bg-white px-3 py-2.5 sm:px-4 sm:py-3 dark:border-slate-800 dark:bg-slate-900 flex-shrink-0">
-              <div className="flex flex-col gap-2.5 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div
-                  className={`flex ${
-                    rewrittenVariants.length > 1
-                      ? "flex-row items-center"
-                      : "flex-col sm:flex-row sm:items-center"
-                  } gap-2.5 sm:gap-3 relative min-w-0`}
-                >
-                  {/* First Row: Emoji, Upload Icons */}
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    {/* Emoji Picker Button */}
-                    <div
-                      className="relative flex-shrink-0"
-                      ref={emojiPickerRef}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        className="flex h-8 w-8 items-center justify-center rounded text-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-                      >
-                        😊
-                      </button>
-
-                      {/* Emoji Picker Popover */}
-                      {showEmojiPicker && (
-                        <div className="absolute bottom-full left-0 mb-2 w-64 h-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg p-3 overflow-y-auto z-50">
-                          <div className="grid grid-cols-8 gap-1">
-                            {COMMON_EMOJIS.map((emoji, index) => (
-                              <button
-                                key={index}
-                                type="button"
-                                onClick={() => insertEmoji(emoji)}
-                                className="flex h-8 w-8 items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-lg transition-colors"
-                                title={emoji}
-                              >
-                                {emoji}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Upload Icons */}
-                    {!formData.imagePreview &&
-                      !formData.documentFile &&
-                      !formData.documentPreview &&
-                      !formData.videoFile &&
-                      !formData.videoPreview && (
-                        <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
-                          <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/*"
-                            onChange={handleImageSelect}
-                            className="hidden"
-                            aria-label="Upload image"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            aria-label="Add image"
-                            className="flex h-8 w-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 flex-shrink-0"
-                            title="Add image"
-                          >
-                            <Image className="h-4 w-4" aria-hidden="true" />
-                          </button>
-                          <input
-                            ref={documentInputRef}
-                            type="file"
-                            accept=".pdf,.doc,.docx,.txt"
-                            onChange={handleDocumentSelect}
-                            className="hidden"
-                            aria-label="Upload document"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => documentInputRef.current?.click()}
-                            aria-label="Add document"
-                            className="flex h-8 w-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 flex-shrink-0"
-                            title="Add document"
-                          >
-                            <Paperclip className="h-4 w-4" aria-hidden="true" />
-                          </button>
-                          <input
-                            ref={videoInputRef}
-                            type="file"
-                            accept="video/*"
-                            onChange={handleVideoSelect}
-                            className="hidden"
-                            aria-label="Upload video"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => videoInputRef.current?.click()}
-                            aria-label="Add video"
-                            className="flex h-8 w-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 flex-shrink-0"
-                            title="Add video"
-                          >
-                            <Video className="h-4 w-4" aria-hidden="true" />
-                          </button>
-                        </div>
-                      )}
-                  </div>
-
-                  {/* Second Row on Mobile: Rewrite, Polish, Variants, Undo */}
-                  <div
-                    className={`flex items-center gap-2 sm:gap-3 ${
-                      rewrittenVariants.length > 1 ? "flex-nowrap" : "flex-wrap"
-                    } min-w-0`}
-                  >
-                    {/* Rewrite with AI Button */}
+            <div className="flex flex-col gap-2.5 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div
+                className={`flex ${
+                  rewrittenVariants.length > 1
+                    ? "flex-row items-center"
+                    : "flex-col sm:flex-row sm:items-center"
+                } gap-2.5 sm:gap-3 relative min-w-0`}
+              >
+                {/* First Row: Emoji, Upload Icons */}
+                <div className="flex items-center gap-2 sm:gap-3">
+                  {/* Emoji Picker Button */}
+                  <div className="relative flex-shrink-0" ref={emojiPickerRef}>
                     <button
                       type="button"
-                      onClick={() => setShowSettings(true)}
-                      disabled={!hasText || isRewriting || isGenerating}
-                      className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap flex-shrink-0"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className="flex h-8 w-8 items-center justify-center rounded text-lg hover:bg-slate-100 dark:hover:bg-slate-800"
                     >
-                      {isRewriting ? (
-                        <>
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          Rewriting with AI
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-3.5 w-3.5" />
-                          Rewrite with AI
-                        </>
-                      )}
+                      😊
                     </button>
 
-                    {/* Polish Button */}
-                    <div className="relative flex-shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => setShowPolishInput(!showPolishInput)}
-                        disabled={
-                          !hasText || isRewriting || isGenerating || isPolishing
-                        }
-                        className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap"
-                        title="Polish your post"
-                        ref={polishButtonRef}
-                      >
-                        <Wand2 className="h-3.5 w-3.5 text-purple-600" />
-                        Polish
-                      </button>
-
-                      {/* Polish Input Popover */}
-                      {showPolishInput && (
-                        <div
-                          className="fixed left-1/2 -translate-x-1/2 z-[100] w-[min(calc(100vw-2rem),400px)] rounded-lg border border-slate-200 bg-white p-4 shadow-lg sm:absolute sm:left-0 sm:bottom-full sm:mb-2 sm:w-80 sm:translate-x-0 dark:border-slate-800 dark:bg-slate-900"
-                          ref={polishInputRef}
-                        >
-                          <form onSubmit={handlePolish} className="space-y-3">
-                            <div className="flex items-center gap-2">
-                              <Wand2 className="h-4 w-4 text-purple-600" />
-                              <Label
-                                htmlFor="polish-prompt-input"
-                                className="text-sm font-medium text-slate-700 dark:text-slate-300"
-                              >
-                                What would you like to improve?
-                              </Label>
-                            </div>
-                            <Textarea
-                              id="polish-prompt-input"
-                              placeholder="e.g., Make it more engaging, add a call-to-action, improve the tone to be more professional, add emojis, make it shorter, include a compelling opening line..."
-                              value={polishPrompt}
-                              onChange={(e) => setPolishPrompt(e.target.value)}
-                              className="min-h-[140px] resize-none text-sm"
-                              disabled={isPolishing}
-                            />
-                            <div className="flex gap-2 justify-end">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => {
-                                  setShowPolishInput(false);
-                                  setPolishPrompt("");
-                                }}
-                                disabled={isPolishing}
-                                size="sm"
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                type="submit"
-                                disabled={!polishPrompt.trim() || isPolishing}
-                                size="sm"
-                                className="bg-purple-600 text-white hover:bg-purple-700"
-                              >
-                                {isPolishing ? (
-                                  <>
-                                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                    Polishing...
-                                  </>
-                                ) : (
-                                  <>
-                                    <Wand2 className="h-4 w-4 mr-2" />
-                                    Polish
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          </form>
+                    {/* Emoji Picker Popover */}
+                    {showEmojiPicker && (
+                      <div className="absolute bottom-full left-0 mb-2 w-64 h-64 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg p-3 overflow-y-auto z-50">
+                        <div className="grid grid-cols-8 gap-1">
+                          {COMMON_EMOJIS.map((emoji, index) => (
+                            <button
+                              key={index}
+                              type="button"
+                              onClick={() => insertEmoji(emoji)}
+                              className="flex h-8 w-8 items-center justify-center rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-lg transition-colors"
+                              title={emoji}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
+                  </div>
 
-                    {/* Variant Navigation */}
-                    {rewrittenVariants.length > 1 && !isRewriting && (
-                      <div className="flex items-center gap-1 rounded-md border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900 flex-shrink-0">
+                  {/* Upload Icons */}
+                  {!formData.imagePreview &&
+                    !formData.documentFile &&
+                    !formData.documentPreview &&
+                    !formData.videoFile &&
+                    !formData.videoPreview && (
+                      <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageSelect}
+                          className="hidden"
+                          aria-label="Upload image"
+                        />
                         <button
                           type="button"
-                          onClick={handlePreviousVariant}
-                          disabled={currentVariantIndex === 0}
-                          className="flex items-center justify-center p-1.5 text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-200 dark:hover:bg-slate-800"
-                          title="Previous variant"
+                          onClick={() => fileInputRef.current?.click()}
+                          aria-label="Add image"
+                          className="flex h-8 w-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 flex-shrink-0"
+                          title="Add image"
                         >
-                          <ChevronLeft className="h-4 w-4" />
+                          <Image className="h-4 w-4" aria-hidden="true" />
                         </button>
-                        <span className="px-2 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                          Opt. {currentVariantIndex + 1} of{" "}
-                          {rewrittenVariants.length}
-                        </span>
+                        <input
+                          ref={documentInputRef}
+                          type="file"
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={handleDocumentSelect}
+                          className="hidden"
+                          aria-label="Upload document"
+                        />
                         <button
                           type="button"
-                          onClick={handleNextVariant}
-                          disabled={
-                            currentVariantIndex === rewrittenVariants.length - 1
-                          }
-                          className="flex items-center justify-center p-1.5 text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-200 dark:hover:bg-slate-800"
-                          title="Next variant"
+                          onClick={() => documentInputRef.current?.click()}
+                          aria-label="Add document"
+                          className="flex h-8 w-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 flex-shrink-0"
+                          title="Add document"
                         >
-                          <ChevronRight className="h-4 w-4" />
+                          <Paperclip className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                        <input
+                          ref={videoInputRef}
+                          type="file"
+                          accept="video/*"
+                          onChange={handleVideoSelect}
+                          className="hidden"
+                          aria-label="Upload video"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => videoInputRef.current?.click()}
+                          aria-label="Add video"
+                          className="flex h-8 w-8 items-center justify-center rounded text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 flex-shrink-0"
+                          title="Add video"
+                        >
+                          <Video className="h-4 w-4" aria-hidden="true" />
                         </button>
                       </div>
                     )}
-
-                    {/* Undo Button */}
-                    {originalText && !isRewriting && (
-                      <button
-                        type="button"
-                        onClick={handleUndo}
-                        className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap flex-shrink-0"
-                        title="Undo rewrite"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                        Undo
-                      </button>
-                    )}
-                  </div>
                 </div>
 
-                {/* Post Button */}
-                <Button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={
-                    !hasText || isSaving || isGenerating || isNavigating
-                  }
-                  size="default"
-                  className="w-full sm:w-auto flex-shrink-0"
+                {/* Second Row on Mobile: Rewrite, Polish, Variants, Undo */}
+                <div
+                  className={`flex items-center gap-2 sm:gap-3 ${
+                    rewrittenVariants.length > 1 ? "flex-nowrap" : "flex-wrap"
+                  } min-w-0`}
                 >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : isNavigating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {postId ? "Edit Post" : "Create Post"}
-                    </>
-                  ) : postId ? (
-                    "Edit Post"
-                  ) : (
-                    "Create Post"
+                  {/* Rewrite with AI Button */}
+                  <button
+                    type="button"
+                    onClick={() => setShowSettings(true)}
+                    disabled={!hasText || isRewriting || isGenerating}
+                    className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap flex-shrink-0"
+                  >
+                    {isRewriting ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Rewriting with AI
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Rewrite with AI
+                      </>
+                    )}
+                  </button>
+
+                  {/* Polish Button */}
+                  <div className="relative flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setShowPolishInput(!showPolishInput)}
+                      disabled={
+                        !hasText || isRewriting || isGenerating || isPolishing
+                      }
+                      className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap"
+                      title="Polish your post"
+                      ref={polishButtonRef}
+                    >
+                      <Wand2 className="h-3.5 w-3.5 text-purple-600" />
+                      Polish
+                    </button>
+
+                    {/* Polish Input Popover */}
+                    {showPolishInput && (
+                      <div
+                        className="fixed left-1/2 -translate-x-1/2 z-[100] w-[min(calc(100vw-2rem),400px)] rounded-lg border border-slate-200 bg-white p-4 shadow-lg sm:absolute sm:left-0 sm:bottom-full sm:mb-2 sm:w-80 sm:translate-x-0 dark:border-slate-800 dark:bg-slate-900"
+                        ref={polishInputRef}
+                      >
+                        <form onSubmit={handlePolish} className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Wand2 className="h-4 w-4 text-purple-600" />
+                            <Label
+                              htmlFor="polish-prompt-input"
+                              className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                            >
+                              What would you like to improve?
+                            </Label>
+                          </div>
+                          <Textarea
+                            id="polish-prompt-input"
+                            placeholder="e.g., Make it more engaging, add a call-to-action, improve the tone to be more professional, add emojis, make it shorter, include a compelling opening line..."
+                            value={polishPrompt}
+                            onChange={(e) => setPolishPrompt(e.target.value)}
+                            className="min-h-[140px] resize-none text-sm"
+                            disabled={isPolishing}
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                setShowPolishInput(false);
+                                setPolishPrompt("");
+                              }}
+                              disabled={isPolishing}
+                              size="sm"
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="submit"
+                              disabled={!polishPrompt.trim() || isPolishing}
+                              size="sm"
+                              className="bg-purple-600 text-white hover:bg-purple-700"
+                            >
+                              {isPolishing ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                  Polishing...
+                                </>
+                              ) : (
+                                <>
+                                  <Wand2 className="h-4 w-4 mr-2" />
+                                  Polish
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Variant Navigation */}
+                  {rewrittenVariants.length > 1 && !isRewriting && (
+                    <div className="flex items-center gap-1 rounded-md border border-slate-300 bg-white dark:border-slate-700 dark:bg-slate-900 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={handlePreviousVariant}
+                        disabled={currentVariantIndex === 0}
+                        className="flex items-center justify-center p-1.5 text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-200 dark:hover:bg-slate-800"
+                        title="Previous variant"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <span className="px-2 text-xs font-medium text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                        Opt. {currentVariantIndex + 1} of{" "}
+                        {rewrittenVariants.length}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleNextVariant}
+                        disabled={
+                          currentVariantIndex === rewrittenVariants.length - 1
+                        }
+                        className="flex items-center justify-center p-1.5 text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed dark:text-slate-200 dark:hover:bg-slate-800"
+                        title="Next variant"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
                   )}
-                </Button>
+
+                  {/* Undo Button */}
+                  {originalText && !isRewriting && (
+                    <button
+                      type="button"
+                      onClick={handleUndo}
+                      className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap flex-shrink-0"
+                      title="Undo rewrite"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                      Undo
+                    </button>
+                  )}
+                </div>
               </div>
+
+              {/* Post Button */}
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!hasText || isSaving || isGenerating || isNavigating}
+                size="default"
+                className="w-full sm:w-auto flex-shrink-0"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : isNavigating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    {postId ? "Edit Post" : "Create Post"}
+                  </>
+                ) : postId ? (
+                  "Edit Post"
+                ) : (
+                  "Create Post"
+                )}
+              </Button>
             </div>
           </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
