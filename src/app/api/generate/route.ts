@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       callToAction = "",
       includeHashtags = false,
       includeSourceArticle = true,
+      includeEmojis = false,
       maxLength = 1200,
       language = "English",
     } = await request.json();
@@ -209,6 +210,7 @@ export async function POST(request: NextRequest) {
         callToAction,
         includeHashtags,
         includeSourceArticle,
+        includeEmojis,
         maxLength,
         language,
         voiceProfile, // Include voice profile if available

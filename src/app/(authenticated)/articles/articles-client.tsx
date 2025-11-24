@@ -878,6 +878,7 @@ export function ArticlesClient({ user }: { user: User }) {
           callToAction: formData.callToAction,
           includeHashtags: formData.includeHashtags,
           includeSourceArticle: formData.includeSourceArticle,
+          includeEmojis: formData.includeEmojis,
           maxLength: formData.maxLength,
         }),
       });

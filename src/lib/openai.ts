@@ -30,6 +30,7 @@ export interface SummarizationInput {
   callToAction?: string;
   includeHashtags?: boolean;
   includeSourceArticle?: boolean;
+  includeEmojis?: boolean;
   maxLength?: number;
   language?: string;
   voiceProfile?: {
@@ -255,6 +256,7 @@ function buildSummarizationPrompt(input: SummarizationInput): string {
     callToAction = "",
     includeHashtags = false,
     includeSourceArticle = true,
+    includeEmojis = false,
     maxLength = 1200,
     language = "English",
     voiceProfile,
@@ -263,6 +265,10 @@ function buildSummarizationPrompt(input: SummarizationInput): string {
   const hashtagInstruction = includeHashtags
     ? "Include 3-5 relevant hashtags at the end of each post"
     : "Do not include hashtags";
+
+  const emojiInstruction = includeEmojis
+    ? "Include 1-3 relevant emojis strategically placed throughout each post to enhance engagement"
+    : "Do not include emojis";
 
   const sourceArticleInstruction =
     includeSourceArticle && sourceInfo
@@ -323,7 +329,8 @@ CONTENT REQUIREMENTS:
 - Writing Tone: ${userTone}${voiceProfile ? " (matching the custom voice profile below)" : ""}
 - Maximum character length per post: ${maxLength}${languageInstruction}
 - ${hashtagInstruction}
-- ${sourceArticleInstruction}${voiceProfileSection}
+- ${sourceArticleInstruction}
+- ${emojiInstruction}${voiceProfileSection}
 
 CONTENT SOURCE:
 ${articleSnippets.map((snippet, i) => `${i + 1}. ${snippet}`).join("\n")}${
@@ -352,7 +359,7 @@ Please provide:
    - Body (max ${maxLength} characters)
    - ${hashtagInstruction}
    - ${sourceArticleInstruction}
-   - Maximum 3 emojis total per post
+   - ${emojiInstruction}
    - ${ctaInstruction}
    - Tone should match: ${userTone}
    - Content should be appropriate for: ${targetAudience}

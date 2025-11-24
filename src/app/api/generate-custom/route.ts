@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       callToAction = "",
       includeHashtags = false,
       includeSourceArticle = false,
+      includeEmojis = false,
       maxLength = 1200,
       language = "English",
       articleUrl,
@@ -111,6 +112,7 @@ export async function POST(request: NextRequest) {
         callToAction,
         includeHashtags,
         includeSourceArticle,
+        includeEmojis,
         maxLength,
         language,
       });

@@ -21,11 +21,9 @@ import {
   Image,
   Sparkles,
   Loader2,
-  Settings2,
   FileText,
   Link as LinkIcon,
   Check,
-  Eye,
   ThumbsUp,
   MessageCircle,
   Repeat2,
@@ -53,6 +51,7 @@ export interface CreatePostFormData {
   callToAction: string;
   includeHashtags: boolean;
   includeSourceArticle: boolean;
+  includeEmojis: boolean;
   maxLength: number;
   language?: string;
   articleUrl?: string;
@@ -75,6 +74,7 @@ export interface UserPreferencesConfig {
   maxLength?: number;
   includeHashtags?: boolean;
   includeSourceArticle?: boolean;
+  includeEmojis?: boolean;
   userName?: string;
   userInitials?: string;
   language?: string;
@@ -439,7 +439,8 @@ export function CreatePostModal({
       callToAction: "",
       includeHashtags: userPreferences?.includeHashtags ?? false,
       includeSourceArticle: userPreferences?.includeSourceArticle ?? true,
-      maxLength: userPreferences?.maxLength || 2000,
+      includeEmojis: userPreferences?.includeEmojis ?? false,
+      maxLength: userPreferences?.maxLength || 3000,
       language: userPreferences?.language || storedLanguage,
       userName: userPreferences?.userName,
       userInitials: userPreferences?.userInitials,
@@ -462,8 +463,6 @@ export function CreatePostModal({
   const [showSettings, setShowSettings] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showArticleInput, setShowArticleInput] = useState(false);
-  const [previewMode, setPreviewMode] = useState(false);
-  const [isTextExpanded, setIsTextExpanded] = useState(false);
   const [isRewriting, setIsRewriting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -481,7 +480,6 @@ export function CreatePostModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const documentInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const textPreviewRef = useRef<HTMLDivElement>(null);
   const publishTargetDropdownRef = useRef<HTMLDivElement>(null);
   const settingsPanelRef = useRef<HTMLDivElement>(null);
   const editableAreaRef = useRef<HTMLDivElement>(null);
@@ -1141,6 +1139,7 @@ export function CreatePostModal({
           callToAction: formData.callToAction || "",
           includeHashtags: formData.includeHashtags,
           includeSourceArticle: formData.includeSourceArticle,
+          includeEmojis: formData.includeEmojis,
           maxLength: formData.maxLength,
           language: formData.language || "English",
           articleUrl: formData.articleUrl,
@@ -1629,47 +1628,14 @@ export function CreatePostModal({
     }
   };
 
-  // Memoize text clipping calculations to avoid recalculating on every render
-  const shouldClipText = useCallback((text: string): boolean => {
-    if (!text || text.length < 180) return false;
-    // LinkedIn typically shows 3-4 lines before clipping
-    // Approximate: ~180-220 characters per 3-4 lines, or if there are line breaks
-    const lineCount = text.split("\n").length;
-    // If text has explicit line breaks, check if more than 3 lines
-    if (lineCount > 3) return true;
-    // For continuous text, clip around 220 characters (approximate 4 lines)
-    return text.length > 220;
-  }, []);
-
-  const getClippedText = useCallback((text: string): string => {
-    // Approximate 3-4 lines: LinkedIn shows around 200-220 chars
-    const maxLength = 220;
-    if (text.length <= maxLength) return text;
-    // Find the last space before maxLength to avoid cutting words
-    const clipped = text.substring(0, maxLength);
-    const lastSpace = clipped.lastIndexOf(" ");
-    const lastNewline = clipped.lastIndexOf("\n");
-    // Prefer breaking at newline if it's close
-    if (lastNewline > maxLength * 0.7) {
-      return text.substring(0, lastNewline);
-    }
-    return lastSpace > 0 ? clipped.substring(0, lastSpace) : clipped;
-  }, []);
-
   // Memoize computed values
   const hasText = useMemo(() => postText.trim().length > 0, [postText]);
-  const shouldShowMoreButton = useMemo(
-    () => shouldClipText(postText) && !isTextExpanded,
-    [postText, isTextExpanded, shouldClipText]
-  );
-  const displayText = useMemo(
-    () => (shouldShowMoreButton ? getClippedText(postText) : postText),
-    [shouldShowMoreButton, postText, getClippedText]
-  );
 
   // Memoize organization name lookup to avoid repeated array searches
-  const selectedOrgName = useMemo(() => {
-    if (selectedPublishTarget === "personal") return "Personal";
+  const selectedOrgName = useMemo((): string => {
+    if (selectedPublishTarget === "personal") {
+      return "Personal";
+    }
     const org = organizations.find(
       (org) => org.linkedin_org_id === selectedPublishTarget
     );
@@ -1682,8 +1648,7 @@ export function CreatePostModal({
         <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-900 flex flex-col min-h-[700px] max-h-[98vh]">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 pr-12 dark:border-slate-800 dark:bg-slate-900 flex-shrink-0 sticky top-0 z-10">
-            {!previewMode && (
-              <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
                 {/* Profile Picture */}
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
                   {formData.userInitials || "U"}
@@ -1761,190 +1726,15 @@ export function CreatePostModal({
                   )}
                 </div>
               </div>
-            )}
-            <div
-              className={`flex items-center gap-2 ${
-                previewMode ? "ml-auto" : ""
-              }`}
-            >
-              <button
-                onClick={() => {
-                  setPreviewMode(!previewMode);
-                  setIsTextExpanded(false);
-                }}
-                className={`rounded-full p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 ${
-                  previewMode
-                    ? "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400"
-                    : ""
-                }`}
-                title={previewMode ? "Edit" : "Preview"}
-              >
-                <Eye className="h-4 w-4" />
-              </button>
-              {!previewMode && (
-                <button
-                  onClick={() => setShowSettings(!showSettings)}
-                  className="rounded-full p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800"
-                  title="Settings"
-                >
-                  <Settings2 className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-                </button>
-              )}
-            </div>
           </div>
 
-          {/* Scrollable content area (editor / preview) */}
+          {/* Scrollable content area (editor) */}
           <div className="relative flex-1 flex flex-col min-h-0">
-            {previewMode ? (
-              /* LinkedIn Feed Preview */
-              <div
-                className="bg-white dark:bg-slate-900 flex-1 min-h-0"
-                style={{ minHeight: "200px" }}
-              >
-                {/* Post Header - LinkedIn Style */}
-                <div className="px-4 py-3 pb-2">
-                  <div className="flex items-start gap-3">
-                    {/* Profile Picture */}
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-base font-semibold text-white flex-shrink-0">
-                      {formData.userInitials || "U"}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                          {formData.userName || "You"}
-                        </span>
-                        {/* Verification Badge */}
-                        <div className="h-4 w-4 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                          <Check className="h-2.5 w-2.5 text-white" />
-                        </div>
-                        <span className="text-sm text-slate-500 dark:text-slate-400">
-                          • 1st
-                        </span>
-                      </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Your Company
-                      </div>
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className="text-xs text-slate-500 dark:text-slate-400">
-                          1w •
-                        </span>
-                        <Globe className="h-3 w-3 text-slate-500 dark:text-slate-400" />
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800">
-                        <MoreVertical className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Post Content */}
-                <div className="px-4 pb-3">
-                  <div
-                    ref={textPreviewRef}
-                    className="text-sm text-slate-900 dark:text-slate-100 leading-[1.5] whitespace-pre-wrap"
-                  >
-                    {displayText}
-                    {shouldShowMoreButton && (
-                      <>
-                        {" "}
-                        <button
-                          onClick={() => setIsTextExpanded(true)}
-                          className="text-slate-500 dark:text-slate-400 font-medium hover:underline"
-                        >
-                          ...more
-                        </button>
-                      </>
-                    )}
-                    {isTextExpanded && shouldClipText(postText) && (
-                      <>
-                        <button
-                          onClick={() => setIsTextExpanded(false)}
-                          className="text-slate-500 dark:text-slate-400 font-medium hover:underline ml-1"
-                        >
-                          ...less
-                        </button>
-                      </>
-                    )}
-                  </div>
-                  {/* Show translation link */}
-                  {hasText && (
-                    <button className="text-xs text-slate-500 dark:text-slate-400 mt-2 hover:underline">
-                      Show translation
-                    </button>
-                  )}
-                </div>
-
-                {/* Image Preview - LinkedIn Style */}
-                {formData.imagePreview && (
-                  <div className="px-4 pb-3">
-                    <div
-                      className="relative w-full"
-                      style={{ height: "600px" }}
-                    >
-                      <NextImage
-                        src={formData.imagePreview}
-                        alt="Post image"
-                        fill
-                        className="rounded-md object-contain"
-                        unoptimized
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Engagement Section */}
-                <div className="px-4 pb-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-1">
-                      <div className="flex items-center -space-x-1">
-                        <div className="h-5 w-5 rounded-full bg-blue-600 border-2 border-white dark:border-slate-900 flex items-center justify-center">
-                          <ThumbsUp className="h-3 w-3 text-white" />
-                        </div>
-                        <div className="h-5 w-5 rounded-full bg-red-500 border-2 border-white dark:border-slate-900 flex items-center justify-center">
-                          <Heart className="h-3 w-3 text-white" />
-                        </div>
-                        <div className="h-5 w-5 rounded-full bg-green-500 border-2 border-white dark:border-slate-900 flex items-center justify-center">
-                          <span className="text-xs">👏</span>
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-600 dark:text-slate-400 ml-1">
-                        You and X others
-                      </span>
-                    </div>
-                    <div className="text-xs text-slate-600 dark:text-slate-400">
-                      X comments
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-1 border-t border-slate-200 dark:border-slate-800 pt-2">
-                    <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
-                      <ThumbsUp className="h-5 w-5" />
-                      <span className="text-sm font-medium">Like</span>
-                    </button>
-                    <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
-                      <MessageCircle className="h-5 w-5" />
-                      <span className="text-sm font-medium">Comment</span>
-                    </button>
-                    <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
-                      <Repeat2 className="h-5 w-5" />
-                      <span className="text-sm font-medium">Repost</span>
-                    </button>
-                    <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400">
-                      <Send className="h-5 w-5" />
-                      <span className="text-sm font-medium">Send</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Text Input Area - LinkedIn Style */
-              <div
-                ref={editableAreaRef}
-                className="flex flex-col px-4 py-4 flex-1 min-h-[260px] sm:min-h-[400px]"
-              >
+            {/* Text Input Area - LinkedIn Style */}
+            <div
+              ref={editableAreaRef}
+              className="flex flex-col px-4 py-4 flex-1 min-h-[260px] sm:min-h-[400px]"
+            >
                 {/* Article Reference Section */}
                 {isLoadingArticle &&
                 formData.articleUrl &&
@@ -2201,15 +1991,13 @@ export function CreatePostModal({
                   </div>
                 )}
               </div>
-            )}
           </div>
 
-          {!previewMode && (
-            <div
-              className={`absolute inset-0 z-30 transition duration-300 ${
-                showSettings ? "pointer-events-auto" : "pointer-events-none"
-              }`}
-            >
+          <div
+            className={`absolute inset-0 z-30 transition duration-300 ${
+              showSettings ? "pointer-events-auto" : "pointer-events-none"
+            }`}
+          >
               <div
                 className={`absolute inset-0 bg-slate-900/40 transition-opacity duration-300 ${
                   showSettings ? "opacity-100" : "opacity-0"
@@ -2226,7 +2014,7 @@ export function CreatePostModal({
                 <div className="absolute left-0 right-0 top-0 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-4 bg-white dark:bg-slate-900">
                   <div>
                     <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      Post settings
+                      Rewrite with AI settings
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                       Adjust rewrite preferences
@@ -2378,7 +2166,7 @@ export function CreatePostModal({
                           onChange={(e) =>
                             handleInputChange(
                               "maxLength",
-                              parseInt(e.target.value) || 2000
+                              parseInt(e.target.value) || 3000
                             )
                           }
                           min="500"
@@ -2412,12 +2200,16 @@ export function CreatePostModal({
                         </select>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          id="includeHashtags"
-                          checked={formData.includeHashtags}
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                        Content Options
+                      </Label>
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="includeHashtags"
+                            checked={formData.includeHashtags}
                           onChange={(e) =>
                             handleInputChange(
                               "includeHashtags",
@@ -2453,6 +2245,27 @@ export function CreatePostModal({
                           Mention article source
                         </Label>
                       </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="includeEmojis"
+                          checked={formData.includeEmojis}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "includeEmojis",
+                              e.target.checked
+                            )
+                          }
+                          className="h-4 w-4 rounded border border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        />
+                        <Label
+                          htmlFor="includeEmojis"
+                          className="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300"
+                        >
+                          Include emojis
+                        </Label>
+                      </div>
+                      </div>
                     </div>
                   </div>
                   <div className="absolute left-0 right-0 bottom-0 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 flex items-center justify-end gap-3">
@@ -2465,20 +2278,32 @@ export function CreatePostModal({
                     </Button>
                     <Button
                       type="button"
-                      onClick={() => setShowSettings(false)}
+                      onClick={async () => {
+                        setShowSettings(false);
+                        await handleRewrite();
+                      }}
+                      disabled={isRewriting || !hasText}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
                     >
-                      Save Settings
+                      {isRewriting ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Rewriting...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Rewrite with AI
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+          </div>
 
           {/* Footer */}
-          {!previewMode && (
-            <div className="border-t border-slate-200 bg-white px-3 py-2.5 sm:px-4 sm:py-3 dark:border-slate-800 dark:bg-slate-900 flex-shrink-0">
+          <div className="border-t border-slate-200 bg-white px-3 py-2.5 sm:px-4 sm:py-3 dark:border-slate-800 dark:bg-slate-900 flex-shrink-0">
               <div className="flex flex-col gap-2.5 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div
                   className={`flex ${
@@ -2593,14 +2418,14 @@ export function CreatePostModal({
                     {/* Rewrite with AI Button */}
                     <button
                       type="button"
-                      onClick={handleRewrite}
+                      onClick={() => setShowSettings(true)}
                       disabled={!hasText || isRewriting || isGenerating}
                       className="flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800 whitespace-nowrap flex-shrink-0"
                     >
                       {isRewriting ? (
                         <>
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          Rewriting...
+                          Rewriting with AI
                         </>
                       ) : (
                         <>
@@ -2760,8 +2585,7 @@ export function CreatePostModal({
                 </Button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
       </DialogContent>
     </Dialog>
   );
