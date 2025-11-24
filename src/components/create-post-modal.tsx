@@ -40,6 +40,8 @@ import {
   Video,
 } from "lucide-react";
 import NextImage from "next/image";
+import { Avatar } from "@/components/ui/avatar";
+import { useLinkedInProfilePicture } from "@/hooks/useLinkedInProfilePicture";
 
 export interface CreatePostFormData {
   topicTitle: string;
@@ -350,6 +352,12 @@ export function CreatePostModal({
       id: number;
     }>
   >([]);
+
+  // LinkedIn profile picture (cached via hook)
+  const {
+    profilePicture: linkedInProfilePicture,
+    isLoading: isLoadingProfilePicture,
+  } = useLinkedInProfilePicture();
 
   // State for selected publish target (can be changed by user in the modal)
   const [selectedPublishTarget, setSelectedPublishTarget] =
@@ -1650,9 +1658,24 @@ export function CreatePostModal({
           <div className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 pr-12 dark:border-slate-800 dark:bg-slate-900 flex-shrink-0 sticky top-0 z-10">
             <div className="flex items-center gap-3">
               {/* Profile Picture */}
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white">
-                {formData.userInitials || "U"}
-              </div>
+              <Avatar
+                imageUrl={
+                  selectedPublishTarget === "personal"
+                    ? linkedInProfilePicture
+                    : null
+                }
+                name={selectedOrgName}
+                type={
+                  selectedPublishTarget === "personal"
+                    ? "personal"
+                    : "organization"
+                }
+                size="md"
+                isLoading={
+                  selectedPublishTarget === "personal" &&
+                  isLoadingProfilePicture
+                }
+              />
               <div
                 className="flex flex-col relative"
                 ref={publishTargetDropdownRef}

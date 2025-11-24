@@ -55,6 +55,8 @@ import { generateLinkedInPostURL } from "@/lib/linkedin-urls";
 import { CreatePostModal } from "@/components/create-post-modal";
 import type { CreatePostFormData } from "@/components/create-post-modal";
 import { FileText, Download, Image as ImageIcon } from "lucide-react";
+import { Avatar } from "@/components/ui/avatar";
+import { useLinkedInProfilePicture } from "@/hooks/useLinkedInProfilePicture";
 
 // The API now returns signed URLs directly, so we can use them as-is
 // This function is kept for backward compatibility if we receive a path instead of a URL
@@ -155,6 +157,10 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
   const [postContentVersion, setPostContentVersion] = useState(0);
   const [userName, setUserName] = useState<string>("You");
   const [userInitials, setUserInitials] = useState<string>("U");
+  const {
+    profilePicture: linkedInProfilePicture,
+    isLoading: isLoadingProfilePicture,
+  } = useLinkedInProfilePicture();
   const [engagementMetrics, setEngagementMetrics] = useState<{
     likes: number;
     comments: number;
@@ -944,19 +950,21 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
                     {/* Profile Picture */}
                     {(() => {
                       const orgInfo = getOrganizationInfo(currentPost);
-                      const orgInitials = getOrganizationInitials(
-                        orgInfo.organizationName
-                      );
-                      const backgroundColor = orgInfo.isPersonal
-                        ? "hsl(217 91% 60%)" // Blue for personal
-                        : "hsl(142 76% 36%)"; // Green for organizations
                       return (
-                        <div
-                          className="flex h-12 w-12 items-center justify-center rounded-full text-base font-semibold text-white flex-shrink-0"
-                          style={{ backgroundColor }}
-                        >
-                          {orgInitials}
-                        </div>
+                        <Avatar
+                          imageUrl={
+                            orgInfo.isPersonal ? linkedInProfilePicture : null
+                          }
+                          name={orgInfo.organizationName}
+                          type={
+                            orgInfo.isPersonal ? "personal" : "organization"
+                          }
+                          size="lg"
+                          backgroundColor={orgInfo.color}
+                          isLoading={
+                            orgInfo.isPersonal && isLoadingProfilePicture
+                          }
+                        />
                       );
                     })()}
                     <div className="flex-1 min-w-0">

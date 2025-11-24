@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Avatar } from "@/components/ui/avatar";
+import { useLinkedInProfilePicture } from "@/hooks/useLinkedInProfilePicture";
 import { createClientClient } from "@/lib/supabase-client";
 import { resetGlobalAdminState } from "@/contexts/admin-context";
 import type { User } from "@supabase/supabase-js";
@@ -61,9 +63,10 @@ export function SharedNav({
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [linkedInProfilePicture, setLinkedInProfilePicture] = useState<
-    string | null
-  >(null);
+  const {
+    profilePicture: linkedInProfilePicture,
+    isLoading: isLoadingProfilePicture,
+  } = useLinkedInProfilePicture();
   const pathname = usePathname();
   const router = useRouter();
   const postsDropdownRef = useRef<HTMLDivElement>(null);
@@ -92,26 +95,6 @@ export function SharedNav({
         }
 
         setUser(user);
-
-        // Fetch LinkedIn profile picture if integration is complete
-        try {
-          const linkedInResponse = await fetch("/api/linkedin/status");
-          if (linkedInResponse.ok) {
-            const linkedInData = await linkedInResponse.json();
-            if (
-              linkedInData.connected &&
-              linkedInData.profile?.profilePicture
-            ) {
-              setLinkedInProfilePicture(linkedInData.profile.profilePicture);
-            }
-          }
-        } catch (linkedInError) {
-          // Silently fail - LinkedIn integration is optional
-          console.debug(
-            "Could not fetch LinkedIn profile picture:",
-            linkedInError
-          );
-        }
       } catch (error) {
         console.error("Error fetching user data:", error);
         router.push("/auth/signin");
@@ -340,22 +323,14 @@ export function SharedNav({
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                 className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                {linkedInProfilePicture ? (
-                  <Image
-                    src={linkedInProfilePicture}
-                    alt="Profile"
-                    width={32}
-                    height={32}
-                    className="rounded-full object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-white">
-                      {user?.email?.charAt(0)?.toUpperCase() || "U"}
-                    </span>
-                  </div>
-                )}
+                <Avatar
+                  imageUrl={linkedInProfilePicture}
+                  name={user?.email || undefined}
+                  type="personal"
+                  size="sm"
+                  alt="Profile"
+                  isLoading={isLoadingProfilePicture}
+                />
                 <span className="ml-2 text-gray-700 hidden menu:block">
                   {user?.email}
                 </span>
