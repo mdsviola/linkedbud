@@ -7,8 +7,9 @@ import {
   deleteFileFromStorageByUrl,
 } from "@/lib/storage";
 import { canUserAccessPost } from "@/lib/portfolio-posts";
+import { canScheduleOrPublishPost } from "@/lib/auth";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET(
   request: NextRequest,
@@ -80,8 +81,14 @@ export async function GET(
     const postWithSignedUrls = { ...postWithLinkedInPosts };
     if (postWithSignedUrls.image_url) {
       // Only generate signed URL if it's a path, not already a full URL
-      if (!postWithSignedUrls.image_url.startsWith("http://") && !postWithSignedUrls.image_url.startsWith("https://")) {
-        const signedImageUrl = await getSignedStorageUrl(supabase, postWithSignedUrls.image_url);
+      if (
+        !postWithSignedUrls.image_url.startsWith("http://") &&
+        !postWithSignedUrls.image_url.startsWith("https://")
+      ) {
+        const signedImageUrl = await getSignedStorageUrl(
+          supabase,
+          postWithSignedUrls.image_url
+        );
         if (signedImageUrl) {
           postWithSignedUrls.image_url = signedImageUrl;
         } else {
@@ -93,8 +100,14 @@ export async function GET(
     }
     if (postWithSignedUrls.document_url) {
       // Only generate signed URL if it's a path, not already a full URL
-      if (!postWithSignedUrls.document_url.startsWith("http://") && !postWithSignedUrls.document_url.startsWith("https://")) {
-        const signedDocumentUrl = await getSignedStorageUrl(supabase, postWithSignedUrls.document_url);
+      if (
+        !postWithSignedUrls.document_url.startsWith("http://") &&
+        !postWithSignedUrls.document_url.startsWith("https://")
+      ) {
+        const signedDocumentUrl = await getSignedStorageUrl(
+          supabase,
+          postWithSignedUrls.document_url
+        );
         if (signedDocumentUrl) {
           postWithSignedUrls.document_url = signedDocumentUrl;
         } else {
@@ -106,8 +119,14 @@ export async function GET(
     }
     if (postWithSignedUrls.video_url) {
       // Only generate signed URL if it's a path, not already a full URL
-      if (!postWithSignedUrls.video_url.startsWith("http://") && !postWithSignedUrls.video_url.startsWith("https://")) {
-        const signedVideoUrl = await getSignedStorageUrl(supabase, postWithSignedUrls.video_url);
+      if (
+        !postWithSignedUrls.video_url.startsWith("http://") &&
+        !postWithSignedUrls.video_url.startsWith("https://")
+      ) {
+        const signedVideoUrl = await getSignedStorageUrl(
+          supabase,
+          postWithSignedUrls.video_url
+        );
         if (signedVideoUrl) {
           postWithSignedUrls.video_url = signedVideoUrl;
         } else {
@@ -160,7 +179,9 @@ export async function PATCH(
     // Extract form fields
     const status = formData.get("status") as string | null;
     const content = formData.get("content") as string | null;
-    const scheduled_publish_date = formData.get("scheduled_publish_date") as string | null;
+    const scheduled_publish_date = formData.get("scheduled_publish_date") as
+      | string
+      | null;
     const publish_target = formData.get("publish_target") as string | null;
     const source_url = formData.get("source_url") as string | null;
     const source_title = formData.get("source_title") as string | null;
@@ -187,7 +208,12 @@ export async function PATCH(
     // Validate video file size (max 100MB)
     if (videoFile && videoFile.size > 100 * 1024 * 1024) {
       return NextResponse.json(
-        { error: "Video file size must be less than 100MB. Your file is " + (videoFile.size / (1024 * 1024)).toFixed(2) + "MB" },
+        {
+          error:
+            "Video file size must be less than 100MB. Your file is " +
+            (videoFile.size / (1024 * 1024)).toFixed(2) +
+            "MB",
+        },
         { status: 400 }
       );
     }
@@ -297,6 +323,7 @@ export async function PATCH(
         `
         user_id,
         status,
+        published_at,
         image_url,
         document_url,
         video_url,
@@ -339,6 +366,22 @@ export async function PATCH(
     const updateData: any = {};
     if (status) updateData.status = status;
 
+    // If marking as published manually (status changed to PUBLISHED and no LinkedIn posts exist),
+    // set published_at to current timestamp if it's not already set
+    if (status === "PUBLISHED" && post.status !== "PUBLISHED") {
+      const hasLinkedInPosts = post.linkedin_posts?.some(
+        (linkedinPost: any) =>
+          linkedinPost.status === "PUBLISHED" && linkedinPost.linkedin_post_id
+      );
+
+      // Only set published_at if:
+      // 1. There are no LinkedIn posts (manual "mark as published")
+      // 2. published_at is not already set
+      if (!hasLinkedInPosts && !post.published_at) {
+        updateData.published_at = new Date().toISOString();
+      }
+    }
+
     // Handle scheduled_publish_date and auto-update status
     // FormData.get() returns null if field is not present, so check !== null
     if (scheduled_publish_date !== null) {
@@ -348,6 +391,18 @@ export async function PATCH(
         updateData.publish_target = null;
         updateData.status = "DRAFT";
       } else if (scheduled_publish_date) {
+        // Check subscription limit for posts per month before scheduling
+        const monthlyLimitCheck = await canScheduleOrPublishPost(user.id);
+        if (!monthlyLimitCheck.canGenerate) {
+          return NextResponse.json(
+            {
+              error: monthlyLimitCheck.reason,
+              requiresUpgrade: true,
+            },
+            { status: 402 }
+          );
+        }
+
         // Set scheduled date and update status to SCHEDULED
         updateData.scheduled_publish_date = scheduled_publish_date;
         updateData.status = "SCHEDULED";
@@ -368,8 +423,10 @@ export async function PATCH(
     // Handle source info updates
     if (source_url !== null) updateData.source_url = source_url || null;
     if (source_title !== null) updateData.source_title = source_title || null;
-    if (source_content !== null) updateData.source_content = source_content || null;
-    if (two_para_summary !== null) updateData.two_para_summary = two_para_summary || "";
+    if (source_content !== null)
+      updateData.source_content = source_content || null;
+    if (two_para_summary !== null)
+      updateData.two_para_summary = two_para_summary || "";
 
     // Handle file uploads and removals
     let newImagePath: string | null | undefined = undefined;
@@ -396,7 +453,11 @@ export async function PATCH(
           "images",
           imageFile.name
         );
-        newImagePath = await uploadFileToStorage(supabase, imageFile, storagePath);
+        newImagePath = await uploadFileToStorage(
+          supabase,
+          imageFile,
+          storagePath
+        );
         if (!newImagePath) {
           console.error("Failed to upload image file");
           // Continue without failing update
@@ -462,25 +523,44 @@ export async function PATCH(
           "videos",
           videoFile.name
         );
-        newVideoPath = await uploadFileToStorage(supabase, videoFile, storagePath);
+        newVideoPath = await uploadFileToStorage(
+          supabase,
+          videoFile,
+          storagePath
+        );
         if (!newVideoPath) {
           console.error("Failed to upload video file");
           return NextResponse.json(
-            { error: "Failed to upload video file. The file may be too large or there was an upload error. Please try a smaller file or check your connection." },
+            {
+              error:
+                "Failed to upload video file. The file may be too large or there was an upload error. Please try a smaller file or check your connection.",
+            },
             { status: 500 }
           );
         }
       } catch (error) {
         console.error("Error uploading video file:", error);
         // Check if it's a size-related error
-        if (error instanceof Error && (error.message.includes("size") || error.message.includes("too large") || error.message.includes("limit"))) {
+        if (
+          error instanceof Error &&
+          (error.message.includes("size") ||
+            error.message.includes("too large") ||
+            error.message.includes("limit"))
+        ) {
           return NextResponse.json(
-            { error: "Video file is too large. Maximum size is 100MB. Please compress your video or use a smaller file." },
+            {
+              error:
+                "Video file is too large. Maximum size is 100MB. Please compress your video or use a smaller file.",
+            },
             { status: 400 }
           );
         }
         return NextResponse.json(
-          { error: "Failed to upload video file: " + (error instanceof Error ? error.message : "Unknown error") },
+          {
+            error:
+              "Failed to upload video file: " +
+              (error instanceof Error ? error.message : "Unknown error"),
+          },
           { status: 500 }
         );
       }
@@ -488,7 +568,8 @@ export async function PATCH(
 
     // Update file paths in updateData if changed
     if (newImagePath !== undefined) updateData.image_url = newImagePath;
-    if (newDocumentPath !== undefined) updateData.document_url = newDocumentPath;
+    if (newDocumentPath !== undefined)
+      updateData.document_url = newDocumentPath;
     if (newVideoPath !== undefined) updateData.video_url = newVideoPath;
 
     const { error: updateError } = await supabase

@@ -20,28 +20,17 @@ export async function POST(request: NextRequest) {
       "Creator Lite": {
         tier: "LITE",
         variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_LITE",
-        displayName: "linkedbud Creator Lite",
+        displayName: "Creator Lite",
       },
       "Creator Pro": {
         tier: "PRO",
         variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_PRO",
-        displayName: "linkedbud Creator Pro",
+        displayName: "Creator Pro",
       },
       Growth: {
         tier: "GROWTH",
         variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_GROWTH",
-        displayName: "linkedbud Growth",
-      },
-      // Legacy plan names for backward compatibility
-      Lite: {
-        tier: "LITE",
-        variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_LITE",
-        displayName: "linkedbud Creator Lite",
-      },
-      Starter: {
-        tier: "PRO",
-        variantEnvKey: "LEMONSQUEEZY_VARIANT_ID_PRO",
-        displayName: "linkedbud Creator Pro",
+        displayName: "Growth",
       },
     };
 
@@ -135,7 +124,7 @@ export async function POST(request: NextRequest) {
           },
         },
         product_options: {
-          name: planConfig.displayName,
+          // Omit 'name' field to let LemonSqueezy use only the variant name
           description: `Upgrade to ${planConfig.displayName}`,
           media: [],
           enabled_variants: [variantId],

@@ -57,6 +57,7 @@ import type { CreatePostFormData } from "@/components/create-post-modal";
 import { FileText, Download, Image as ImageIcon } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { useLinkedInProfilePicture } from "@/hooks/useLinkedInProfilePicture";
+import { MoveContextDropdown } from "@/components/move-context-dropdown";
 
 // The API now returns signed URLs directly, so we can use them as-is
 // This function is kept for backward compatibility if we receive a path instead of a URL
@@ -179,6 +180,7 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
     "DRAFT" | "PUBLISHED" | "SCHEDULED" | "ARCHIVED" | null
   >(null);
   const [modalIsLoading, setModalIsLoading] = useState(false);
+  const [movingContext, setMovingContext] = useState(false);
 
   const linkedinPublishForm = useFormSubmission();
   const { toast } = useToast();
@@ -455,6 +457,58 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
       } else {
         setUpdatingPost(null);
       }
+    }
+  };
+
+  const handleMoveContext = async (newPublishTarget: string) => {
+    if (!currentPost) return;
+
+    setMovingContext(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("publish_target", newPublishTarget);
+
+      const response = await fetch(`/api/posts/${currentPost.id}`, {
+        method: "PATCH",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to move post context");
+      }
+
+      // Refresh the post data to get the updated publish_target
+      await refreshPost();
+
+      // Show success toast
+      toast({
+        title: (
+          <div className="flex items-center gap-2">
+            <Check className="h-4 w-4" />
+            <span>Context moved successfully</span>
+          </div>
+        ) as any,
+        description: `Post moved to ${newPublishTarget === "personal" ? "Personal" : organizations.find(o => o.linkedin_org_id === newPublishTarget)?.org_name || "organization"}`,
+        variant: "success",
+      });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to move post context";
+      toast({
+        title: (
+          <div className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4" />
+            <span>Error</span>
+          </div>
+        ) as any,
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setMovingContext(false);
     }
   };
 
@@ -831,16 +885,37 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
   // Determine which tab to navigate back to
   const getBackUrl = () => {
     const baseUrl = `/posts/${String(currentPost.status).toLowerCase()}`;
-    const orgInfo = getOrganizationInfo(currentPost);
+    const params = new URLSearchParams();
 
-    if (orgInfo.isPersonal) {
-      return `${baseUrl}?tab=personal`;
-    } else if (orgInfo.organizationId) {
-      return `${baseUrl}?tab=${orgInfo.organizationId}`;
+    // First, check if we have a tab parameter (preserved from when user clicked on post)
+    const tab = searchParams.get("tab");
+    if (tab) {
+      // Use the preserved tab context
+      params.set("tab", tab);
+    } else {
+      // Fallback: determine from post's organization info
+      const orgInfo = getOrganizationInfo(currentPost);
+      if (orgInfo.isPersonal) {
+        params.set("tab", "personal");
+      } else if (orgInfo.organizationId) {
+        params.set("tab", orgInfo.organizationId);
+      } else {
+        // Default to personal if we can't determine
+        params.set("tab", "personal");
+      }
     }
 
-    // Default to personal if we can't determine
-    return `${baseUrl}?tab=personal`;
+    // Preserve page number if it was provided
+    const page = searchParams.get("page");
+    if (page) {
+      const pageNum = parseInt(page, 10);
+      if (!isNaN(pageNum) && pageNum > 1) {
+        params.set("page", pageNum.toString());
+      }
+    }
+
+    const queryString = params.toString();
+    return queryString ? `${baseUrl}?${queryString}` : baseUrl;
   };
 
   return (
@@ -861,23 +936,36 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
           {/* Action buttons */}
           <div className="flex gap-2">
             {currentPost.status === "DRAFT" && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleStatusChange(currentPost.id, "PUBLISHED")}
-                disabled={
-                  markingAsPublished === currentPost.id ||
-                  deletingPost === currentPost.id
-                }
-                className="flex items-center gap-2"
-              >
-                {markingAsPublished === currentPost.id ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <CheckCheck className="h-4 w-4" />
-                )}
-                Mark as Published
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleStatusChange(currentPost.id, "PUBLISHED")}
+                  disabled={
+                    markingAsPublished === currentPost.id ||
+                    deletingPost === currentPost.id ||
+                    movingContext
+                  }
+                  className="flex items-center gap-2"
+                >
+                  {markingAsPublished === currentPost.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <CheckCheck className="h-4 w-4" />
+                  )}
+                  Mark as Published
+                </Button>
+                <MoveContextDropdown
+                  organizations={organizations}
+                  currentPublishTarget={currentPost.publish_target}
+                  onMove={handleMoveContext}
+                  isMoving={movingContext}
+                  disabled={
+                    markingAsPublished === currentPost.id ||
+                    deletingPost === currentPost.id
+                  }
+                />
+              </>
             )}
 
             {currentPost.status === "PUBLISHED" && (
@@ -913,7 +1001,8 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
               disabled={
                 markingAsPublished === currentPost.id ||
                 publishingToLinkedin === currentPost.id ||
-                deletingPost === currentPost.id
+                deletingPost === currentPost.id ||
+                movingContext
               }
               className="flex items-center gap-2 text-red-600 hover:text-red-700"
             >
@@ -1224,6 +1313,7 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
                             )
                           }
                           isPublishing={publishingToLinkedin === currentPost.id}
+                          publishTarget={currentPost.publish_target}
                         />
 
                         <Button
@@ -1296,6 +1386,7 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
                             )
                           }
                           isPublishing={publishingToLinkedin === currentPost.id}
+                          publishTarget={currentPost.publish_target}
                         />
                       </>
                     )}

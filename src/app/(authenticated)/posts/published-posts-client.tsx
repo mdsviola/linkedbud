@@ -99,12 +99,21 @@ export function PublishedPostsClient({ status }: PublishedPostsClientProps) {
     fetchData();
   }, [status]);
 
-  // Update selectedView when searchParams change (e.g., when navigating back with tab parameter)
+  // Update selectedView and pagination when searchParams change (e.g., when navigating back)
   useEffect(() => {
     const tabParam = searchParams.get("tab");
+    const pageParam = searchParams.get("page");
+
     if (tabParam && organizations.length > 0) {
       if (tabParam === "personal") {
         setSelectedView("personal");
+        // Restore personal pagination if page parameter is provided
+        if (pageParam) {
+          const page = parseInt(pageParam, 10);
+          if (!isNaN(page) && page >= 1) {
+            fetchPersonalPosts(page);
+          }
+        }
       } else {
         // Check if it's a valid organization ID
         const isValidOrg = organizations.some(
@@ -112,10 +121,49 @@ export function PublishedPostsClient({ status }: PublishedPostsClientProps) {
         );
         if (isValidOrg) {
           setSelectedView(tabParam);
+          // Restore organization pagination if page parameter is provided
+          if (pageParam) {
+            const page = parseInt(pageParam, 10);
+            if (!isNaN(page) && page >= 1) {
+              fetchOrganizationPosts(page);
+            }
+          }
         }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, organizations]);
+
+  // Sync URL with selectedView changes (when user manually changes tab)
+  // Only update URL if it's different from current URL param and organizations are loaded
+  useEffect(() => {
+    if (organizations.length > 0) {
+      const currentTab = searchParams.get("tab");
+      const newTab = selectedView;
+
+      // Only update URL if it's different from current URL param
+      // Also handle the case where URL has no tab param but selectedView is not "personal"
+      if (currentTab !== newTab && (currentTab !== null || newTab !== "personal")) {
+        const url = new URL(window.location.href);
+        if (newTab === "personal") {
+          url.searchParams.set("tab", "personal");
+        } else {
+          // Validate it's a valid org before setting
+          const isValidOrg = organizations.some(
+            (org) => org.linkedin_org_id === newTab
+          );
+          if (isValidOrg) {
+            url.searchParams.set("tab", newTab);
+          } else {
+            url.searchParams.set("tab", "personal");
+          }
+        }
+        // When changing tabs, reset page to 1 (or remove page param)
+        url.searchParams.delete("page");
+        router.replace(url.pathname + url.search, { scroll: false });
+      }
+    }
+  }, [selectedView, organizations, router, searchParams]);
 
   const fetchData = async () => {
     try {
@@ -131,7 +179,7 @@ export function PublishedPostsClient({ status }: PublishedPostsClientProps) {
       } else {
         const fetchedOrgs = orgsResult.organizations || [];
         setOrganizations(fetchedOrgs);
-        
+
         // Validate and set the selectedView from URL query parameter
         const tabParam = searchParams.get("tab");
         if (tabParam) {
@@ -229,12 +277,28 @@ export function PublishedPostsClient({ status }: PublishedPostsClientProps) {
   const handlePersonalPageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= personalPagination.totalPages) {
       fetchPersonalPosts(newPage);
+      // Update URL with new page number
+      const url = new URL(window.location.href);
+      if (newPage === 1) {
+        url.searchParams.delete("page");
+      } else {
+        url.searchParams.set("page", newPage.toString());
+      }
+      router.replace(url.pathname + url.search, { scroll: false });
     }
   };
 
   const handleOrganizationPageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= organizationPagination.totalPages) {
       fetchOrganizationPosts(newPage);
+      // Update URL with new page number
+      const url = new URL(window.location.href);
+      if (newPage === 1) {
+        url.searchParams.delete("page");
+      } else {
+        url.searchParams.set("page", newPage.toString());
+      }
+      router.replace(url.pathname + url.search, { scroll: false });
     }
   };
 
@@ -371,7 +435,7 @@ export function PublishedPostsClient({ status }: PublishedPostsClientProps) {
       {(() => {
         const isPersonal = selectedView === "personal";
         const selectedOrg = organizations.find((org) => org.linkedin_org_id === selectedView);
-        
+
         if (isPersonal) {
           // Show personal posts
           if (personalPosts.length === 0) {
@@ -393,7 +457,7 @@ export function PublishedPostsClient({ status }: PublishedPostsClientProps) {
               </div>
             );
           }
-          
+
           return (
             <div>
               <div className="flex items-center gap-2 mb-4">
@@ -407,7 +471,13 @@ export function PublishedPostsClient({ status }: PublishedPostsClientProps) {
               </div>
               <div className="flex flex-col gap-2">
                 {personalPosts.map((post) => (
-                  <PostCard key={post.id} post={post} status={status} />
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    status={status}
+                    currentTab={selectedView}
+                    currentPage={personalPagination.page}
+                  />
                 ))}
               </div>
               <Pagination
@@ -418,7 +488,7 @@ export function PublishedPostsClient({ status }: PublishedPostsClientProps) {
             </div>
           );
         }
-        
+
         // Show organization posts
         if (!selectedOrg) {
           return (
@@ -432,7 +502,7 @@ export function PublishedPostsClient({ status }: PublishedPostsClientProps) {
             </div>
           );
         }
-        
+
         // Filter posts for this specific organization
         const orgPosts = organizationPosts.filter((post) => {
           const orgId =
@@ -440,7 +510,7 @@ export function PublishedPostsClient({ status }: PublishedPostsClientProps) {
             post.publish_target;
           return orgId === selectedView;
         });
-        
+
         if (orgPosts.length === 0) {
           return (
             <div className="text-center py-12">
@@ -460,7 +530,7 @@ export function PublishedPostsClient({ status }: PublishedPostsClientProps) {
             </div>
           );
         }
-        
+
         return (
           <div>
             <div className="flex items-center gap-2 mb-4">
@@ -468,14 +538,20 @@ export function PublishedPostsClient({ status }: PublishedPostsClientProps) {
               <h2 className="text-xl font-semibold text-gray-900">
                 {selectedOrg.org_name}
               </h2>
-              <LabelWithCount 
-                count={organizationCounts[selectedView] || orgPosts.length} 
+              <LabelWithCount
+                count={organizationCounts[selectedView] || orgPosts.length}
                 unit="posts"
               />
             </div>
             <div className="flex flex-col gap-2">
               {orgPosts.map((post) => (
-                <PostCard key={post.id} post={post} status={status} />
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  status={status}
+                  currentTab={selectedView}
+                  currentPage={organizationPagination.page}
+                />
               ))}
             </div>
             <Pagination

@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { formatCompactDateTime } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils";
 import { Calendar, Clock, CheckCircle, Archive, Edit } from "lucide-react";
 
 interface PostStatusBadgeProps {
@@ -13,6 +13,7 @@ interface PostStatusBadgeProps {
     linkedin_post_id: string;
     status: string;
     published_at: string;
+    organization_id: string | null;
   }[];
   className?: string;
   hideDate?: boolean;
@@ -28,7 +29,7 @@ export function PostStatusBadge({
   hideDate = false,
 }: PostStatusBadgeProps) {
   const formatDate = (dateString: string) => {
-    return formatCompactDateTime(dateString);
+    return formatDateTime(dateString);
   };
 
   const getStatusConfig = () => {
@@ -57,10 +58,49 @@ export function PostStatusBadge({
         };
       case "PUBLISHED":
         // Use LinkedIn post's published date if available, otherwise fall back to posts.published_at
-        const actualPublishedAt =
-          linkedinPosts?.find(
-            (post) => post.status === "PUBLISHED" && post.published_at
-          )?.published_at || publishedAt;
+        // Filter linkedinPosts based on publish_target:
+        // - If publish_target is "personal" or null, find post with organization_id === null
+        // - If publish_target is an organization ID, find post with matching organization_id
+        // - Otherwise, find any PUBLISHED post
+        let actualPublishedAt: string | null = null;
+
+        if (linkedinPosts && linkedinPosts.length > 0) {
+          const isPersonal = scheduledPublishTarget === "personal" || !scheduledPublishTarget;
+
+          if (isPersonal) {
+            // For personal posts, find the LinkedIn post with organization_id === null
+            const personalPost = linkedinPosts.find(
+              (post) =>
+                post.status === "PUBLISHED" &&
+                post.published_at &&
+                post.organization_id === null
+            );
+            actualPublishedAt = personalPost?.published_at || null;
+          } else if (scheduledPublishTarget) {
+            // For organization posts, find the LinkedIn post with matching organization_id
+            const orgPost = linkedinPosts.find(
+              (post) =>
+                post.status === "PUBLISHED" &&
+                post.published_at &&
+                post.organization_id === scheduledPublishTarget
+            );
+            actualPublishedAt = orgPost?.published_at || null;
+          }
+
+          // Fallback: if no matching post found, use any PUBLISHED post
+          if (!actualPublishedAt) {
+            const anyPublishedPost = linkedinPosts.find(
+              (post) => post.status === "PUBLISHED" && post.published_at
+            );
+            actualPublishedAt = anyPublishedPost?.published_at || null;
+          }
+        }
+
+        // Final fallback to posts.published_at
+        if (!actualPublishedAt) {
+          actualPublishedAt = publishedAt || null;
+        }
+
         return {
           label: hideDate
             ? "Published"

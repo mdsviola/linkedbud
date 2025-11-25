@@ -67,7 +67,9 @@ type LimitType =
   | "polish"
   | "for_you"
   | "rewrite_with_ai"
-  | "ai_insights";
+  | "ai_insights"
+  | "published_posts"
+  | "posts_per_month";
 
 // Get limit for a specific tier and type
 function getTierLimit(tier: string, type: LimitType): number {
@@ -93,12 +95,26 @@ function getTierLimit(tier: string, type: LimitType): number {
       case "ai_insights":
         defaultValue = "10";
         break;
+      case "published_posts":
+        defaultValue = "2";
+        break;
+      case "posts_per_month":
+        defaultValue = "2";
+        break;
     }
   } else if (tier === "LITE") {
     // Lite tier has specific limits
     switch (type) {
       case "draft":
         defaultValue = "30";
+        break;
+      case "published_posts":
+        // Published posts are unlimited for Lite tier
+        defaultValue = "-1";
+        break;
+      case "posts_per_month":
+        // Posts per month are unlimited for Lite tier
+        defaultValue = "-1";
         break;
       default:
         // Other features are unlimited for Lite
@@ -202,7 +218,10 @@ function isSubscriptionValid(subscription: any): boolean {
 
   // Cancelled subscriptions are valid until current_period_end
   // Handle both "canceled" (US spelling) and "cancelled" (UK spelling)
-  if (subscription.status === "canceled" || subscription.status === "cancelled") {
+  if (
+    subscription.status === "canceled" ||
+    subscription.status === "cancelled"
+  ) {
     if (!subscription.current_period_end) {
       // If cancelled but no current_period_end, consider it invalid
       return false;
@@ -372,9 +391,62 @@ function getLimitName(type: LimitType): string {
       return "AI rewrite operations";
     case "ai_insights":
       return "AI insights generations";
+    case "published_posts":
+      return "published posts";
+    case "posts_per_month":
+      return "posts per month";
     default:
       return "operations";
   }
+}
+
+// Helper function to count total published posts
+async function countPublishedPosts(userId: string): Promise<number> {
+  const supabase = createReadOnlyServerClient();
+
+  const { count } = await supabase
+    .from("posts")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", "PUBLISHED");
+
+  return count || 0;
+}
+
+// Helper function to count posts (published or scheduled) in the current month
+async function countPostsInCurrentMonth(userId: string): Promise<number> {
+  const supabase = createReadOnlyServerClient();
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(
+    now.getFullYear(),
+    now.getMonth() + 1,
+    0,
+    23,
+    59,
+    59,
+    999
+  );
+
+  // Count published posts in current month
+  const { count: publishedCount } = await supabase
+    .from("posts")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", "PUBLISHED")
+    .gte("published_at", startOfMonth.toISOString())
+    .lte("published_at", endOfMonth.toISOString());
+
+  // Count scheduled posts in current month
+  const { count: scheduledCount } = await supabase
+    .from("posts")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("status", "SCHEDULED")
+    .gte("scheduled_publish_date", startOfMonth.toISOString())
+    .lte("scheduled_publish_date", endOfMonth.toISOString());
+
+  return (publishedCount || 0) + (scheduledCount || 0);
 }
 
 // Helper function to check limit by type
@@ -383,7 +455,6 @@ async function checkLimitByType(
   type: LimitType
 ): Promise<{ canGenerate: boolean; reason?: string }> {
   const tier = await getUserTier(userId);
-  const counts = await getUserGenerationCounts(userId);
 
   // Get the limit for this tier and type
   const limit = getTierLimit(tier, type);
@@ -401,8 +472,44 @@ async function checkLimitByType(
     };
   }
 
-  // Check the limit for this type
-  const typeCount = counts[type] || 0;
+  // Special handling for published_posts - count total published posts from database
+  if (type === "published_posts") {
+    const currentCount = await countPublishedPosts(userId);
+
+    if (currentCount >= limit) {
+      const limitName = getLimitName(type);
+      const tierName = tier === "FREE" ? "free" : tier.toLowerCase();
+
+      return {
+        canGenerate: false,
+        reason: `You have reached your ${tierName} tier limit of ${limit} ${limitName}. Please upgrade to continue.`,
+      };
+    }
+
+    return { canGenerate: true };
+  }
+
+  // Special handling for posts_per_month - count from database
+  if (type === "posts_per_month") {
+    const currentCount = await countPostsInCurrentMonth(userId);
+
+    if (currentCount >= limit) {
+      const limitName = getLimitName(type);
+      const tierName = tier === "FREE" ? "free" : tier.toLowerCase();
+
+      return {
+        canGenerate: false,
+        reason: `You have reached your ${tierName} tier limit of ${limit} ${limitName}. Please upgrade to continue.`,
+      };
+    }
+
+    return { canGenerate: true };
+  }
+
+  // For other types, use usage counters
+  const counts = await getUserGenerationCounts(userId);
+  // Type assertion is safe here because we've already handled "published_posts" and "posts_per_month" above
+  const typeCount = (counts[type as keyof GenerationCounts] as number) || 0;
 
   if (typeCount >= limit) {
     const limitName = getLimitName(type);
@@ -465,6 +572,18 @@ export async function canGenerateForYou(
   userId: string
 ): Promise<{ canGenerate: boolean; reason?: string }> {
   return checkLimitByType(userId, "for_you");
+}
+
+export async function canPublishPost(
+  userId: string
+): Promise<{ canGenerate: boolean; reason?: string }> {
+  return checkLimitByType(userId, "published_posts");
+}
+
+export async function canScheduleOrPublishPost(
+  userId: string
+): Promise<{ canGenerate: boolean; reason?: string }> {
+  return checkLimitByType(userId, "posts_per_month");
 }
 
 // Keep for backward compatibility during migration

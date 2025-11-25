@@ -226,7 +226,7 @@ function ForYouSection({
   onGenerateDrafts: (article: Article) => void;
   generatingArticle: string | null;
   loading: boolean;
-  error: boolean;
+  error: { message: string; requiresUpgrade?: boolean } | null;
   hasAttempted: boolean;
 }) {
   return (
@@ -271,10 +271,17 @@ function ForYouSection({
             <h3 className="text-lg font-medium text-gray-900 mb-2">
               For you posts couldn&apos;t be fetched
             </h3>
-            <p className="text-gray-500">
-              Unable to get AI recommendations at this time. Please try again
-              later.
+            <p className="text-gray-500 mb-4">
+              {error.message}
             </p>
+            {error.requiresUpgrade && (
+              <Button
+                onClick={() => window.location.href = "/subscription"}
+                className="mt-2"
+              >
+                Upgrade Plan
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}
@@ -601,7 +608,10 @@ export function ArticlesClient({ user }: { user: User }) {
   >({});
   const [forYouArticles, setForYouArticles] = useState<Article[]>([]);
   const [forYouLoading, setForYouLoading] = useState(true); // Always start in loading state
-  const [forYouError, setForYouError] = useState(false);
+  const [forYouError, setForYouError] = useState<{
+    message: string;
+    requiresUpgrade?: boolean;
+  } | null>(null);
   const forYouAttempted = useRef(false);
 
   const supabase = createClientClient();
@@ -615,7 +625,7 @@ export function ArticlesClient({ user }: { user: User }) {
 
     // Reset For You state when preferences change
     forYouAttempted.current = false;
-    setForYouError(false);
+    setForYouError(null);
     setForYouLoading(true);
     setForYouArticles([]); // Clear previous articles
 
@@ -814,7 +824,7 @@ export function ArticlesClient({ user }: { user: User }) {
   const fetchForYouRecommendations = async () => {
     // Clear previous articles and errors
     setForYouArticles([]);
-    setForYouError(false);
+    setForYouError(null);
 
     try {
       const response = await fetch("/api/articles/recommend", {
@@ -831,7 +841,16 @@ export function ArticlesClient({ user }: { user: User }) {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Failed to get recommendations");
+        // Capture the specific error message and whether it requires an upgrade
+        const errorMessage = result.error || "Failed to get recommendations";
+        const requiresUpgrade = response.status === 402 || result.requiresUpgrade === true;
+
+        setForYouError({
+          message: errorMessage,
+          requiresUpgrade,
+        });
+        setForYouArticles([]);
+        return;
       }
 
       const recommendedArticles = result.recommendedArticles || [];
@@ -841,7 +860,13 @@ export function ArticlesClient({ user }: { user: User }) {
       saveForYouCache(recommendedArticles);
     } catch (err) {
       console.error("Error fetching For You recommendations:", err);
-      setForYouError(true);
+      const errorMessage = err instanceof Error
+        ? err.message
+        : "An unexpected error occurred. Please try again later.";
+      setForYouError({
+        message: errorMessage,
+        requiresUpgrade: false,
+      });
       setForYouArticles([]);
     } finally {
       setForYouLoading(false);

@@ -140,7 +140,8 @@ export const PRICING_DATA: PricingData = {
     },
     LITE: {
       name: "Creator Lite",
-      tagline: "Low price. Low commitment. Low usage. Unlimited* posting and scheduling.",
+      tagline:
+        "Low price. Low commitment. Low usage. Unlimited* posting and scheduling.",
       targetUser: "Creators who want unlimited* posting with limited AI usage",
       monthlyPrice: getEnvNumber("PRICING_LITE_MONTHLY", 9),
       yearlyPrice: getEnvNumber("PRICING_LITE_YEARLY", 7),
@@ -157,7 +158,6 @@ export const PRICING_DATA: PricingData = {
         "Unlimited* post creation",
         "Unlimited* scheduling",
         "Templates and trending topic ideas",
-        "Desktop and mobile preview",
         "Advanced analytics (reach and engagement highlights)",
         "20 Rewrite with AI function calls per month",
         "80 Polish with AI actions per month",
@@ -174,7 +174,6 @@ export const PRICING_DATA: PricingData = {
             "Unlimited* post creation",
             "Unlimited* scheduling",
             "Templates and trending topic ideas",
-            "Desktop and mobile preview",
             "Advanced analytics (reach and engagement highlights)",
           ],
         },
@@ -189,14 +188,12 @@ export const PRICING_DATA: PricingData = {
         },
         {
           title: "Notes",
-          items: [
-            "Single user",
-            "No collaboration",
-          ],
+          items: ["Single user", "No collaboration"],
         },
       ],
       idealFor: "Creators who want unlimited* posting with limited AI usage",
-      description: "Low price. Low commitment. Low usage. Unlimited* posting and scheduling.",
+      description:
+        "Low price. Low commitment. Low usage. Unlimited* posting and scheduling.",
       cta: "Start for free",
       href: "/auth/signup",
       highlighted: false,
@@ -241,10 +238,7 @@ export const PRICING_DATA: PricingData = {
         },
         {
           title: "Notes",
-          items: [
-            "Single user",
-            "No collaboration",
-          ],
+          items: ["Single user", "No collaboration"],
         },
       ],
       idealFor: "Serious creators who need unlimited* AI features",
@@ -257,8 +251,7 @@ export const PRICING_DATA: PricingData = {
     GROWTH: {
       name: "Growth",
       tagline: "For teams and agencies that need shared access",
-      targetUser:
-        "Teams and agencies that need shared access",
+      targetUser: "Teams and agencies that need shared access",
       monthlyPrice: getEnvNumber("PRICING_GROWTH_MONTHLY", 39),
       yearlyPrice: getEnvNumber("PRICING_GROWTH_YEARLY", 32),
       teamMembersIncluded: getEnvNumber("PRICING_GROWTH_TEAM_MEMBERS", 3),

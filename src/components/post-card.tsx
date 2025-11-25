@@ -19,17 +19,31 @@ interface PostCardPost {
   scheduled_publish_date: string | null;
   published_at: string | null;
   created_at: string;
+  publish_target?: string | null;
   linkedin_posts?: PostCardLinkedInPost[];
 }
 
 interface PostCardProps {
   post: PostCardPost;
   status?: "DRAFT" | "PUBLISHED" | "SCHEDULED";
+  currentTab?: string; // Current selected tab (personal or organization ID)
+  currentPage?: number; // Current page number for pagination
 }
 
-export function PostCard({ post, status }: PostCardProps) {
+export function PostCard({ post, status, currentTab, currentPage }: PostCardProps) {
+  // Include the current tab and page in the URL so we can restore them when navigating back
+  const params = new URLSearchParams();
+  if (currentTab) {
+    params.set("tab", currentTab);
+  }
+  if (currentPage && currentPage > 1) {
+    params.set("page", currentPage.toString());
+  }
+  const queryString = params.toString();
+  const href = queryString ? `/posts/${post.id}?${queryString}` : `/posts/${post.id}`;
+
   return (
-    <Link href={`/posts/${post.id}`}>
+    <Link href={href}>
       <Card className="hover:shadow-md transition-shadow cursor-pointer">
         <CardContent className="p-4">
           <div>
@@ -41,6 +55,7 @@ export function PostCard({ post, status }: PostCardProps) {
                 <PostStatusBadge
                   status={post.status}
                   scheduledPublishDate={post.scheduled_publish_date}
+                  scheduledPublishTarget={post.publish_target}
                   publishedAt={post.published_at}
                   linkedinPosts={post.linkedin_posts}
                 />

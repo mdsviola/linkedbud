@@ -3,6 +3,7 @@ import { createServerClient } from "@/lib/supabase-server";
 import { LinkedInAPI, getLinkedInToken } from "@/lib/linkedin";
 import { downloadFileFromStorage, extractFilePathFromUrl } from "@/lib/storage";
 import { enhanceVoiceProfile } from "@/lib/voice-utils";
+import { canScheduleOrPublishPost } from "@/lib/auth";
 
 // Helper function to enhance voice profile asynchronously
 async function enhanceVoiceProfileAsync(
@@ -21,7 +22,7 @@ async function enhanceVoiceProfileAsync(
   );
 }
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 async function logLinkedInPost(
   userId: string,
@@ -98,6 +99,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check subscription limit for posts per month (published or scheduled)
+    const monthlyLimitCheck = await canScheduleOrPublishPost(user.id);
+    if (!monthlyLimitCheck.canGenerate) {
+      return NextResponse.json(
+        {
+          error: monthlyLimitCheck.reason,
+          requiresUpgrade: true,
+        },
+        { status: 402 }
+      );
+    }
+
     const requestData = await request.json();
     postId = requestData.postId;
     content = requestData.content;
@@ -113,7 +126,10 @@ export async function POST(request: NextRequest) {
     // Validate publishTo value
     if (publishTo !== "personal" && typeof publishTo !== "string") {
       return NextResponse.json(
-        { error: "Invalid publishTo value. Must be 'personal' or an organization ID." },
+        {
+          error:
+            "Invalid publishTo value. Must be 'personal' or an organization ID.",
+        },
         { status: 400 }
       );
     }
@@ -127,10 +143,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (postError || !post) {
-      return NextResponse.json(
-        { error: "Post not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
     // Get LinkedIn token for publishing
@@ -138,7 +151,9 @@ export async function POST(request: NextRequest) {
     const isPersonal = publishTo === "personal";
     const tokenType = isPersonal ? "personal" : "community";
 
-    console.log(`[Publish] Publishing to: ${publishTo}, Token type: ${tokenType}, Is personal: ${isPersonal}`);
+    console.log(
+      `[Publish] Publishing to: ${publishTo}, Token type: ${tokenType}, Is personal: ${isPersonal}`
+    );
 
     const token = await getLinkedInToken(user.id, tokenType);
 
@@ -152,9 +167,13 @@ export async function POST(request: NextRequest) {
 
     // Verify token type matches what we requested
     if (token.type && token.type !== tokenType) {
-      console.error(`[Publish] Token type mismatch! Requested: ${tokenType}, Got: ${token.type}`);
+      console.error(
+        `[Publish] Token type mismatch! Requested: ${tokenType}, Got: ${token.type}`
+      );
       return NextResponse.json(
-        { error: `Token type mismatch. Expected ${tokenType} token but got ${token.type}.` },
+        {
+          error: `Token type mismatch. Expected ${tokenType} token but got ${token.type}.`,
+        },
         { status: 500 }
       );
     }
@@ -170,19 +189,25 @@ export async function POST(request: NextRequest) {
       // For personal posts: authorUrn must be undefined so LinkedInClient uses personal profile
       authorUrn = undefined;
       organizationId = undefined; // Personal posts don't have an organization ID
-      console.log(`[Publish] Publishing to personal profile - authorUrn: ${authorUrn}, organizationId: ${organizationId}`);
+      console.log(
+        `[Publish] Publishing to personal profile - authorUrn: ${authorUrn}, organizationId: ${organizationId}`
+      );
     } else {
       // For organization posts: use the publishTo value as organization ID
       // Validate that publishTo is a valid organization ID (numeric string)
       if (!/^\d+$/.test(publishTo)) {
         return NextResponse.json(
-          { error: `Invalid organization ID: ${publishTo}. Organization ID must be numeric.` },
+          {
+            error: `Invalid organization ID: ${publishTo}. Organization ID must be numeric.`,
+          },
           { status: 400 }
         );
       }
       authorUrn = `urn:li:organization:${publishTo}`;
       organizationId = publishTo; // Store the organization ID for tracking
-      console.log(`[Publish] Publishing to organization - authorUrn: ${authorUrn}, organizationId: ${organizationId}`);
+      console.log(
+        `[Publish] Publishing to organization - authorUrn: ${authorUrn}, organizationId: ${organizationId}`
+      );
     }
 
     // Create LinkedIn API instance with the correct token
@@ -206,18 +231,26 @@ export async function POST(request: NextRequest) {
       try {
         // Extract storage path (handle both full URLs and paths)
         let imagePath = post.image_url;
-        if (post.image_url.startsWith("http://") || post.image_url.startsWith("https://")) {
+        if (
+          post.image_url.startsWith("http://") ||
+          post.image_url.startsWith("https://")
+        ) {
           const extracted = extractFilePathFromUrl(post.image_url);
           if (extracted) {
             imagePath = extracted;
           } else {
-            console.warn("Could not extract path from image URL, skipping image upload");
+            console.warn(
+              "Could not extract path from image URL, skipping image upload"
+            );
             imagePath = null;
           }
         }
 
         if (imagePath) {
-          const imageBuffer = await downloadFileFromStorage(supabase, imagePath);
+          const imageBuffer = await downloadFileFromStorage(
+            supabase,
+            imagePath
+          );
           if (imageBuffer) {
             const filename = getFilenameFromPath(imagePath);
             imageAssetUrn = await linkedinAPI.uploadImageAsset(
@@ -226,7 +259,9 @@ export async function POST(request: NextRequest) {
               authorUrn
             );
           } else {
-            console.warn("Failed to download image from storage, publishing without image");
+            console.warn(
+              "Failed to download image from storage, publishing without image"
+            );
           }
         }
       } catch (error) {
@@ -241,18 +276,26 @@ export async function POST(request: NextRequest) {
       try {
         // Extract storage path (handle both full URLs and paths)
         let documentPath = post.document_url;
-        if (post.document_url.startsWith("http://") || post.document_url.startsWith("https://")) {
+        if (
+          post.document_url.startsWith("http://") ||
+          post.document_url.startsWith("https://")
+        ) {
           const extracted = extractFilePathFromUrl(post.document_url);
           if (extracted) {
             documentPath = extracted;
           } else {
-            console.warn("Could not extract path from document URL, skipping document upload");
+            console.warn(
+              "Could not extract path from document URL, skipping document upload"
+            );
             documentPath = null;
           }
         }
 
         if (documentPath) {
-          const documentBuffer = await downloadFileFromStorage(supabase, documentPath);
+          const documentBuffer = await downloadFileFromStorage(
+            supabase,
+            documentPath
+          );
           if (documentBuffer) {
             const filename = getFilenameFromPath(documentPath);
             documentAssetUrn = await linkedinAPI.uploadDocumentAsset(
@@ -261,7 +304,9 @@ export async function POST(request: NextRequest) {
               authorUrn
             );
           } else {
-            console.warn("Failed to download document from storage, publishing without document");
+            console.warn(
+              "Failed to download document from storage, publishing without document"
+            );
           }
         }
       } catch (error) {
@@ -276,18 +321,26 @@ export async function POST(request: NextRequest) {
       try {
         // Extract storage path (handle both full URLs and paths)
         let videoPath = post.video_url;
-        if (post.video_url.startsWith("http://") || post.video_url.startsWith("https://")) {
+        if (
+          post.video_url.startsWith("http://") ||
+          post.video_url.startsWith("https://")
+        ) {
           const extracted = extractFilePathFromUrl(post.video_url);
           if (extracted) {
             videoPath = extracted;
           } else {
-            console.warn("Could not extract path from video URL, skipping video upload");
+            console.warn(
+              "Could not extract path from video URL, skipping video upload"
+            );
             videoPath = null;
           }
         }
 
         if (videoPath) {
-          const videoBuffer = await downloadFileFromStorage(supabase, videoPath);
+          const videoBuffer = await downloadFileFromStorage(
+            supabase,
+            videoPath
+          );
           if (videoBuffer) {
             const filename = getFilenameFromPath(videoPath);
             videoAssetUrn = await linkedinAPI.uploadVideoAsset(
@@ -296,7 +349,9 @@ export async function POST(request: NextRequest) {
               authorUrn
             );
           } else {
-            console.warn("Failed to download video from storage, publishing without video");
+            console.warn(
+              "Failed to download video from storage, publishing without video"
+            );
           }
         }
       } catch (error) {
@@ -310,7 +365,9 @@ export async function POST(request: NextRequest) {
     // Final safety check: ensure authorUrn is undefined for personal posts
     const finalAuthorUrn = isPersonal ? undefined : authorUrn;
 
-    console.log(`[Publish] Final publish call - isPersonal: ${isPersonal}, finalAuthorUrn: ${finalAuthorUrn}`);
+    console.log(
+      `[Publish] Final publish call - isPersonal: ${isPersonal}, finalAuthorUrn: ${finalAuthorUrn}`
+    );
 
     const linkedinResponse = await linkedinAPI.publishPost(
       content,
