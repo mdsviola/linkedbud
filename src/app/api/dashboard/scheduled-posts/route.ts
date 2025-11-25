@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     );
 
     // Query scheduled posts within the next 7 days
+    // Only fetch SCHEDULED posts - published posts should not appear in the publishing schedule
     const { data: scheduledPosts, error: scheduledError } = await supabase
       .from("posts")
       .select(
@@ -58,90 +59,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Query published posts that were scheduled within the next 7 days or published within the next 7 days
-    // We'll fetch all published posts and filter in memory to handle the OR condition
-    const { data: allPublishedPosts, error: publishedError } = await supabase
-      .from("posts")
-      .select(
-        `
-        id,
-        content,
-        two_para_summary,
-        scheduled_publish_date,
-        published_at,
-        status,
-        publish_target,
-        linkedin_posts(
-          linkedin_post_id,
-          status,
-          published_at,
-          organization_id
-        )
-      `
-      )
-      .eq("user_id", user.id)
-      .eq("status", "PUBLISHED");
-
-    if (publishedError) {
-      console.error("Error fetching published posts:", publishedError);
-      return NextResponse.json(
-        { error: "Failed to fetch published posts" },
-        { status: 500 }
-      );
-    }
-
-    // Filter published posts to those within the date range
-    const publishedPosts = (allPublishedPosts || []).filter((post) => {
-      const scheduledDate = post.scheduled_publish_date
-        ? new Date(post.scheduled_publish_date)
-        : null;
-      const publishedDate = post.published_at
-        ? new Date(post.published_at)
-        : null;
-
-      // Include if scheduled date is in range OR published date is in range
-      const scheduledInRange =
-        scheduledDate &&
-        scheduledDate >= startOfToday &&
-        scheduledDate < endOfSevenDays;
-      const publishedInRange =
-        publishedDate &&
-        publishedDate >= startOfToday &&
-        publishedDate < endOfSevenDays;
-
-      return scheduledInRange || publishedInRange;
+    // Sort scheduled posts by scheduled_publish_date in ascending order (earliest first)
+    const posts = (scheduledPosts || []).sort((a, b) => {
+      const dateA = a.scheduled_publish_date
+        ? new Date(a.scheduled_publish_date).getTime()
+        : 0;
+      const dateB = b.scheduled_publish_date
+        ? new Date(b.scheduled_publish_date).getTime()
+        : 0;
+      return dateA - dateB;
     });
-
-    // Combine and sort posts
-    // For scheduled posts, use scheduled_publish_date
-    // For published posts, use published_at if available, otherwise scheduled_publish_date
-    // Sort in descending order (most recent first)
-    const allPosts = [...(scheduledPosts || []), ...publishedPosts].sort(
-      (a, b) => {
-        const getSortDate = (post: any): number => {
-          // For published posts, prioritize published_at
-          if (post.status === "PUBLISHED" && post.published_at) {
-            const date = new Date(post.published_at);
-            return isNaN(date.getTime()) ? 0 : date.getTime();
-          }
-          // For scheduled posts or published posts without published_at, use scheduled_publish_date
-          if (post.scheduled_publish_date) {
-            const date = new Date(post.scheduled_publish_date);
-            return isNaN(date.getTime()) ? 0 : date.getTime();
-          }
-          // Fallback to 0 for posts without dates (shouldn't happen, but handle gracefully)
-          return 0;
-        };
-
-        const dateA = getSortDate(a);
-        const dateB = getSortDate(b);
-
-        // Sort in descending order: newer dates (larger timestamps) come first
-        return dateB - dateA;
-      }
-    );
-
-    const posts = allPosts;
 
     // Fetch organization names for organization posts
     const organizationIds = new Set<string>();
