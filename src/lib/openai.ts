@@ -32,6 +32,7 @@ export interface SummarizationInput {
   includeSourceArticle?: boolean;
   includeEmojis?: boolean;
   maxLength?: number;
+  postLength?: "short" | "medium" | "long" | "in-depth";
   language?: string;
   voiceProfile?: {
     voice_data: any;
@@ -258,9 +259,23 @@ function buildSummarizationPrompt(input: SummarizationInput): string {
     includeSourceArticle = true,
     includeEmojis = false,
     maxLength = 1200,
+    postLength = "medium",
     language = "English",
     voiceProfile,
   } = input;
+
+  // Calculate minimum and target lengths based on postLength selection
+  const lengthConfig = {
+    short: { min: 600, target: 800, max: 1000, description: "concise and focused" },
+    medium: { min: 900, target: 1200, max: 1500, description: "balanced and informative" },
+    long: { min: 1600, target: 2000, max: 2500, description: "detailed and comprehensive" },
+    "in-depth": { min: 2400, target: 3000, max: 3500, description: "thorough and in-depth" },
+  };
+
+  const lengthSettings = lengthConfig[postLength] || lengthConfig.medium;
+  const effectiveMaxLength = Math.min(maxLength, lengthSettings.max);
+  const minLength = lengthSettings.min;
+  const targetLength = Math.min(lengthSettings.target, effectiveMaxLength);
 
   const hashtagInstruction = includeHashtags
     ? "Include 3-5 relevant hashtags at the end of each post"
@@ -327,7 +342,11 @@ CONTENT REQUIREMENTS:
 - Post Type: ${postType}
 - Target Audience: ${targetAudience}
 - Writing Tone: ${userTone}${voiceProfile ? " (matching the custom voice profile below)" : ""}
-- Maximum character length per post: ${maxLength}${languageInstruction}
+- Post Length/Depth: ${postLength.charAt(0).toUpperCase() + postLength.slice(1)} (${lengthSettings.description})
+- Minimum character length per post: ${minLength} characters
+- Target character length per post: ${targetLength} characters
+- Maximum character length per post: ${effectiveMaxLength} characters
+- CRITICAL: Generate substantial, ${lengthSettings.description} content. Do NOT create short or brief posts. Each post body must be at least ${minLength} characters and should aim for approximately ${targetLength} characters to match the selected depth level.${languageInstruction}
 - ${hashtagInstruction}
 - ${sourceArticleInstruction}
 - ${emojiInstruction}${voiceProfileSection}
@@ -340,7 +359,14 @@ ${articleSnippets.map((snippet, i) => `${i + 1}. ${snippet}`).join("\n")}${
   }${keyPointsSection}${customInstructions}
 
 TASK:
-Create engaging LinkedIn content that resonates with ${targetAudience} using a ${userTone} tone${voiceProfile ? " while matching the custom voice profile above" : ""}. The content should be formatted as ${postType} and stay within ${maxLength} characters.${
+Create engaging LinkedIn content that resonates with ${targetAudience} using a ${userTone} tone${voiceProfile ? " while matching the custom voice profile above" : ""}. The content should be formatted as ${postType} and be ${lengthSettings.description} in depth.
+
+LENGTH REQUIREMENTS (CRITICAL):
+- Each post body MUST be at least ${minLength} characters long
+- Each post body should TARGET approximately ${targetLength} characters
+- Each post body must NOT exceed ${effectiveMaxLength} characters
+- The selected depth level is "${postLength}" - generate content that matches this depth. For "${postLength}" posts, provide ${lengthSettings.description} content with appropriate detail, examples, insights, or analysis.
+- DO NOT generate brief or short posts. Ensure each variant is substantial and meets the minimum length requirement.${
     language && language !== "English"
       ? ` All content must be written entirely in ${language} with proper grammar, spelling, and cultural context.`
       : ""
@@ -356,7 +382,7 @@ Please provide:
 
 2. Three LinkedIn post variants, each with:
    - Hook (max 120 characters, designed to avoid "See more" truncation)
-   - Body (max ${maxLength} characters)
+   - Body (MINIMUM ${minLength} characters, TARGET ${targetLength} characters, MAXIMUM ${effectiveMaxLength} characters) - MUST be substantial and ${lengthSettings.description}
    - ${hashtagInstruction}
    - ${sourceArticleInstruction}
    - ${emojiInstruction}
@@ -364,6 +390,7 @@ Please provide:
    - Tone should match: ${userTone}
    - Content should be appropriate for: ${targetAudience}
    - Post type: ${postType}
+   - Depth level: ${postLength} - ensure content is ${lengthSettings.description} and meets the length requirements
    - ${
      customPrompt ? `Follow these specific instructions: ${customPrompt}` : ""
    }

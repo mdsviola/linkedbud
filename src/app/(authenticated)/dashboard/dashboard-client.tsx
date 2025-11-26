@@ -80,6 +80,12 @@ export function DashboardClient() {
   const [cooldownRemaining, setCooldownRemaining] = useState<number | null>(
     null
   );
+  const [ideasGeneratedAt, setIdeasGeneratedAt] = useState<string | null>(
+    null
+  );
+  const [ideasExpiresAt, setIdeasExpiresAt] = useState<string | null>(
+    null
+  );
   const [insightsSummary, setInsightsSummary] = useState<string | null>(null);
   const [insightsLoading, setInsightsLoading] = useState(false);
 
@@ -111,23 +117,24 @@ export function DashboardClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update countdown timer
+  // Calculate cooldown from expires_at once - no continuous updates to prevent flickering
+  // The value will be recalculated when new data is fetched
   useEffect(() => {
-    if (cooldownRemaining === null || cooldownRemaining <= 0) {
+    if (!ideasExpiresAt) {
+      setCooldownRemaining(null);
       return;
     }
 
-    const interval = setInterval(() => {
-      setCooldownRemaining((prev) => {
-        if (prev === null || prev <= 1000) {
-          return null;
-        }
-        return prev - 1000;
-      });
-    }, 1000);
+    const expiresAt = new Date(ideasExpiresAt).getTime();
+    const now = Date.now();
+    const remaining = expiresAt - now;
 
-    return () => clearInterval(interval);
-  }, [cooldownRemaining]);
+    if (remaining <= 0) {
+      setCooldownRemaining(null);
+    } else {
+      setCooldownRemaining(remaining);
+    }
+  }, [ideasExpiresAt]);
 
   const fetchAnalytics = async () => {
     try {
@@ -180,30 +187,41 @@ export function DashboardClient() {
     }
   };
 
-  const fetchIdeas = async () => {
+  const fetchIdeas = async (forceRefresh = false) => {
     try {
       setIdeasLoading(true);
-      const response = await fetch("/api/ideas");
+      const url = forceRefresh ? "/api/ideas?refresh=true" : "/api/ideas";
+      const response = await fetch(url);
       const result = await response.json();
 
       if (response.ok) {
         if (result.ideas && result.ideas.length > 0) {
           setIdeas(result.ideas);
-          setCooldownRemaining(null); // Clear cooldown if we got ideas
+          setIdeasGeneratedAt(result.generated_at || null);
+          setIdeasExpiresAt(result.expires_at || null);
+          // Cooldown will be calculated from expires_at in useEffect
         } else {
           // No ideas available - might be cooldown or no preferences
           setIdeas([]);
+          setIdeasGeneratedAt(null);
+          setIdeasExpiresAt(null);
         }
       } else {
         // Handle cooldown error
         if (result.error === "cooldown") {
-          setCooldownRemaining(result.remainingMs || 0);
-          // Don't clear ideas - API will return cached ideas if they exist
+          // Keep existing ideas if available
+          if (result.ideas && result.ideas.length > 0) {
+            setIdeas(result.ideas);
+            setIdeasGeneratedAt(result.generated_at || null);
+            setIdeasExpiresAt(result.expires_at || null);
+          }
         } else {
           console.warn("Failed to fetch ideas:", result.error);
           // Only clear if it's a real error (not cooldown)
           if (result.error !== "cooldown") {
             setIdeas([]);
+            setIdeasGeneratedAt(null);
+            setIdeasExpiresAt(null);
           }
         }
       }
@@ -430,7 +448,8 @@ export function DashboardClient() {
         ideas={ideas}
         loading={ideasLoading}
         cooldownRemaining={cooldownRemaining}
-        onRefresh={fetchIdeas}
+        generatedAt={ideasGeneratedAt}
+        onRefresh={() => fetchIdeas(true)}
         burstInterval={4000}
         ideaDisplayDuration={3000}
         className="mb-8"

@@ -7,6 +7,7 @@ import {
 } from "@/lib/rss-utils";
 import { fetchCustomRSSFeeds, RSSArticle } from "@/lib/rss";
 import { Idea } from "@/components/ideas-showcase";
+import { getUserSubscription } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,58 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const COOLDOWN_DURATION_MS = 60 * 60 * 1000; // 1 hour in milliseconds
+/**
+ * Get cooldown duration in milliseconds based on user's tier
+ * Can be configured via environment variables:
+ * - TIER_{TIER}_CONTENT_IDEAS_COOLDOWN_HOURS (in hours)
+ * Defaults:
+ * - FREE: 30 days (720 hours)
+ * - LITE: 7 days (168 hours)
+ * - PRO: 1 day (24 hours)
+ * - GROWTH/ENTERPRISE: 12 hours
+ */
+async function getCooldownDurationMs(userId: string): Promise<number> {
+  const subscription = await getUserSubscription(userId);
+
+  // Map price_id to tier
+  const TIER_MAPPING: Record<string, string> = {
+    [process.env.LEMONSQUEEZY_VARIANT_ID_PRO || ""]: "PRO",
+    [process.env.LEMONSQUEEZY_VARIANT_ID_GROWTH || ""]: "GROWTH",
+    [process.env.LEMONSQUEEZY_VARIANT_ID_LITE || ""]: "LITE",
+  };
+
+  let tier: string;
+  if (!subscription) {
+    tier = "FREE";
+  } else {
+    tier = subscription.price_id && TIER_MAPPING[subscription.price_id]
+      ? TIER_MAPPING[subscription.price_id]
+      : "PRO"; // Default to PRO for unknown subscriptions
+  }
+
+  // Check for environment variable override
+  const envKey = `TIER_${tier}_CONTENT_IDEAS_COOLDOWN_HOURS`;
+  const envValue = process.env[envKey];
+
+  if (envValue) {
+    const hours = parseInt(envValue, 10);
+    if (!isNaN(hours) && hours > 0) {
+      return hours * 60 * 60 * 1000; // Convert hours to milliseconds
+    }
+  }
+
+  // Default values if no env var is set
+  const defaults: Record<string, number> = {
+    FREE: 30 * 24,      // 30 days in hours
+    LITE: 7 * 24,       // 7 days in hours
+    PRO: 24,            // 1 day in hours
+    GROWTH: 12,         // 12 hours
+    ENTERPRISE: 12,     // 12 hours
+  };
+
+  const hours = defaults[tier] || defaults.PRO;
+  return hours * 60 * 60 * 1000; // Convert hours to milliseconds
+}
 
 /**
  * Check if user can generate ideas based on expires_at from content_ideas table
@@ -64,7 +116,8 @@ async function saveIdeasToDatabase(
   ideas: Idea[]
 ): Promise<void> {
   const now = new Date();
-  const expiresAt = new Date(now.getTime() + COOLDOWN_DURATION_MS);
+  const cooldownDuration = await getCooldownDurationMs(userId);
+  const expiresAt = new Date(now.getTime() + cooldownDuration);
 
   const { error } = await supabase.from("content_ideas").upsert(
     {
@@ -85,15 +138,15 @@ async function saveIdeasToDatabase(
 }
 
 /**
- * Get existing ideas from database
+ * Get existing ideas from database with metadata
  */
 async function getIdeasFromDatabase(
   supabase: any,
   userId: string
-): Promise<Idea[] | null> {
+): Promise<{ ideas: Idea[]; generated_at: string; expires_at: string } | null> {
   const { data, error } = await supabase
     .from("content_ideas")
-    .select("ideas")
+    .select("ideas, generated_at, expires_at")
     .eq("user_id", userId)
     .single();
 
@@ -116,7 +169,11 @@ async function getIdeasFromDatabase(
     return null;
   }
 
-  return data.ideas as Idea[];
+  return {
+    ideas: data.ideas as Idea[],
+    generated_at: data.generated_at,
+    expires_at: data.expires_at,
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -131,25 +188,101 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Always check database first for existing ideas
-    const existingIdeas = await getIdeasFromDatabase(supabase, user.id);
-    if (existingIdeas && existingIdeas.length > 0) {
-      // Return existing ideas even if cooldown is active
-      return NextResponse.json({ ideas: existingIdeas });
+    // Check if we should force refresh (query parameter)
+    const { searchParams } = new URL(request.url);
+    const forceRefresh = searchParams.get("refresh") === "true";
+
+    // Check database for existing ideas
+    const existingData = await getIdeasFromDatabase(supabase, user.id);
+
+    // If we have existing ideas, check if they should be refreshed
+    if (existingData && existingData.ideas && existingData.ideas.length > 0) {
+      const expiresAt = new Date(existingData.expires_at).getTime();
+      const now = Date.now();
+      const isExpired = expiresAt <= now;
+
+      // If not forcing refresh and ideas haven't expired, return cached ideas
+      if (!forceRefresh && !isExpired) {
+        return NextResponse.json({
+          ideas: existingData.ideas,
+          generated_at: existingData.generated_at,
+          expires_at: existingData.expires_at,
+        });
+      }
+
+      // If forcing refresh or expired, check cooldown before generating new ones
+      if (forceRefresh || isExpired) {
+        // Check if we can generate new ones
+        const { canGenerate, remainingMs } = await checkCooldown(supabase, user.id);
+        if (!canGenerate) {
+          // Still in cooldown, return existing ideas with metadata
+          const remainingMinutes = Math.ceil(remainingMs / (60 * 1000));
+          const remainingHours = Math.floor(remainingMinutes / 60);
+          const remainingDays = Math.floor(remainingHours / 24);
+
+          let message: string;
+          if (remainingDays > 0) {
+            message = `Please wait ${remainingDays} day${remainingDays !== 1 ? "s" : ""} before generating new ideas.`;
+          } else if (remainingHours > 0) {
+            message = `Please wait ${remainingHours} hour${remainingHours !== 1 ? "s" : ""} before generating new ideas.`;
+          } else {
+            message = `Please wait ${remainingMinutes} minute${
+              remainingMinutes !== 1 ? "s" : ""
+            } before generating new ideas.`;
+          }
+
+          return NextResponse.json({
+            ideas: existingData.ideas,
+            generated_at: existingData.generated_at,
+            expires_at: existingData.expires_at,
+            expired: isExpired,
+            error: "cooldown",
+            remainingMs,
+            remainingMinutes,
+            message,
+          });
+        }
+        // Cooldown passed, will generate new ideas below
+      }
     }
 
-    // No ideas exist, check if we can generate new ones
+    // No ideas exist or need refresh, check if we can generate new ones
     const { canGenerate, remainingMs } = await checkCooldown(supabase, user.id);
 
     if (!canGenerate) {
       const remainingMinutes = Math.ceil(remainingMs / (60 * 1000));
+      const remainingHours = Math.floor(remainingMinutes / 60);
+      const remainingDays = Math.floor(remainingHours / 24);
+
+      let message: string;
+      if (remainingDays > 0) {
+        message = `Please wait ${remainingDays} day${remainingDays !== 1 ? "s" : ""} before generating new ideas.`;
+      } else if (remainingHours > 0) {
+        message = `Please wait ${remainingHours} hour${remainingHours !== 1 ? "s" : ""} before generating new ideas.`;
+      } else {
+        message = `Please wait ${remainingMinutes} minute${
+          remainingMinutes !== 1 ? "s" : ""
+        } before generating new ideas.`;
+      }
+
+      // If we have existing ideas, return them even if in cooldown
+      if (existingData && existingData.ideas && existingData.ideas.length > 0) {
+        return NextResponse.json({
+          ideas: existingData.ideas,
+          generated_at: existingData.generated_at,
+          expires_at: existingData.expires_at,
+          error: "cooldown",
+          remainingMs,
+          remainingMinutes,
+          message,
+        });
+      }
+
       return NextResponse.json({
         error: "cooldown",
         remainingMs,
         remainingMinutes,
-        message: `Please wait ${remainingMinutes} minute${
-          remainingMinutes !== 1 ? "s" : ""
-        } before generating new ideas.`,
+        message,
       });
     }
 
@@ -261,7 +394,14 @@ export async function GET(request: NextRequest) {
     // Save ideas to database (includes expires_at for cooldown)
     await saveIdeasToDatabase(supabase, user.id, ideas);
 
-    return NextResponse.json({ ideas });
+    // Get the saved data to return generated_at and expires_at
+    const savedData = await getIdeasFromDatabase(supabase, user.id);
+
+    return NextResponse.json({
+      ideas,
+      generated_at: savedData?.generated_at || new Date().toISOString(),
+      expires_at: savedData?.expires_at || new Date(Date.now() + await getCooldownDurationMs(user.id)).toISOString(),
+    });
   } catch (error) {
     console.error("Error in ideas API:", error);
     return NextResponse.json(

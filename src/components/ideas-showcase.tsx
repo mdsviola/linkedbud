@@ -28,6 +28,59 @@ export interface Idea {
   articleUrl?: string; // Optional article URL for loading the article in the modal
 }
 
+/**
+ * Format generated time for display
+ */
+function formatGeneratedTime(isoString: string): string {
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (60 * 1000));
+  const diffHours = Math.floor(diffMs / (60 * 60 * 1000));
+  const diffDays = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+
+  if (diffMins < 1) {
+    return "just now";
+  } else if (diffMins < 60) {
+    return `${diffMins} minute${diffMins !== 1 ? "s" : ""} ago`;
+  } else if (diffHours < 24) {
+    return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+  } else if (diffDays < 7) {
+    return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
+  } else {
+    // For older dates, show the actual date
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
+    });
+  }
+}
+
+/**
+ * Format cooldown time for display (simplified to reduce flickering)
+ * Uses consistent rounding to prevent value jumping
+ */
+function formatCooldownTime(remainingMs: number): string {
+  // Use consistent Math.floor to prevent flickering from rounding differences
+  const remainingSeconds = Math.floor(remainingMs / 1000);
+  const remainingMinutes = Math.floor(remainingSeconds / 60);
+  const remainingHours = Math.floor(remainingMinutes / 60);
+  const remainingDays = Math.floor(remainingHours / 24);
+
+  // Simplify: only show the largest unit to reduce flickering
+  // Only update when the displayed unit actually changes
+  if (remainingDays > 0) {
+    return `${remainingDays} day${remainingDays !== 1 ? "s" : ""}`;
+  } else if (remainingHours > 0) {
+    return `${remainingHours} hour${remainingHours !== 1 ? "s" : ""}`;
+  } else if (remainingMinutes > 0) {
+    return `${remainingMinutes} minute${remainingMinutes !== 1 ? "s" : ""}`;
+  } else {
+    return "less than a minute";
+  }
+}
+
 type TopicColor = {
   bg: string;
   border: string;
@@ -324,6 +377,7 @@ interface IdeasShowcaseProps {
   showDebug?: boolean;
   loading?: boolean;
   cooldownRemaining?: number | null;
+  generatedAt?: string | null;
   onRefresh?: () => void;
 }
 
@@ -337,6 +391,7 @@ export function IdeasShowcase({
   showDebug = false,
   loading = false,
   cooldownRemaining = null,
+  generatedAt = null,
   onRefresh,
 }: IdeasShowcaseProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("bubble");
@@ -419,7 +474,7 @@ export function IdeasShowcase({
   // Group ideas by topic/category
   const ideasByCategory = useMemo(() => {
     const grouped = new Map<string, Idea[]>();
-    
+
     ideas.forEach((idea) => {
       const category = idea.topic?.trim() || "General";
       if (!grouped.has(category)) {
@@ -1003,7 +1058,7 @@ export function IdeasShowcase({
                   className="gap-2"
                   title={
                     cooldownRemaining !== null && cooldownRemaining > 0
-                      ? `Come back in ${Math.ceil(cooldownRemaining / (60 * 1000))} minute${Math.ceil(cooldownRemaining / (60 * 1000)) !== 1 ? "s" : ""} for more ideas`
+                      ? `Come back in ${formatCooldownTime(cooldownRemaining)} for more ideas`
                       : "Generate new ideas"
                   }
                 >
@@ -1014,12 +1069,13 @@ export function IdeasShowcase({
                 </Button>
               )}
             </div>
-            {cooldownRemaining !== null && cooldownRemaining > 0 && (
+            {(generatedAt || (cooldownRemaining !== null && cooldownRemaining > 0)) && (
               <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                 <Clock className="h-3.5 w-3.5" />
                 <span>
-                  Come back in {Math.ceil(cooldownRemaining / (60 * 1000))}{" "}
-                  minute{Math.ceil(cooldownRemaining / (60 * 1000)) !== 1 ? "s" : ""} for new ideas
+                  {generatedAt && `Last generated: ${formatGeneratedTime(generatedAt)}`}
+                  {generatedAt && cooldownRemaining !== null && cooldownRemaining > 0 && " • "}
+                  {cooldownRemaining !== null && cooldownRemaining > 0 && `Come back in ${formatCooldownTime(cooldownRemaining)} for new ideas`}
                 </span>
               </div>
             )}
@@ -1421,8 +1477,7 @@ export function IdeasShowcase({
                         Cooldown Active
                       </h2>
                       <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
-                        Come back in {Math.ceil(cooldownRemaining / (60 * 1000))}{" "}
-                        minute{Math.ceil(cooldownRemaining / (60 * 1000)) !== 1 ? "s" : ""} to generate new ideas.
+                        Come back in {formatCooldownTime(cooldownRemaining)} to generate new ideas.
                       </p>
                     </div>
                   </motion.div>
@@ -1487,7 +1542,7 @@ export function IdeasShowcase({
                 </p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   {cooldownRemaining !== null && cooldownRemaining > 0
-                    ? `Come back in ${Math.ceil(cooldownRemaining / (60 * 1000))} minute${Math.ceil(cooldownRemaining / (60 * 1000)) !== 1 ? "s" : ""} for more ideas.`
+                    ? `Come back in ${formatCooldownTime(cooldownRemaining)} for more ideas.`
                     : "Check back later for fresh inspiration."}
                 </p>
               </div>
@@ -1508,13 +1563,13 @@ export function IdeasShowcase({
                         <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
                           {category}
                         </h3>
-                        <LabelWithCount 
+                        <LabelWithCount
                           count={categoryIdeas.length}
                           className="text-xs"
                           countClassName="text-gray-500 dark:text-gray-400"
                         />
                       </div>
-                      
+
                       {/* Ideas in this category */}
                       <div className="space-y-3">
                         {categoryIdeas.map((idea, ideaIndex) => {

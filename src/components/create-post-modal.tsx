@@ -38,6 +38,7 @@ import {
   Building2,
   Wand2,
   Video,
+  ExternalLink,
 } from "lucide-react";
 import NextImage from "next/image";
 import { Avatar } from "@/components/ui/avatar";
@@ -55,6 +56,7 @@ export interface CreatePostFormData {
   includeSourceArticle: boolean;
   includeEmojis: boolean;
   maxLength: number;
+  postLength?: "short" | "medium" | "long" | "in-depth"; // User-friendly length selector
   language?: string;
   articleUrl?: string;
   articleTitle?: string;
@@ -160,6 +162,13 @@ const LANGUAGE_OPTIONS = [
   { value: "Arabic", label: "Arabic" },
   { value: "Italian", label: "Italian" },
 ];
+
+const POST_LENGTH_OPTIONS = [
+  { value: "short", label: "Short (~800 chars)", maxLength: 800 },
+  { value: "medium", label: "Medium (~1,200 chars)", maxLength: 1200 },
+  { value: "long", label: "Long (~2,000 chars)", maxLength: 2000 },
+  { value: "in-depth", label: "In-depth (~3,000 chars)", maxLength: 3000 },
+] as const;
 
 // Move emoji array outside component to prevent recreation on every render
 const COMMON_EMOJIS = [
@@ -436,6 +445,19 @@ export function CreatePostModal({
   // Get default values: use user preferences first, then fallback to defaults
   const getDefaultFormData = useCallback((): CreatePostFormData => {
     const storedLanguage = getStoredLanguage();
+    // Determine postLength based on maxLength or default to "medium"
+    const defaultMaxLength = userPreferences?.maxLength || 3000;
+    let defaultPostLength: "short" | "medium" | "long" | "in-depth" = "medium";
+    if (defaultMaxLength <= 800) {
+      defaultPostLength = "short";
+    } else if (defaultMaxLength <= 1200) {
+      defaultPostLength = "medium";
+    } else if (defaultMaxLength <= 2000) {
+      defaultPostLength = "long";
+    } else {
+      defaultPostLength = "in-depth";
+    }
+
     return {
       topicTitle: "",
       tone: userPreferences?.tone || "Professional",
@@ -448,7 +470,8 @@ export function CreatePostModal({
       includeHashtags: userPreferences?.includeHashtags ?? false,
       includeSourceArticle: userPreferences?.includeSourceArticle ?? true,
       includeEmojis: userPreferences?.includeEmojis ?? false,
-      maxLength: userPreferences?.maxLength || 3000,
+      maxLength: defaultMaxLength,
+      postLength: defaultPostLength,
       language: userPreferences?.language || storedLanguage,
       userName: userPreferences?.userName,
       userInitials: userPreferences?.userInitials,
@@ -482,6 +505,7 @@ export function CreatePostModal({
   const [isPolishing, setIsPolishing] = useState(false);
   const polishInputRef = useRef<HTMLDivElement>(null);
   const polishButtonRef = useRef<HTMLButtonElement>(null);
+  const polishTextareaRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const articleInputRef = useRef<HTMLDivElement>(null);
@@ -786,6 +810,7 @@ export function CreatePostModal({
   }, [showArticleInput, showPolishInput]);
 
   // Position polish popover above button on mobile (centered on screen)
+  // Handle iOS keyboard appearance to keep input visible
   useEffect(() => {
     if (!showPolishInput || !polishButtonRef.current || !polishInputRef.current)
       return;
@@ -797,24 +822,109 @@ export function CreatePostModal({
       if (!isMobile) {
         // Desktop: let CSS handle positioning
         polishInputRef.current.style.bottom = "";
+        polishInputRef.current.style.top = "";
         return;
       }
 
-      // Mobile: position above button, centered horizontally
+      // Mobile: position to stay visible above keyboard
       const buttonRect = polishButtonRef.current.getBoundingClientRect();
-      polishInputRef.current.style.bottom = `${
-        window.innerHeight - buttonRect.top + 8
-      }px`;
+
+      // Use visualViewport if available (iOS Safari) to detect keyboard
+      const viewportHeight = window.visualViewport?.height || window.innerHeight;
+      const viewportTop = window.visualViewport?.offsetTop || 0;
+      const viewportBottom = viewportTop + viewportHeight;
+
+      // Check if keyboard is likely visible (viewport height is significantly smaller)
+      const keyboardVisible = window.innerHeight - viewportHeight > 150;
+      const popoverHeight = 240; // Approximate height of the popover
+
+      if (keyboardVisible) {
+        // Keyboard is visible - position popover at top of visible viewport
+        // This ensures the input stays visible above the keyboard
+        polishInputRef.current.style.top = `${viewportTop + 16}px`;
+        polishInputRef.current.style.bottom = "";
+        polishInputRef.current.style.maxHeight = `${viewportHeight - 32}px`;
+        polishInputRef.current.style.overflowY = "auto";
+      } else {
+        // No keyboard - position above button as normal
+        const spaceAbove = buttonRect.top - viewportTop;
+        if (spaceAbove >= popoverHeight + 16) {
+          // Enough space above button
+          polishInputRef.current.style.bottom = `${
+            window.innerHeight - buttonRect.top + 8
+          }px`;
+          polishInputRef.current.style.top = "";
+          polishInputRef.current.style.maxHeight = "";
+          polishInputRef.current.style.overflowY = "";
+        } else {
+          // Not enough space, position at top of viewport
+          polishInputRef.current.style.top = `${viewportTop + 16}px`;
+          polishInputRef.current.style.bottom = "";
+          polishInputRef.current.style.maxHeight = `${viewportHeight - 32}px`;
+          polishInputRef.current.style.overflowY = "auto";
+        }
+      }
     };
 
     updatePosition();
 
+    // Listen for viewport changes (keyboard appearance on iOS)
+    const handleViewportChange = () => {
+      updatePosition();
+      // Ensure textarea is visible when keyboard appears
+      // Use requestAnimationFrame to ensure DOM has updated
+      requestAnimationFrame(() => {
+        if (polishTextareaRef.current && document.activeElement === polishTextareaRef.current) {
+          // Only scroll if the textarea is currently focused
+          setTimeout(() => {
+            polishTextareaRef.current?.scrollIntoView({
+              behavior: "smooth",
+              block: "nearest",
+            });
+          }, 150);
+        }
+      });
+    };
+
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
+
+    // Use visualViewport API for iOS keyboard detection
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", handleViewportChange);
+      window.visualViewport.addEventListener("scroll", handleViewportChange);
+    }
+
+    // Also handle focus on the textarea to ensure it's visible
+    const handleTextareaFocus = () => {
+      // Update position first
+      updatePosition();
+      // Then ensure textarea is visible after keyboard animation
+      setTimeout(() => {
+        if (polishTextareaRef.current) {
+          polishTextareaRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "nearest",
+          });
+        }
+      }, 350); // Delay to allow keyboard animation on iOS
+    };
+
+    const textarea = polishTextareaRef.current;
+    if (textarea) {
+      textarea.addEventListener("focus", handleTextareaFocus);
+    }
 
     return () => {
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener("resize", handleViewportChange);
+        window.visualViewport.removeEventListener("scroll", handleViewportChange);
+      }
+      if (textarea) {
+        textarea.removeEventListener("focus", handleTextareaFocus);
+      }
     };
   }, [showPolishInput]);
 
@@ -1149,6 +1259,7 @@ export function CreatePostModal({
           includeSourceArticle: formData.includeSourceArticle,
           includeEmojis: formData.includeEmojis,
           maxLength: formData.maxLength,
+          postLength: formData.postLength || "medium",
           language: formData.language || "English",
           articleUrl: formData.articleUrl,
           articleTitle: formData.articleTitle,
@@ -1344,6 +1455,27 @@ export function CreatePostModal({
         ...prev,
         [field]: value,
       };
+      // Sync maxLength when postLength changes
+      if (field === "postLength" && typeof value === "string") {
+        const lengthOption = POST_LENGTH_OPTIONS.find(
+          (opt) => opt.value === value
+        );
+        if (lengthOption) {
+          updated.maxLength = lengthOption.maxLength;
+        }
+      }
+      // Sync postLength when maxLength changes manually
+      if (field === "maxLength" && typeof value === "number") {
+        if (value <= 800) {
+          updated.postLength = "short";
+        } else if (value <= 1200) {
+          updated.postLength = "medium";
+        } else if (value <= 2000) {
+          updated.postLength = "long";
+        } else {
+          updated.postLength = "in-depth";
+        }
+      }
       // Save language preference to localStorage when it changes
       if (field === "language" && typeof value === "string") {
         saveLanguagePreference(value);
@@ -1863,11 +1995,48 @@ export function CreatePostModal({
                 </div>
               ) : (
                 <div className="mb-3 flex items-center justify-between rounded-md border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-800 dark:bg-blue-950">
-                  <div className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <Check className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                    <span className="text-sm font-medium text-blue-900 dark:text-blue-100 truncate">
                       Article loaded: {formData.articleTitle || "Article"}
                     </span>
+                    {formData.articleUrl && (() => {
+                      try {
+                        const url = new URL(formData.articleUrl);
+                        const hostname = url.hostname.replace(/^www\./, "");
+                        return (
+                          <a
+                            href={formData.articleUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex-shrink-0 ml-2"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Open article in new tab"
+                          >
+                            <span className="truncate max-w-[200px]">
+                              {hostname}
+                            </span>
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        );
+                      } catch {
+                        return (
+                          <a
+                            href={formData.articleUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex-shrink-0 ml-2"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Open article in new tab"
+                          >
+                            <span className="truncate max-w-[200px]">
+                              View article
+                            </span>
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        );
+                      }
+                    })()}
                   </div>
                   <button
                     type="button"
@@ -1875,7 +2044,7 @@ export function CreatePostModal({
                       handleUrlChange("");
                       setShowArticleInput(false);
                     }}
-                    className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                    className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 flex-shrink-0 ml-2"
                   >
                     Remove
                   </button>
@@ -1899,7 +2068,8 @@ export function CreatePostModal({
                   value={postText}
                   onChange={handleTextareaChange}
                   placeholder=""
-                  className="relative w-full text-[15px] leading-[1.5] text-slate-900 dark:text-slate-100 bg-transparent border-none outline-none resize-none focus:outline-none pt-0"
+                  disabled={isRewriting || isPolishing}
+                  className="relative w-full text-[15px] leading-[1.5] text-slate-900 dark:text-slate-100 bg-transparent border-none outline-none resize-none focus:outline-none pt-0 disabled:opacity-50 disabled:cursor-not-allowed"
                   style={
                     {
                       fontFamily: "inherit",
@@ -1909,6 +2079,16 @@ export function CreatePostModal({
                     } as React.CSSProperties
                   }
                 />
+                {(isRewriting || isPolishing) && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/20 dark:bg-slate-900/20 z-10 rounded-lg">
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin text-slate-500 dark:text-slate-400" />
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        {isRewriting ? "Rewriting with AI..." : "Polishing..."}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Image Preview */}
@@ -2188,26 +2368,31 @@ export function CreatePostModal({
                     </div>
                     <div className="space-y-2">
                       <Label
-                        htmlFor="maxLength"
+                        htmlFor="postLength"
                         className="text-sm font-medium text-slate-700 dark:text-slate-300"
                       >
-                        Max Character Length
+                        Post Length / Depth
                       </Label>
-                      <Input
-                        id="maxLength"
-                        type="number"
-                        value={formData.maxLength}
+                      <select
+                        id="postLength"
+                        value={formData.postLength || "medium"}
                         onChange={(e) =>
                           handleInputChange(
-                            "maxLength",
-                            parseInt(e.target.value) || 3000
+                            "postLength",
+                            e.target.value as "short" | "medium" | "long" | "in-depth"
                           )
                         }
-                        min="500"
-                        max="3000"
-                        step="100"
-                        className="h-11 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
-                      />
+                        className="h-11 w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400"
+                      >
+                        {POST_LENGTH_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Target: ~{formData.maxLength} characters. The AI will generate substantial content matching this depth.
+                      </p>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -2497,11 +2682,27 @@ export function CreatePostModal({
                           </div>
                           <Textarea
                             id="polish-prompt-input"
+                            ref={polishTextareaRef}
                             placeholder="e.g., Make it more engaging, add a call-to-action, improve the tone to be more professional, add emojis, make it shorter, include a compelling opening line..."
                             value={polishPrompt}
                             onChange={(e) => setPolishPrompt(e.target.value)}
                             className="min-h-[140px] resize-none text-sm"
                             disabled={isPolishing}
+                            onFocus={() => {
+                              // Position will be updated by useEffect
+                              // This handler ensures smooth experience
+                              requestAnimationFrame(() => {
+                                if (polishTextareaRef.current) {
+                                  // Small delay to allow keyboard to appear
+                                  setTimeout(() => {
+                                    polishTextareaRef.current?.scrollIntoView({
+                                      behavior: "smooth",
+                                      block: "nearest",
+                                    });
+                                  }, 350);
+                                }
+                              });
+                            }}
                           />
                           <div className="flex gap-2 justify-end">
                             <Button

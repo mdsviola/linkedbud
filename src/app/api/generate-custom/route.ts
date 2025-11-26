@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       includeSourceArticle = false,
       includeEmojis = false,
       maxLength = 1200,
+      postLength = "medium",
       language = "English",
       articleUrl,
       articleTitle,
@@ -114,6 +115,7 @@ export async function POST(request: NextRequest) {
         includeSourceArticle,
         includeEmojis,
         maxLength,
+        postLength,
         language,
       });
     } catch (error) {
