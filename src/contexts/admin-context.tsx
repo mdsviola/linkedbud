@@ -65,8 +65,8 @@ export function AdminProvider({ children }: AdminProviderProps) {
       return;
     }
 
-    // Create new request
-    globalAdminState.promise = (async () => {
+    // Create new request promise and assign it synchronously to prevent race conditions
+    const requestPromise = (async () => {
       try {
         const response = await fetch("/api/admin/check-status");
         if (response.ok) {
@@ -83,7 +83,9 @@ export function AdminProvider({ children }: AdminProviderProps) {
       }
     })();
 
-    await globalAdminState.promise;
+    // Set promise synchronously before awaiting to prevent race conditions
+    globalAdminState.promise = requestPromise;
+    await requestPromise;
 
     // Only update state if component is still mounted
     if (mountedRef.current) {
@@ -100,19 +102,6 @@ export function AdminProvider({ children }: AdminProviderProps) {
 
     return () => {
       mountedRef.current = false;
-    };
-  }, []);
-
-  // Reset admin state when component unmounts (e.g., when user logs out)
-  useEffect(() => {
-    return () => {
-      // Reset global state when component unmounts
-      globalAdminState = {
-        isAdmin: false,
-        loading: true,
-        hasChecked: false,
-        promise: null,
-      };
     };
   }, []);
 

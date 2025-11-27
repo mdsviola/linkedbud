@@ -552,10 +552,7 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
     setScheduleError("");
   };
 
-  const handleSchedulePost = async (
-    scheduledDate: string,
-    publishTarget: string
-  ) => {
+  const handleSchedulePost = async (scheduledDate: string) => {
     if (!currentPost) return;
 
     setIsScheduling(true);
@@ -563,13 +560,16 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
 
     try {
       const formData = new FormData();
+      // Use the post's current publish_target from context
+      const publishTarget = currentPost.publish_target || "personal";
+
       if (scheduledDate) {
         formData.append("scheduled_publish_date", scheduledDate);
         formData.append("publish_target", publishTarget);
       } else {
-        // To clear the scheduled date, send empty strings for both
+        // To clear the scheduled date, send empty string for date but keep the target
         formData.append("scheduled_publish_date", "");
-        formData.append("publish_target", "");
+        formData.append("publish_target", publishTarget);
       }
 
       const response = await fetch(`/api/posts/${currentPost.id}`, {
@@ -1532,8 +1532,6 @@ export function PostDetailClient({ postId }: PostDetailClientProps) {
         onClose={handleCloseScheduleModal}
         onSchedule={handleSchedulePost}
         currentScheduledDate={currentPost.scheduled_publish_date || null}
-        currentPublishTarget={currentPost.publish_target || null}
-        organizations={organizations}
         isSubmitting={isScheduling}
         error={scheduleError}
       />

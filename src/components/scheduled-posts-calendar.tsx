@@ -146,9 +146,17 @@ export function ScheduledPostsCalendar({
   ];
 
   const getOrganizationColor = (organizationId: string) => {
-    const orgIds = Object.keys(organizations);
-    const index = orgIds.indexOf(organizationId);
-    return organizationColors[index % organizationColors.length];
+    // Use a hash-based approach to assign stable colors
+    // This ensures the same organization always gets the same color
+    // regardless of the order in the organizations object
+    let hash = 0;
+    for (let i = 0; i < organizationId.length; i++) {
+      const char = organizationId.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    const index = Math.abs(hash) % organizationColors.length;
+    return organizationColors[index];
   };
 
   // Group posts by day and create events
@@ -251,7 +259,7 @@ export function ScheduledPostsCalendar({
     });
 
     return events;
-  }, [posts, organizations]);
+  }, [posts]);
 
   // Handle month changes
   const handleNavigate = useCallback(
@@ -686,7 +694,7 @@ export function ScheduledPostsCalendar({
                 endAccessor="end"
                 style={{ height: "100%" }}
                 date={visibleDate}
-                view={Views.MONTH}
+                defaultView={Views.MONTH}
                 views={[Views.MONTH]}
                 onNavigate={handleNavigate}
                 onSelectEvent={handleSelectEvent}
@@ -856,9 +864,7 @@ export function ScheduledPostsCalendar({
                             })(),
                           }}
                         />
-                        <span>
-                          {getOrganizationName(post, organizations)}
-                        </span>
+                        <span>{getOrganizationName(post, organizations)}</span>
                       </div>
                     </div>
                   </div>

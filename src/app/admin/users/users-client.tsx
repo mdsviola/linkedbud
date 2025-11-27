@@ -6,11 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, User, CreditCard, ArrowRight, Crown } from "lucide-react";
-import {
-  getTierFromPriceId,
-  getTierDisplayName,
-} from "@/lib/tier-utils";
+import { Loader2, Search, User, ArrowRight } from "lucide-react";
 
 interface User {
   id: string;
@@ -83,23 +79,6 @@ export function UsersClient() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800";
-      case "canceled":
-      case "cancelled":
-        return "bg-amber-100 text-amber-800";
-      case "past_due":
-        return "bg-yellow-100 text-yellow-800";
-      case "trialing":
-        return "bg-blue-100 text-blue-800";
-      case "paused":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
 
   const filteredUsers = users.filter(
     (user) =>
@@ -148,11 +127,6 @@ export function UsersClient() {
       {/* Users List */}
       <div className="grid gap-4">
         {filteredUsers.map((user) => {
-          const subscription = user.subscriptions[0];
-          const tier = subscription
-            ? getTierFromPriceId(subscription.price_id)
-            : "FREE";
-
           return (
             <Link key={user.id} href={`/admin/users/${user.id}`}>
               <Card className="hover:shadow-md transition-shadow cursor-pointer">
@@ -165,24 +139,6 @@ export function UsersClient() {
                           {user.email || "No email"}
                         </h3>
                         <p className="text-sm text-gray-500">ID: {user.id}</p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <Crown className="h-4 w-4 text-gray-400" />
-                          <Badge className="bg-purple-100 text-purple-800 text-xs">
-                            {getTierDisplayName(tier)}
-                          </Badge>
-                        </div>
-                        {subscription && (
-                          <div className="flex items-center gap-2">
-                            <CreditCard className="h-4 w-4 text-gray-400" />
-                            <Badge
-                              className={getStatusColor(subscription.status)}
-                            >
-                              {subscription.status}
-                            </Badge>
-                          </div>
-                        )}
                       </div>
                     </div>
                     <ArrowRight className="h-5 w-5 text-gray-400 ml-4" />

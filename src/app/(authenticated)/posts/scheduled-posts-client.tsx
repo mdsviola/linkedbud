@@ -69,7 +69,11 @@ interface Post {
 
 export function ScheduledPostsClient() {
   const router = useRouter();
-  const [posts, setPosts] = useState<Post[]>([]);
+  // Separate states for scheduled and published posts
+  const [scheduledPosts, setScheduledPosts] = useState<Post[]>([]);
+  const [publishedPosts, setPublishedPosts] = useState<Post[]>([]);
+  // Combined posts for calendar view
+  const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [organizations, setOrganizations] = useState<Record<string, string>>(
     {}
   );
@@ -93,9 +97,17 @@ export function ScheduledPostsClient() {
   ];
 
   const getOrganizationColor = (organizationId: string) => {
-    const orgIds = Object.keys(organizations);
-    const index = orgIds.indexOf(organizationId);
-    return organizationColors[index % organizationColors.length];
+    // Use a hash-based approach to assign stable colors
+    // This ensures the same organization always gets the same color
+    // regardless of the order in the organizations object
+    let hash = 0;
+    for (let i = 0; i < organizationId.length; i++) {
+      const char = organizationId.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    const index = Math.abs(hash) % organizationColors.length;
+    return organizationColors[index];
   };
   // Initialize currentMonth with current date
   const now = new Date();
@@ -107,15 +119,31 @@ export function ScheduledPostsClient() {
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [createError, setCreateError] = useState("");
-  const [pagination, setPagination] = useState<PaginationInfo>({
-    page: 1,
-    limit: 10,
-    total: 0,
-    totalPages: 0,
-    hasNextPage: false,
-    hasPrevPage: false,
-  });
-  const [paginationLoading, setPaginationLoading] = useState(false);
+
+  // Separate pagination states
+  const [scheduledPagination, setScheduledPagination] =
+    useState<PaginationInfo>({
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 0,
+      hasNextPage: false,
+      hasPrevPage: false,
+    });
+  const [publishedPagination, setPublishedPagination] =
+    useState<PaginationInfo>({
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 0,
+      hasNextPage: false,
+      hasPrevPage: false,
+    });
+
+  const [scheduledPaginationLoading, setScheduledPaginationLoading] =
+    useState(false);
+  const [publishedPaginationLoading, setPublishedPaginationLoading] =
+    useState(false);
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
@@ -148,25 +176,22 @@ export function ScheduledPostsClient() {
     return { startDate, endDate };
   }, []);
 
-  const fetchPosts = useCallback(
-    async (page: number = 1, year?: number, month?: number) => {
+  // Fetch scheduled posts
+  const fetchScheduledPosts = useCallback(
+    async (
+      page: number = 1,
+      year?: number,
+      month?: number,
+      isCalendarView: boolean = false
+    ) => {
       try {
-        // Clear all loading states first
-        setLoading(false);
-        setPaginationLoading(false);
-        setCalendarLoading(false);
-
-        // Then set the appropriate loading state
-        if (page === 1 && year && month) {
-          // Month navigation - use calendar loading ONLY
+        // Set loading state
+        if (isCalendarView) {
           setCalendarLoading(true);
-          // NEVER set main loading to true during navigation
         } else if (page === 1 && isInitialLoad) {
-          // Initial load - use main loading
           setLoading(true);
         } else {
-          // Pagination - use pagination loading
-          setPaginationLoading(true);
+          setScheduledPaginationLoading(true);
         }
 
         // If no year/month provided, use current month for initial load
@@ -180,57 +205,240 @@ export function ScheduledPostsClient() {
 
         let url = `/api/posts?status=SCHEDULED&page=${page}&limit=10`;
 
-        // For calendar view (page 1), use extended date range to include adjacent month days
-        // For pagination (page > 1), use regular month range
-        if (page === 1) {
-          // Calculate the visible calendar date range
+        if (isCalendarView && page === 1) {
+          // For calendar view, use extended date range to include adjacent month days
           const { startDate, endDate } = getCalendarDateRange(
             fetchYear,
             fetchMonth
           );
-          url += `&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}&includePublished=true`;
-        } else {
-          // For pagination, use the month range
-          url += `&year=${fetchYear}&month=${fetchMonth}&includePublished=true`;
+          url += `&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
+        } else if (!isCalendarView) {
+          // For list view pagination, use the month range
+          url += `&year=${fetchYear}&month=${fetchMonth}`;
         }
 
         const response = await fetch(url);
         const result = await response.json();
 
         if (!response.ok) {
-          throw new Error(result.error || "Failed to fetch posts");
+          throw new Error(result.error || "Failed to fetch scheduled posts");
         }
 
-        // Always update posts to reflect the current month, even if empty
-        setPosts(result.posts || []);
-        setOrganizations(result.organizations || {});
-        setPagination(
-          result.pagination || {
-            page: 1,
-            limit: 10,
-            total: 0,
-            totalPages: 0,
-            hasNextPage: false,
-            hasPrevPage: false,
-          }
-        );
+        // Update organizations from response (merge to preserve existing ones)
+        if (result.organizations) {
+          setOrganizations((prevOrgs) => ({
+            ...prevOrgs,
+            ...result.organizations,
+          }));
+        }
+
+        if (isCalendarView) {
+          // For calendar, we combine with published posts later
+          return {
+            posts: result.posts || [],
+            organizations: result.organizations || {},
+          };
+        } else {
+          // For list view, update scheduled posts state
+          setScheduledPosts(result.posts || []);
+          setScheduledPagination(
+            result.pagination || {
+              page: 1,
+              limit: 10,
+              total: 0,
+              totalPages: 0,
+              hasNextPage: false,
+              hasPrevPage: false,
+            }
+          );
+          return {
+            posts: result.posts || [],
+            organizations: result.organizations || {},
+          };
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
+        return { posts: [], organizations: {} };
       } finally {
-        setLoading(false);
-        setPaginationLoading(false);
-        setCalendarLoading(false);
-        setIsInitialLoad(false); // Mark that initial load is complete
+        if (!isCalendarView) {
+          setLoading(false);
+          setScheduledPaginationLoading(false);
+        } else {
+          setCalendarLoading(false);
+        }
+      }
+    },
+    [getCalendarDateRange, isInitialLoad]
+  );
+
+  // Fetch published posts
+  const fetchPublishedPosts = useCallback(
+    async (
+      page: number = 1,
+      year?: number,
+      month?: number,
+      isCalendarView: boolean = false
+    ) => {
+      try {
+        // Set loading state
+        if (!isCalendarView) {
+          setPublishedPaginationLoading(true);
+        }
+
+        // If no year/month provided, use current month for initial load
+        let fetchYear = year;
+        let fetchMonth = month;
+        if (!fetchYear || !fetchMonth) {
+          const now = new Date();
+          fetchYear = now.getFullYear();
+          fetchMonth = now.getMonth() + 1;
+        }
+
+        let url = `/api/posts?status=PUBLISHED&page=${page}&limit=10`;
+
+        if (isCalendarView && page === 1) {
+          // For calendar view, use extended date range to include adjacent month days
+          const { startDate, endDate } = getCalendarDateRange(
+            fetchYear,
+            fetchMonth
+          );
+          // Note: The API filters by scheduled_publish_date by default, but for published posts
+          // we need to filter by published_at. For now, we'll fetch and filter client-side if needed.
+          url += `&startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`;
+        } else if (!isCalendarView) {
+          // For list view pagination, calculate month range and use startDate/endDate
+          const firstDay = new Date(fetchYear, fetchMonth - 1, 1);
+          const lastDay = new Date(fetchYear, fetchMonth, 0, 23, 59, 59, 999);
+          url += `&startDate=${firstDay.toISOString()}&endDate=${lastDay.toISOString()}`;
+        }
+
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to fetch published posts");
+        }
+
+        // Update organizations from response (merge to preserve existing ones)
+        if (result.organizations) {
+          setOrganizations((prevOrgs) => ({
+            ...prevOrgs,
+            ...result.organizations,
+          }));
+        }
+
+        if (isCalendarView) {
+          // For calendar, we combine with scheduled posts later
+          return {
+            posts: result.posts || [],
+            organizations: result.organizations || {},
+          };
+        } else {
+          // For list view, update published posts state
+          setPublishedPosts(result.posts || []);
+          setPublishedPagination(
+            result.pagination || {
+              page: 1,
+              limit: 10,
+              total: 0,
+              totalPages: 0,
+              hasNextPage: false,
+              hasPrevPage: false,
+            }
+          );
+          return {
+            posts: result.posts || [],
+            organizations: result.organizations || {},
+          };
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        return { posts: [], organizations: {} };
+      } finally {
+        if (!isCalendarView) {
+          setPublishedPaginationLoading(false);
+        }
       }
     },
     [getCalendarDateRange]
   );
 
+  // Fetch all posts for calendar view (combines scheduled and published)
+  const fetchAllPostsForCalendar = useCallback(
+    async (year?: number, month?: number) => {
+      try {
+        setCalendarLoading(true);
+
+        const [scheduledResult, publishedResult] = await Promise.all([
+          fetchScheduledPosts(1, year, month, true),
+          fetchPublishedPosts(1, year, month, true),
+        ]);
+
+        // Combine posts for calendar view
+        const combined = [
+          ...(scheduledResult.posts || []),
+          ...(publishedResult.posts || []),
+        ];
+
+        // Update organizations before setting posts to avoid flicker
+        // Merge with existing organizations to preserve color stability
+        setOrganizations((prevOrgs) => {
+          const newOrgs =
+            scheduledResult.organizations ||
+            publishedResult.organizations ||
+            {};
+          // Merge to preserve existing organizations and add new ones
+          return { ...prevOrgs, ...newOrgs };
+        });
+
+        // Set posts after organizations are updated
+        setAllPosts(combined);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setCalendarLoading(false);
+      }
+    },
+    [fetchScheduledPosts, fetchPublishedPosts]
+  );
+
+  // Fetch posts for list view (separate calls)
+  const fetchPostsForListView = useCallback(
+    async (
+      scheduledPage: number = 1,
+      publishedPage: number = 1,
+      year?: number,
+      month?: number
+    ) => {
+      try {
+        if (scheduledPage === 1 && publishedPage === 1 && isInitialLoad) {
+          setLoading(true);
+        }
+
+        const [scheduledResult, publishedResult] = await Promise.all([
+          fetchScheduledPosts(scheduledPage, year, month, false),
+          fetchPublishedPosts(publishedPage, year, month, false),
+        ]);
+
+        // Organizations are already set in the individual fetch functions
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoading(false);
+        setIsInitialLoad(false);
+      }
+    },
+    [fetchScheduledPosts, fetchPublishedPosts, isInitialLoad]
+  );
+
   useEffect(() => {
     // On initial load, fetch posts for current month
     const now = new Date();
-    fetchPosts(1, now.getFullYear(), now.getMonth() + 1);
-  }, [fetchPosts]);
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    fetchPostsForListView(1, 1, year, month);
+    fetchAllPostsForCalendar(year, month);
+  }, [fetchPostsForListView, fetchAllPostsForCalendar]);
 
   useEffect(() => {
     // Check LinkedIn integration status
@@ -254,21 +462,59 @@ export function ScheduledPostsClient() {
     (year: number, month: number) => {
       const monthKey = `${year}-${month}`;
       setCurrentMonth(monthKey);
-      fetchPosts(1, year, month);
+      // Reset pagination and fetch first pages for both sections
+      setScheduledPagination((prev) => ({ ...prev, page: 1 }));
+      setPublishedPagination((prev) => ({ ...prev, page: 1 }));
+      fetchPostsForListView(1, 1, year, month);
+      fetchAllPostsForCalendar(year, month);
     },
-    [fetchPosts]
+    [fetchPostsForListView, fetchAllPostsForCalendar]
   );
 
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= pagination.totalPages) {
+  const handleScheduledPageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= scheduledPagination.totalPages) {
       // Use current month when paginating
       if (currentMonth) {
         const [yearStr, monthStr] = currentMonth.split("-");
-        fetchPosts(newPage, parseInt(yearStr), parseInt(monthStr));
+        fetchScheduledPosts(
+          newPage,
+          parseInt(yearStr),
+          parseInt(monthStr),
+          false
+        );
       } else {
         // Fallback to current month if currentMonth is not set
         const now = new Date();
-        fetchPosts(newPage, now.getFullYear(), now.getMonth() + 1);
+        fetchScheduledPosts(
+          newPage,
+          now.getFullYear(),
+          now.getMonth() + 1,
+          false
+        );
+      }
+    }
+  };
+
+  const handlePublishedPageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= publishedPagination.totalPages) {
+      // Use current month when paginating
+      if (currentMonth) {
+        const [yearStr, monthStr] = currentMonth.split("-");
+        fetchPublishedPosts(
+          newPage,
+          parseInt(yearStr),
+          parseInt(monthStr),
+          false
+        );
+      } else {
+        // Fallback to current month if currentMonth is not set
+        const now = new Date();
+        fetchPublishedPosts(
+          newPage,
+          now.getFullYear(),
+          now.getMonth() + 1,
+          false
+        );
       }
     }
   };
@@ -314,7 +560,14 @@ export function ScheduledPostsClient() {
         router.push(`/posts/${data.post.id}`);
       } else {
         // Fallback: refresh posts if redirect fails
-        await fetchPosts(1);
+        const now = new Date();
+        await fetchPostsForListView(
+          1,
+          1,
+          now.getFullYear(),
+          now.getMonth() + 1
+        );
+        await fetchAllPostsForCalendar(now.getFullYear(), now.getMonth() + 1);
       }
     } catch (err) {
       setCreateError(
@@ -327,6 +580,89 @@ export function ScheduledPostsClient() {
 
   const handlePostClick = (post: Post) => {
     router.push(`/posts/${post.id}`);
+  };
+
+  const renderPost = (post: Post) => {
+    // Get organization name using utility function
+    const organizationName = getOrganizationName(post, organizations);
+
+    // Determine organization ID
+    let orgId: string | null = null;
+    if (post.publish_target && post.publish_target !== "personal") {
+      orgId = post.publish_target;
+    } else if (post.linkedin_posts?.length) {
+      // Check if any linkedin post has an organization_id
+      const orgPost = post.linkedin_posts.find(
+        (lp) => lp.organization_id !== null
+      );
+      if (orgPost) {
+        orgId = orgPost.organization_id;
+      }
+    }
+
+    // Determine if this is a personal post
+    const isPersonal =
+      post.publish_target === "personal" ||
+      (!orgId && !post.publish_target) ||
+      post.linkedin_posts?.some((lp) => lp.organization_id === null);
+
+    // Get actual published date (from LinkedIn post if available)
+    const actualPublishedAt =
+      post.linkedin_posts?.find(
+        (lp) => lp.status === "PUBLISHED" && lp.published_at
+      )?.published_at || post.published_at;
+
+    return (
+      <Link key={post.id} href={`/posts/${post.id}`}>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer bg-background">
+          <CardContent className="p-4">
+            <div className="space-y-3">
+              {/* Header with title */}
+              <div className="flex items-center gap-3">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Post #{post.id}
+                </h3>
+                <div className="flex items-center gap-1.5">
+                  <div
+                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{
+                      backgroundColor: isPersonal
+                        ? "hsl(var(--primary))"
+                        : orgId
+                        ? getOrganizationColor(orgId)
+                        : "hsl(142 76% 36%)",
+                    }}
+                  />
+                  <span className="text-xs text-gray-500">
+                    {organizationName}
+                  </span>
+                </div>
+              </div>
+
+              {/* Content snippet */}
+              <p className="text-gray-600 text-sm break-words line-clamp-2">
+                {truncateContent(post.content)}
+              </p>
+
+              {/* Date text */}
+              <p className="text-xs text-gray-500">
+                {post.status === "PUBLISHED"
+                  ? `Published at ${
+                      actualPublishedAt
+                        ? formatDateTimeFull(actualPublishedAt)
+                        : "Unknown date"
+                    }`
+                  : `Scheduled for ${
+                      post.scheduled_publish_date
+                        ? formatDateTimeFull(post.scheduled_publish_date)
+                        : "Not scheduled"
+                    }`}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+    );
   };
 
   if (loading) {
@@ -350,7 +686,20 @@ export function ScheduledPostsClient() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
           <p className="text-gray-600 mb-4">{error}</p>
-          <Button onClick={() => fetchPosts(1)}>Try Again</Button>
+          <Button
+            onClick={() => {
+              const now = new Date();
+              fetchPostsForListView(
+                1,
+                1,
+                now.getFullYear(),
+                now.getMonth() + 1
+              );
+              fetchAllPostsForCalendar(now.getFullYear(), now.getMonth() + 1);
+            }}
+          >
+            Try Again
+          </Button>
         </div>
       </PageWrapper>
     );
@@ -403,7 +752,7 @@ export function ScheduledPostsClient() {
 
         <TabsContent value="calendar" className="mt-6">
           <ScheduledPostsCalendar
-            posts={posts}
+            posts={allPosts}
             loading={calendarLoading}
             onPostClick={handlePostClick}
             organizations={organizations}
@@ -413,178 +762,93 @@ export function ScheduledPostsClient() {
         </TabsContent>
 
         <TabsContent value="list" className="mt-6">
-          {posts.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <Calendar className="h-12 w-12 mx-auto" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No scheduled posts yet
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Schedule some drafts to see them here
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-6">
-              {paginationLoading && (
-                <div className="text-center py-4">
-                  <div className="inline-flex items-center px-4 py-2 text-sm text-gray-600">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
-                    Loading posts...
-                  </div>
+          {scheduledPosts.length === 0 &&
+            publishedPosts.length === 0 &&
+            !loading && (
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <Calendar className="h-12 w-12 mx-auto" />
                 </div>
-              )}
-              {(() => {
-                // Don't separate posts - render them in the order from API (already sorted by date)
-                // The API returns posts sorted by: published_at for published, scheduled_publish_date for scheduled (newest first)
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  No scheduled posts yet
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Schedule some drafts to see them here
+                </p>
+              </div>
+            )}
 
-                const renderPost = (post: Post) => {
-                  // Get organization name using utility function
-                  const organizationName = getOrganizationName(
-                    post,
-                    organizations
-                  );
-
-                  // Determine organization ID
-                  let orgId: string | null = null;
-                  if (
-                    post.publish_target &&
-                    post.publish_target !== "personal"
-                  ) {
-                    orgId = post.publish_target;
-                  } else if (post.linkedin_posts?.length) {
-                    // Check if any linkedin post has an organization_id
-                    const orgPost = post.linkedin_posts.find(
-                      (lp) => lp.organization_id !== null
-                    );
-                    if (orgPost) {
-                      orgId = orgPost.organization_id;
-                    }
-                  }
-
-                  // Determine if this is a personal post
-                  const isPersonal =
-                    post.publish_target === "personal" ||
-                    (!orgId && !post.publish_target) ||
-                    post.linkedin_posts?.some(
-                      (lp) => lp.organization_id === null
-                    );
-
-                  // Get actual published date (from LinkedIn post if available)
-                  const actualPublishedAt =
-                    post.linkedin_posts?.find(
-                      (lp) => lp.status === "PUBLISHED" && lp.published_at
-                    )?.published_at || post.published_at;
-
-                  return (
-                    <Link key={post.id} href={`/posts/${post.id}`}>
-                      <Card className="hover:shadow-md transition-shadow cursor-pointer bg-background">
-                        <CardContent className="p-4">
-                          <div className="space-y-3">
-                            {/* Header with title */}
-                            <div className="flex items-center gap-3">
-                              <h3 className="text-lg font-semibold text-gray-900">
-                                Post #{post.id}
-                              </h3>
-                              <div className="flex items-center gap-1.5">
-                                <div
-                                  className="w-2 h-2 rounded-full flex-shrink-0"
-                                  style={{
-                                    backgroundColor: isPersonal
-                                      ? "hsl(var(--primary))"
-                                      : orgId
-                                      ? getOrganizationColor(orgId)
-                                      : "hsl(142 76% 36%)",
-                                  }}
-                                />
-                                <span className="text-xs text-gray-500">
-                                  {organizationName}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Content snippet */}
-                            <p className="text-gray-600 text-sm break-words line-clamp-2">
-                              {truncateContent(post.content)}
-                            </p>
-
-                            {/* Date text */}
-                            <p className="text-xs text-gray-500">
-                              {post.status === "PUBLISHED"
-                                ? `Published at ${
-                                    actualPublishedAt
-                                      ? formatDateTimeFull(actualPublishedAt)
-                                      : "Unknown date"
-                                  }`
-                                : `Scheduled for ${
-                                    post.scheduled_publish_date
-                                      ? formatDateTimeFull(
-                                          post.scheduled_publish_date
-                                        )
-                                      : "Not scheduled"
-                                  }`}
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  );
-                };
-
-                // Count scheduled and published for display
-                const scheduledCount = posts.filter(
-                  (p) => p.status === "SCHEDULED"
-                ).length;
-                const publishedCount = posts.filter(
-                  (p) => p.status === "PUBLISHED"
-                ).length;
-
-                return (
+          <div className="flex flex-col gap-8">
+            {/* Scheduled Posts Section */}
+            {(scheduledPosts.length > 0 || scheduledPaginationLoading) && (
+              <div className="space-y-4">
+                <h2 className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-blue-600" />
+                  <LabelWithCount
+                    label="Scheduled"
+                    count={scheduledPagination.total}
+                  />
+                </h2>
+                {scheduledPaginationLoading && (
+                  <div className="text-center py-4">
+                    <div className="inline-flex items-center px-4 py-2 text-sm text-gray-600">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                      Loading scheduled posts...
+                    </div>
+                  </div>
+                )}
+                {scheduledPosts.length > 0 && (
                   <>
-                    {posts.length > 0 && (
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-4">
-                          {scheduledCount > 0 && (
-                            <h2 className="flex items-center gap-2">
-                              <Calendar className="h-5 w-5 text-blue-600" />
-                              <LabelWithCount
-                                label="Scheduled"
-                                count={scheduledCount}
-                              />
-                            </h2>
-                          )}
-                          {publishedCount > 0 && (
-                            <h2 className="flex items-center gap-2">
-                              <CheckCircle2 className="h-5 w-5 text-green-600" />
-                              <LabelWithCount
-                                label="Published"
-                                count={publishedCount}
-                              />
-                            </h2>
-                          )}
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          {posts.map((post) => renderPost(post))}
-                        </div>
-                      </div>
-                    )}
-                    {posts.length === 0 && (
-                      <div className="text-center py-8">
-                        <p className="text-gray-500">No posts found</p>
-                      </div>
+                    <div className="flex flex-col gap-2">
+                      {scheduledPosts.map((post) => renderPost(post))}
+                    </div>
+                    {scheduledPagination.totalPages > 1 && (
+                      <Pagination
+                        pagination={scheduledPagination}
+                        onPageChange={handleScheduledPageChange}
+                        loading={scheduledPaginationLoading}
+                      />
                     )}
                   </>
-                );
-              })()}
-            </div>
-          )}
+                )}
+              </div>
+            )}
 
-          <Pagination
-            pagination={pagination}
-            onPageChange={handlePageChange}
-            loading={paginationLoading}
-          />
+            {/* Published Posts Section */}
+            {(publishedPosts.length > 0 || publishedPaginationLoading) && (
+              <div className="space-y-4">
+                <h2 className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <LabelWithCount
+                    label="Published"
+                    count={publishedPagination.total}
+                  />
+                </h2>
+                {publishedPaginationLoading && (
+                  <div className="text-center py-4">
+                    <div className="inline-flex items-center px-4 py-2 text-sm text-gray-600">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                      Loading published posts...
+                    </div>
+                  </div>
+                )}
+                {publishedPosts.length > 0 && (
+                  <>
+                    <div className="flex flex-col gap-2">
+                      {publishedPosts.map((post) => renderPost(post))}
+                    </div>
+                    {publishedPagination.totalPages > 1 && (
+                      <Pagination
+                        pagination={publishedPagination}
+                        onPageChange={handlePublishedPageChange}
+                        loading={publishedPaginationLoading}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
 

@@ -13,7 +13,7 @@ export function AdminNav() {
 
   return (
     <SharedNav
-      logoText="linkedbud - Admin"
+      logoText="linkedbud"
       logoHref="/admin"
       navigation={navigation}
       settingsHref="/admin/settings"

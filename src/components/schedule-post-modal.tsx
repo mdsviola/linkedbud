@@ -19,10 +19,8 @@ import { Calendar, Clock } from "lucide-react";
 interface SchedulePostModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSchedule: (scheduledDate: string, publishTarget: string) => Promise<void>;
+  onSchedule: (scheduledDate: string) => Promise<void>;
   currentScheduledDate?: string | null;
-  currentPublishTarget?: string | null;
-  organizations?: Array<{ linkedin_org_id: string; org_name: string | null }>;
   isSubmitting?: boolean;
   error?: string;
 }
@@ -32,14 +30,11 @@ export function SchedulePostModal({
   onClose,
   onSchedule,
   currentScheduledDate,
-  currentPublishTarget,
-  organizations = [],
   isSubmitting = false,
   error,
 }: SchedulePostModalProps) {
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
-  const [publishTarget, setPublishTarget] = useState("personal");
   const [validationError, setValidationError] = useState("");
 
   // Show toast when error prop changes
@@ -64,7 +59,7 @@ export function SchedulePostModal({
     }
   }, [validationError]);
 
-  // Convert UTC date to local date and time format and set publish target
+  // Convert UTC date to local date and time format
   useEffect(() => {
     if (currentScheduledDate) {
       const utcDate = new Date(currentScheduledDate);
@@ -100,14 +95,7 @@ export function SchedulePostModal({
         )}`
       );
     }
-
-    // Set publish target from current value or default to personal
-    if (currentPublishTarget) {
-      setPublishTarget(currentPublishTarget);
-    } else {
-      setPublishTarget("personal");
-    }
-  }, [currentScheduledDate, currentPublishTarget, isOpen]);
+  }, [currentScheduledDate, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,7 +120,7 @@ export function SchedulePostModal({
     const utcIsoString = selectedDateTime.toISOString();
 
     try {
-      await onSchedule(utcIsoString, publishTarget);
+      await onSchedule(utcIsoString);
     } catch (err) {
       // Error handling is done in the parent component
       console.error("Failed to schedule post:", err);
@@ -141,7 +129,7 @@ export function SchedulePostModal({
 
   const handleClearSchedule = async () => {
     try {
-      await onSchedule("", "personal"); // Empty string to clear the schedule
+      await onSchedule(""); // Empty string to clear the schedule
     } catch (err) {
       console.error("Failed to clear schedule:", err);
     }
@@ -202,26 +190,6 @@ export function SchedulePostModal({
             {validationError && (
               <p className="text-sm text-red-600">{validationError}</p>
             )}
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="publish-target" className="text-sm font-medium">
-              Publish to Account
-            </label>
-            <select
-              id="publish-target"
-              value={publishTarget}
-              onChange={(e) => setPublishTarget(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              disabled={isSubmitting}
-            >
-              <option value="personal">Personal Profile</option>
-              {organizations.map((org) => (
-                <option key={org.linkedin_org_id} value={org.linkedin_org_id}>
-                  {org.org_name || `Organization ${org.linkedin_org_id}`}
-                </option>
-              ))}
-            </select>
           </div>
 
           <DialogFooter className="flex gap-2">

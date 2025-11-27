@@ -289,49 +289,27 @@ export function UserDetailClient({ userId }: UserDetailClientProps) {
         <CardHeader>
           <CardTitle>User Information</CardTitle>
           <CardDescription>
-            Basic account details and subscription status
+            Basic account details
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="flex items-center gap-3">
-              <User className="h-5 w-5 text-gray-400" />
-              <div>
+            <div>
+              <div className="flex items-center gap-3">
+                <User className="h-5 w-5 text-gray-400" />
                 <p className="text-sm text-gray-500">User ID</p>
-                <p className="text-sm text-gray-900 break-all">{user.id}</p>
               </div>
+              <p className="text-sm text-gray-900 break-all mt-2">{user.id}</p>
             </div>
-            <div className="flex items-center gap-3">
-              <Calendar className="h-5 w-5 text-gray-400" />
-              <div>
+            <div>
+              <div className="flex items-center gap-3">
+                <Calendar className="h-5 w-5 text-gray-400" />
                 <p className="text-sm text-gray-500">Joined</p>
-                <p className="text-sm text-gray-900">
-                  {formatDate(user.created_at)}
-                </p>
               </div>
+              <p className="text-sm text-gray-900 mt-2">
+                {formatDate(user.created_at)}
+              </p>
             </div>
-            {subscription && (
-              <>
-                <div className="flex items-center gap-3">
-                  <CreditCard className="h-5 w-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-500">Subscription Status</p>
-                    <Badge className={getStatusColor(subscription.status)}>
-                      {subscription.status}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Crown className="h-5 w-5 text-gray-400" />
-                  <div>
-                    <p className="text-sm text-gray-500">Subscription Tier</p>
-                    <Badge className="bg-purple-100 text-purple-800">
-                      {getTierDisplayName(currentTier)}
-                    </Badge>
-                  </div>
-                </div>
-              </>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -347,66 +325,70 @@ export function UserDetailClient({ userId }: UserDetailClientProps) {
         <CardContent>
           {subscription ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="flex items-center gap-3">
-                <Crown className="h-5 w-5 text-gray-400" />
-                <div>
+              <div>
+                <div className="flex items-center gap-3">
+                  <Crown className="h-5 w-5 text-gray-400" />
                   <p className="text-sm text-gray-500">Tier</p>
+                </div>
+                <div className="mt-2">
                   <Badge className="bg-purple-100 text-purple-800 font-semibold">
                     {getTierDisplayName(currentTier)}
                   </Badge>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <CreditCard className="h-5 w-5 text-gray-400" />
-                <div>
+              <div>
+                <div className="flex items-center gap-3">
+                  <CreditCard className="h-5 w-5 text-gray-400" />
                   <p className="text-sm text-gray-500">Status</p>
+                </div>
+                <div className="mt-2">
                   <Badge className={getStatusColor(subscription.status)}>
                     {subscription.status}
                   </Badge>
                 </div>
               </div>
               {subscription.current_period_end && (
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-5 w-5 text-gray-400" />
-                  <div>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-5 w-5 text-gray-400" />
                     <p className="text-sm text-gray-500">Period End</p>
-                    <p className="text-sm text-gray-900">
-                      {formatDate(subscription.current_period_end)}
-                    </p>
                   </div>
+                  <p className="text-sm text-gray-900 mt-2">
+                    {formatDate(subscription.current_period_end)}
+                  </p>
                 </div>
               )}
               {subscription.external_subscription_id && (
-                <div className="flex items-center gap-3">
-                  <Settings className="h-5 w-5 text-gray-400" />
-                  <div>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <Settings className="h-5 w-5 text-gray-400" />
                     <p className="text-sm text-gray-500">
                       LemonSqueezy Subscription ID
                     </p>
-                    <p className="text-sm text-gray-900 font-mono break-all">
-                      {subscription.external_subscription_id}
-                    </p>
                   </div>
-                </div>
-              )}
-              <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-500">Provider</p>
-                  <p className="text-sm text-gray-900 capitalize">
-                    {subscription.provider}
+                  <p className="text-sm text-gray-900 font-mono break-all mt-2">
+                    {subscription.external_subscription_id}
                   </p>
                 </div>
+              )}
+              <div>
+                <div className="flex items-center gap-3">
+                  <User className="h-5 w-5 text-gray-400" />
+                  <p className="text-sm text-gray-500">Provider</p>
+                </div>
+                <p className="text-sm text-gray-900 capitalize mt-2">
+                  {subscription.provider}
+                </p>
               </div>
               {subscription.price_id && (
-                <div className="flex items-center gap-3">
-                  <Settings className="h-5 w-5 text-gray-400" />
-                  <div>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <Settings className="h-5 w-5 text-gray-400" />
                     <p className="text-sm text-gray-500">Price ID</p>
-                    <p className="text-sm text-gray-900 font-mono">
-                      {subscription.price_id}
-                    </p>
                   </div>
+                  <p className="text-sm text-gray-900 font-mono mt-2">
+                    {subscription.price_id}
+                  </p>
                 </div>
               )}
             </div>
@@ -428,21 +410,46 @@ export function UserDetailClient({ userId }: UserDetailClientProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { type: "draft", label: "Draft Generations" },
-              { type: "polish", label: "Polish Generations" },
-              { type: "for_you", label: "For You Generations" },
-            ].map(({ type, label }) => (
-              <div key={type} className="flex items-center gap-3">
-                <Settings className="h-5 w-5 text-gray-400" />
-                <div>
-                  <p className="text-sm text-gray-500">{label}</p>
-                  <p className="text-sm text-gray-900">
+            {(() => {
+              // Format type names for display
+              const formatLabel = (type: string): string => {
+                const labelMap: Record<string, string> = {
+                  draft: "Draft Generations",
+                  polish: "Polish Generations",
+                  for_you: "For You Generations",
+                  rewrite_with_ai: "Rewrite with AI",
+                  ai_insights: "AI Insights",
+                };
+                return (
+                  labelMap[type] ||
+                  type
+                    .split("_")
+                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(" ")
+                );
+              };
+
+              // Get all generation types from the data, sorted for consistency
+              const allTypes = Object.keys(generationCounts).sort();
+
+              // If no counters exist, show all known types with 0
+              const typesToShow =
+                allTypes.length > 0
+                  ? allTypes
+                  : ["draft", "polish", "for_you", "rewrite_with_ai", "ai_insights"];
+
+              return typesToShow.map((type) => (
+                <div key={type}>
+                  <div className="flex items-center gap-3">
+                    <Settings className="h-5 w-5 text-gray-400" />
+                    <p className="text-sm text-gray-500">{formatLabel(type)}</p>
+                  </div>
+                  <p className="text-sm text-gray-900 mt-2">
                     {generationCounts[type] || 0}
                   </p>
                 </div>
-              </div>
-            ))}
+              ));
+            })()}
           </div>
         </CardContent>
       </Card>
