@@ -36,13 +36,15 @@ Linkedbud is a LinkedIn content creation and analytics co-pilot that helps users
 
 These scopes are part of LinkedIn&apos;s Community Management API and are requested only when users explicitly choose to connect organization pages they administer. They enable both analytics retrieval and post management for organization pages:
 
-- **`r_organization_admin`** — Enumerate organization pages user administers (access control)
+- **`rw_organization_admin`** — Enumerate and manage organization pages user administers (access control)
 - **`r_organization_social`** — Read organization page post data and statistics
 - **`w_organization_social`** — Publish posts to organization pages user administers
 - **`r_member_postAnalytics`** — Read post performance metrics for member-created content
+- **`r_member_profileAnalytics`** — Read profile analytics for member content
 - **`r_organization_followers`** — Read aggregate follower counts for organization pages
 - **`r_organization_social_feed`** — Access organization page feed data
 - **`w_organization_social_feed`** — Post to organization page feeds
+- **`w_member_social`** — Publish posts to member profiles (used for personal profile posting via Community Management API)
 - **`w_member_social_feed`** — Post to member feeds
 - **`r_basicprofile`** — Basic profile information access
 - **`r_1st_connections_size`** — Aggregate connection count (for analytics)

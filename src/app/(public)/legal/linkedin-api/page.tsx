@@ -165,9 +165,9 @@ export default function LinkedInAPICompliancePage() {
               <ul className="list-disc list-inside space-y-2 mb-4 ml-4">
                 <li>
                   <code className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
-                    r_organization_admin
+                    rw_organization_admin
                   </code>{" "}
-                  — Enumerate organization pages you administer (for access
+                  — Enumerate and manage organization pages you administer (for access
                   control)
                 </li>
                 <li>
@@ -190,6 +190,12 @@ export default function LinkedInAPICompliancePage() {
                 </li>
                 <li>
                   <code className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+                    r_member_profileAnalytics
+                  </code>{" "}
+                  — Read profile analytics for member content
+                </li>
+                <li>
+                  <code className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
                     r_organization_followers
                   </code>{" "}
                   — Read aggregate follower counts for organization pages
@@ -205,6 +211,12 @@ export default function LinkedInAPICompliancePage() {
                     w_organization_social_feed
                   </code>{" "}
                   — Post to organization page feeds
+                </li>
+                <li>
+                  <code className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
+                    w_member_social
+                  </code>{" "}
+                  — Publish posts to member profiles (used for personal profile posting via Community Management API)
                 </li>
                 <li>
                   <code className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
