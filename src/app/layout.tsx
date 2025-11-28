@@ -69,16 +69,17 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/android-chrome-192x192.png", sizes: "192x192", type: "image/png" },
-      { url: "/android-chrome-512x512.png", sizes: "512x512", type: "image/png" },
+      { url: `${baseUrl}/favicon.ico`, sizes: "any" },
+      { url: `${baseUrl}/favicon-16x16.png`, sizes: "16x16", type: "image/png" },
+      { url: `${baseUrl}/favicon-32x32.png`, sizes: "32x32", type: "image/png" },
+      { url: `${baseUrl}/android-chrome-192x192.png`, sizes: "192x192", type: "image/png" },
+      { url: `${baseUrl}/android-chrome-512x512.png`, sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    apple: [{ url: `${baseUrl}/apple-touch-icon.png`, sizes: "180x180", type: "image/png" }],
     // Site icon for Google search results (preferred size: 192x192 or 512x512)
-    shortcut: [{ url: "/android-chrome-192x192.png", sizes: "192x192", type: "image/png" }],
+    shortcut: [{ url: `${baseUrl}/android-chrome-192x192.png`, sizes: "192x192", type: "image/png" }],
   },
+  manifest: `${baseUrl}/site.webmanifest`,
 };
 
 export default function RootLayout({
