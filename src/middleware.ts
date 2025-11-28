@@ -93,6 +93,32 @@ export async function middleware(request: NextRequest) {
       }
     }
 
+    // Define public routes that authenticated users should not access
+    const publicRoutes = [
+      "/about",
+      "/comparison",
+      "/faq",
+      "/features",
+      "/pricing",
+      "/privacy",
+      "/try-free",
+      "/legal",
+    ];
+
+    // Redirect authenticated users away from public pages
+    const isPublicRoute = publicRoutes.some((route) =>
+      request.nextUrl.pathname.startsWith(route)
+    );
+    // Exception: allow access to invite accept pages (needed for collaboration invites)
+    const isInviteAcceptRoute = request.nextUrl.pathname.startsWith("/invite/accept");
+    if (isPublicRoute && !isInviteAcceptRoute) {
+      if (isAdmin) {
+        return NextResponse.redirect(new URL("/admin", request.url));
+      } else {
+        return NextResponse.redirect(new URL("/dashboard", request.url));
+      }
+    }
+
     // Define regular user routes that admins should not access
     const regularUserRoutes = [
       "/dashboard",
